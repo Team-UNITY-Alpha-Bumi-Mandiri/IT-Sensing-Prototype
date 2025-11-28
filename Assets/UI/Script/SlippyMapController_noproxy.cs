@@ -242,14 +242,22 @@ public class SlippyMapController_noproxy : MonoBehaviour
     public void ZoomOut() => SetZoom(zoom - 1);
 
     void SetZoom(int newZoom)
-    {
-        newZoom = Mathf.Clamp(newZoom, 2, 19);
-        if (newZoom == zoom) return;
+{
+    newZoom = Mathf.Clamp(newZoom, 2, 19);
+    if (newZoom == zoom) return;
 
-        zoom = newZoom;
-        centerTile = LatLonToTile(latitude, longitude, zoom);
-        LoadAllTiles();
-    }
+    zoom = newZoom;
+
+    // reposition center tile
+    centerTile = LatLonToTile(latitude, longitude, zoom);
+
+    // penting! reset posisi container
+    tileContainer.anchoredPosition = Vector2.zero;
+
+    // reload tiles
+    LoadAllTiles();
+}
+
 
     // -----------------------------------------------------------------------
     // CHANGE MAP STYLE

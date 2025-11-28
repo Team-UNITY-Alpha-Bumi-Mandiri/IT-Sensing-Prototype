@@ -2,14 +2,14 @@
 Pembuatan aplikasi Desktop berdasarkan website IT Sensing 
 
 ✅ CHECKLIST FITUR YANG SUDAH DIBUAT :
-○	Layout UI (Sudah ada UI) ✔
-○	Toolbar kanan Peta (Sudah ditambah UI) ✔
-○	Peta menggunakan Tiles download ✔
-○	Scroll dan Drag di Peta ✔
-○	Map Style Switching ✔
-○	Script Proxy Cloudflare dan No Proxy (Jika misal peta tidak load/block connection) ✔
-○	Fitur search Lokasi mengikuti nominatim dan ada informasi lokasi ✔
-○	Map loading fade in supaya tidak menumpuk dan stuttering ✔
+- Layout UI (Sudah ada UI) ✔
+- Toolbar kanan Peta (Sudah ditambah UI) ✔
+- Peta menggunakan Tiles download ✔
+- Scroll dan Drag di Peta ✔
+- Map Style Switching ✔
+- Script Proxy Cloudflare dan No Proxy (Jika misal peta tidak load/block connection) ✔
+- Fitur search Lokasi mengikuti nominatim dan ada informasi lokasi ✔
+- Map loading fade in supaya tidak menumpuk dan stuttering ✔
 
 
 ●	✅ CHECKLIST LAPORAN DEBUGGING DAN ALASAN

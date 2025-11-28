@@ -8758,6 +8758,10 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 19215785}
     m_Modifications:
+    - target: {fileID: 1539616069667815857, guid: 783b4a1dcf2eaa742b874c759526f13b, type: 3}
+      propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.data[0].m_Target
+      value: 
+      objectReference: {fileID: 19215784}
     - target: {fileID: 2548977557430684030, guid: 783b4a1dcf2eaa742b874c759526f13b, type: 3}
       propertyPath: m_text
       value: Upload Files
@@ -12085,6 +12089,10 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 498579501}
     m_Modifications:
+    - target: {fileID: 1539616069667815857, guid: 783b4a1dcf2eaa742b874c759526f13b, type: 3}
+      propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.data[0].m_Target
+      value: 
+      objectReference: {fileID: 498579500}
     - target: {fileID: 2548977557430684030, guid: 783b4a1dcf2eaa742b874c759526f13b, type: 3}
       propertyPath: m_text
       value: Upload Raster
@@ -27040,6 +27048,10 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 216484675}
     m_Modifications:
+    - target: {fileID: 1539616069667815857, guid: 783b4a1dcf2eaa742b874c759526f13b, type: 3}
+      propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.data[0].m_Target
+      value: 
+      objectReference: {fileID: 216484674}
     - target: {fileID: 2548977557430684030, guid: 783b4a1dcf2eaa742b874c759526f13b, type: 3}
       propertyPath: m_text
       value: Composite
@@ -27313,6 +27325,10 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 182633584}
     m_Modifications:
+    - target: {fileID: 1539616069667815857, guid: 783b4a1dcf2eaa742b874c759526f13b, type: 3}
+      propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.data[0].m_Target
+      value: 
+      objectReference: {fileID: 182633583}
     - target: {fileID: 2548977557430684030, guid: 783b4a1dcf2eaa742b874c759526f13b, type: 3}
       propertyPath: m_text
       value: Create View
@@ -46483,6 +46499,10 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 1371268369}
     m_Modifications:
+    - target: {fileID: 1539616069667815857, guid: 783b4a1dcf2eaa742b874c759526f13b, type: 3}
+      propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.data[0].m_Target
+      value: 
+      objectReference: {fileID: 1371268368}
     - target: {fileID: 2548977557430684030, guid: 783b4a1dcf2eaa742b874c759526f13b, type: 3}
       propertyPath: m_text
       value: Raster Fusion
@@ -47554,6 +47574,10 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 660513773}
     m_Modifications:
+    - target: {fileID: 1539616069667815857, guid: 783b4a1dcf2eaa742b874c759526f13b, type: 3}
+      propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.data[0].m_Target
+      value: 
+      objectReference: {fileID: 660513772}
     - target: {fileID: 2548977557430684030, guid: 783b4a1dcf2eaa742b874c759526f13b, type: 3}
       propertyPath: m_text
       value: Upload Shapefile

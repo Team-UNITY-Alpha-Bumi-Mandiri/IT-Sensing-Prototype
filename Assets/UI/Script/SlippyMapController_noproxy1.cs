@@ -1,5 +1,7 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.Networking;
@@ -7,7 +9,7 @@ using UnityEngine.InputSystem;
 
 public class SlippyMapController_noproxy1 : MonoBehaviour
 {
-    [Header("UI")]
+    [Header("UI (assign in Inspector)")]
     public RectTransform tileContainer;
     public RectTransform inputArea;
     public InputField searchField;
@@ -15,6 +17,12 @@ public class SlippyMapController_noproxy1 : MonoBehaviour
     public RectTransform marker;
     public GameObject infoBubble;
     public Text infoText;
+
+    // FITUR GAYA PETA
+    [Header("Map Style Control")]
+    [Tooltip("Array tombol untuk setiap gaya peta (indeks harus sesuai dengan urutan enum MapStyle).")]
+    public Button[] styleButtons;
+    // AKHIR FITUR GAYA PETA
 
     [Header("Map Settings")]
     public double latitude = -7.797068;
@@ -25,47 +33,88 @@ public class SlippyMapController_noproxy1 : MonoBehaviour
     public MapStyle currentStyle = MapStyle.OSM;
 
     const int TILE_SIZE = 256;
-    const int GRID_SIZE = 5;
+    const int GRID_SIZE = 7; // 7x7 grid
 
     private Vector2Int centerTile;
     private Dictionary<Vector2Int, RawImage> tiles = new Dictionary<Vector2Int, RawImage>();
 
+    // Drag state
     private bool dragging = false;
     private Vector2 lastMousePos;
+    private Vector2 fractionalOffset = Vector2.zero;
 
-    // Search
+    // Search/marker
     private bool hasSearchMarker = false;
-    private Vector2Int searchedTile;
     private double searchedLat;
     private double searchedLon;
     private string searchedName = "";
 
-    // Smooth pan
+    // Pan / animation
     private bool isPanning = false;
-    private float panTime = 0;
+    private float panTime = 0f;
     private float panDuration = 0.6f;
     private double panStartLat, panStartLon;
     private double panTargetLat, panTargetLon;
 
+    // Caching & loading control
+    private Dictionary<string, Texture2D> tileCache = new Dictionary<string, Texture2D>();
+    private Dictionary<string, int> tileLoadToken = new Dictionary<string, int>();
+    private int globalLoadCounter = 1;
+    private int maxConcurrentLoads = 4;
+    private int activeLoads = 0;
+    private Queue<TileRequest> loadQueue = new Queue<TileRequest>();
+
+    // Behavior toggles
+    public bool suspendLoadingDuringDrag = false;
+    public bool prioritizeCenterFirst = true;
+
+    [Header("Loading & Animation")]
+    [Tooltip("Waktu tunda pemuatan tile setelah mouse berhenti bergerak.")]
+    public float dragLoadDelay = 0.15f; 
+    private float dragLoadTimer = 0f;
+    [Tooltip("Durasi animasi fade in tile.")]
+    public float tileFadeDuration = 0.2f; 
+    [Tooltip("Hanya fade in, fade out dihilangkan.")]
+    public bool useFadeAnimation = true; 
+
+    struct TileRequest
+    {
+        public int z;
+        public int x;
+        public int y;
+        public string key;
+        public RawImage img;
+        public int token;
+    }
+
     void Start()
     {
         centerTile = LatLonToTile(latitude, longitude, zoom);
-
         GenerateTileGrid();
         LoadAllTiles();
 
-        if (searchButton)
+        if (searchButton != null)
             searchButton.onClick.AddListener(OnSearch);
 
-        if (marker)
+        if (marker != null)
         {
             marker.gameObject.SetActive(false);
-            if (marker.GetComponent<Button>() != null)
-                marker.GetComponent<Button>().onClick.AddListener(OnMarkerClicked);
+            var mb = marker.GetComponent<Button>();
+            if (mb != null) mb.onClick.AddListener(OnMarkerClicked);
         }
 
-        if (infoBubble)
+        if (infoBubble != null)
             infoBubble.SetActive(false);
+
+        // LOGIKA START UNTUK KONTROL GAYA PETA
+        if (styleButtons != null)
+        {
+            for (int i = 0; i < styleButtons.Length; i++)
+            {
+                int styleIndex = i; 
+                styleButtons[i].onClick.AddListener(() => SetMapStyleByIndex(styleIndex));
+            }
+        }
     }
 
     void Update()
@@ -75,10 +124,8 @@ public class SlippyMapController_noproxy1 : MonoBehaviour
         if (isPanning)
         {
             UpdatePan();
-            return;
         }
 
-        // CLICK MAP → hide marker & bubble
         if (Mouse.current.leftButton.wasPressedThisFrame)
         {
             if (!IsPointerOverMarker() && IsMouseOverInputArea())
@@ -90,12 +137,27 @@ public class SlippyMapController_noproxy1 : MonoBehaviour
             HandleDrag();
             HandleZoom();
         }
-        else dragging = false;
+        else
+        {
+            dragging = false;
+        }
+
+        if (!isPanning && !dragging)
+        {
+            if (dragLoadTimer > 0)
+            {
+                dragLoadTimer -= Time.deltaTime;
+                if (dragLoadTimer <= 0)
+                {
+                    LoadAllTiles();
+                    dragLoadTimer = 0;
+                }
+            }
+        }
+
+        ProcessLoadQueue();
     }
 
-    // ======================================================
-    // HELPER INPUT FUNCTIONS
-    // ======================================================
     bool IsMouseOverInputArea()
     {
         if (inputArea == null) return true;
@@ -117,18 +179,19 @@ public class SlippyMapController_noproxy1 : MonoBehaviour
         if (infoBubble) infoBubble.SetActive(false);
     }
 
-    // ======================================================
-    // TILE MATH
-    // ======================================================
-    double LerpDouble(double a, double b, double t) => a + (b - a) * t;
-
-    Vector2Int LatLonToTile(double lat, double lon, int zoomLevel)
+    // ===========================
+    // Lat/Lon <-> tile math
+    // ===========================
+    Vector2Int LatLonToTile(double lat, double lon, int z)
     {
         double latRad = lat * Mathf.Deg2Rad;
-        double n = System.Math.Pow(2.0, zoomLevel);
+        double n = Mathf.Pow(2, z);
 
-        int x = (int)((lon + 180.0) / 360.0 * n);
-        int y = (int)((1.0 - System.Math.Log(System.Math.Tan(latRad) + 1.0 / System.Math.Cos(latRad)) / System.Math.PI) / 2.0 * n);
+        double tileX = (lon + 180.0) / 360.0 * n;
+        double tileY = (1.0 - Math.Log(Mathf.Tan((float)latRad) + 1f / Mathf.Cos((float)latRad)) / Math.PI) / 2.0 * n;
+
+        int x = Mathf.FloorToInt((float)tileX);
+        int y = Mathf.FloorToInt((float)tileY);
 
         return new Vector2Int(x, y);
     }
@@ -136,152 +199,340 @@ public class SlippyMapController_noproxy1 : MonoBehaviour
     Vector2 GetFractionalOffset(double lat, double lon)
     {
         double latRad = lat * Mathf.Deg2Rad;
-        double n = System.Math.Pow(2.0, zoom);
+        double n = Mathf.Pow(2, zoom);
 
         double tileX = (lon + 180.0) / 360.0 * n;
-        double tileY = (1.0 - System.Math.Log(System.Math.Tan(latRad) + 1.0 / System.Math.Cos(latRad)) / System.Math.PI) / 2.0 * n;
+        double tileY = (1.0 - Math.Log(Mathf.Tan((float)latRad) + 1f / Mathf.Cos((float)latRad)) / Math.PI) / 2.0 * n;
 
-        float fx = (float)((tileX - System.Math.Floor(tileX)) * TILE_SIZE);
-        float fy = (float)((tileY - System.Math.Floor(tileY)) * TILE_SIZE);
+        float fx = (float)((tileX - Math.Floor(tileX)) * TILE_SIZE);
+        float fy = (float)((tileY - Math.Floor(tileY)) * TILE_SIZE);
+
+        fx = Mathf.Repeat(fx, TILE_SIZE);
+        fy = Mathf.Repeat(fy, TILE_SIZE);
 
         return new Vector2(fx, fy);
     }
 
-    // ======================================================
-    // TILE GRID
-    // ======================================================
+    // ===========================
+    // Grid generation & render
+    // ===========================
     void GenerateTileGrid()
     {
+        if (tileContainer == null) return;
+
         foreach (Transform t in tileContainer)
             Destroy(t.gameObject);
 
         tiles.Clear();
 
         int half = GRID_SIZE / 2;
-
         for (int dx = -half; dx <= half; dx++)
         {
             for (int dy = -half; dy <= half; dy++)
             {
-                GameObject go = new GameObject($"Tile_{dx}_{dy}", typeof(RawImage));
-                go.transform.SetParent(tileContainer, false);
+                GameObject g = new GameObject($"Tile_{dx}_{dy}", typeof(RawImage));
+                g.transform.SetParent(tileContainer, false);
 
-                RawImage img = go.GetComponent<RawImage>();
+                RawImage img = g.GetComponent<RawImage>();
                 img.rectTransform.sizeDelta = new Vector2(TILE_SIZE, TILE_SIZE);
-                img.rectTransform.anchoredPosition = new Vector2(dx * TILE_SIZE, -dy * TILE_SIZE);
                 img.raycastTarget = false;
+                img.color = new Color(1, 1, 1, 0.2f); 
 
                 tiles[new Vector2Int(dx, dy)] = img;
             }
         }
     }
 
-    string GetTileURL(int x, int y)
+    void ApplyFractionalOffset(Vector2 frac)
+    {
+        foreach (var kv in tiles)
+        {
+            Vector2Int off = kv.Key;
+            RawImage img = kv.Value;
+            if (img == null) continue;
+
+            // Menggunakan -frac.x dan +frac.y untuk memastikan pergerakan UI sesuai dengan pergerakan dunia
+            Vector2 pos = new Vector2(off.x * TILE_SIZE - frac.x, -off.y * TILE_SIZE + frac.y);
+            img.rectTransform.anchoredPosition = pos;
+        }
+    }
+
+    string GetTileURLForStyle(int z, int x, int y)
     {
         switch (currentStyle)
         {
-            case MapStyle.OSM: return $"https://tile.openstreetmap.org/{zoom}/{x}/{y}.png";
-            case MapStyle.Roadmap: return $"https://mt1.google.com/vt/lyrs=m&x={x}&y={y}&z={zoom}";
-            case MapStyle.Terrain: return $"https://mt1.google.com/vt/lyrs=p&x={x}&y={y}&z={zoom}";
-            case MapStyle.Satellite: return $"https://mt1.google.com/vt/lyrs=s&x={x}&y={y}&z={zoom}";
-            case MapStyle.Hybrid: return $"https://mt1.google.com/vt/lyrs=y&x={x}&y={y}&z={zoom}";
+            case MapStyle.OSM:
+                return $"https://tile.openstreetmap.org/{z}/{x}/{y}.png";
+            case MapStyle.Roadmap:
+                return $"https://mt1.google.com/vt/lyrs=m&x={x}&y={y}&z={z}";
+            case MapStyle.Terrain:
+                return $"https://mt1.google.com/vt/lyrs=p&x={x}&y={y}&z={z}";
+            case MapStyle.Satellite:
+                return $"https://mt1.google.com/vt/lyrs=s&x={x}&y={y}&z={z}";
+            case MapStyle.Hybrid:
+                return $"https://mt1.google.com/vt/lyrs=y&x={x}&y={y}&z={z}";
         }
         return "";
     }
 
+    string TileKey(int z, int x, int y)
+    {
+        return $"{z}/{x}/{y}/{currentStyle}";
+    }
+
+    // ===========================
+    // Load management & FADE Coroutines
+    // ===========================
     void LoadAllTiles()
     {
-        foreach (var kv in tiles)
+        loadQueue.Clear(); 
+        
+        if (tileContainer != null)
+            tileContainer.anchoredPosition = Vector2.zero;
+
+        int n = 1 << zoom;
+        int half = GRID_SIZE / 2;
+
+        List<TileRequest> requests = new List<TileRequest>();
+
+        for (int dx = -half; dx <= half; dx++)
         {
-            var off = kv.Key;
-            RawImage img = kv.Value;
+            for (int dy = -half; dy <= half; dy++)
+            {
+                Vector2Int off = new Vector2Int(dx, dy);
+                if (!tiles.ContainsKey(off)) continue;
 
-            int tx = centerTile.x + off.x;
-            int ty = centerTile.y + off.y;
+                RawImage img = tiles[off];
+                int tx = centerTile.x + dx;
+                int tyRaw = centerTile.y + dy;
 
-            img.texture = null;
-            img.color = new Color(1, 1, 1, 0.3f);
+                if (n > 0)
+                    tx = (tx % n + n) % n;
 
-            StartCoroutine(LoadTile(tx, ty, img));
+                if (tyRaw < 0 || tyRaw >= n)
+                {
+                    img.texture = null;
+                    img.color = new Color(1, 1, 1, 0f);
+                    continue;
+                }
+
+                int ty = tyRaw;
+                
+                img.texture = null;
+                img.color = new Color(1, 1, 1, 0.2f);
+
+                string key = TileKey(zoom, tx, ty);
+                int token = ++globalLoadCounter;
+                tileLoadToken[key] = token;
+
+                TileRequest tr = new TileRequest { z = zoom, x = tx, y = ty, key = key, img = img, token = token };
+                requests.Add(tr);
+            }
         }
 
-        UpdateMarkerPosition();
+        if (prioritizeCenterFirst)
+        {
+            requests = requests.OrderBy(r =>
+            {
+                int relX = r.x - centerTile.x;
+                int relY = r.y - centerTile.y;
+                int nwrap = 1 << zoom;
+                if (nwrap > 0)
+                {
+                    int wrapX = relX;
+                    if (wrapX > nwrap / 2) wrapX -= nwrap;
+                    if (wrapX < -nwrap / 2) wrapX += nwrap;
+                    relX = wrapX;
+                }
+                return Math.Abs(relX) + Math.Abs(relY);
+            }).ToList();
+        }
+
+        foreach (var r in requests)
+            loadQueue.Enqueue(r);
     }
 
-    IEnumerator LoadTile(int x, int y, RawImage img)
+    void ProcessLoadQueue()
     {
-        string url = GetTileURL(x, y) + "?nocache=" + Random.value;
-        UnityWebRequest req = UnityWebRequestTexture.GetTexture(url);
+        if (suspendLoadingDuringDrag && dragging)
+            return;
 
-        yield return req.SendWebRequest();
-
-        if (req.result == UnityWebRequest.Result.Success)
+        while (activeLoads < maxConcurrentLoads && loadQueue.Count > 0)
         {
-            Texture2D tex = DownloadHandlerTexture.GetContent(req);
-            img.texture = tex;
-            img.color = Color.white;
+            TileRequest tr = loadQueue.Dequeue();
+
+            if (tileCache.TryGetValue(tr.key, out Texture2D cachedTex))
+            {
+                if (tr.img != null)
+                {
+                    if (useFadeAnimation)
+                    {
+                        StartCoroutine(FadeInTile(tr.img, cachedTex));
+                    }
+                    else
+                    {
+                        tr.img.texture = cachedTex;
+                        tr.img.color = Color.white;
+                    }
+                }
+                continue;
+            }
+
+            StartCoroutine(LoadTileCoroutine(tr));
+            activeLoads++;
         }
     }
 
-    // ======================================================
-    // DRAG MAP
-    // ======================================================
+    IEnumerator LoadTileCoroutine(TileRequest tr)
+    {
+        if (!tileLoadToken.TryGetValue(tr.key, out int currentToken) || currentToken != tr.token)
+        {
+            activeLoads--;
+            yield break;
+        }
+
+        string url = GetTileURLForStyle(tr.z, tr.x, tr.y);
+        if (string.IsNullOrEmpty(url))
+        {
+            activeLoads--;
+            yield break;
+        }
+
+        string finalUrl = url + "?nocache=" + UnityEngine.Random.value;
+
+        using (UnityWebRequest req = UnityWebRequestTexture.GetTexture(finalUrl))
+        {
+            yield return req.SendWebRequest();
+
+            if (!tileLoadToken.TryGetValue(tr.key, out int afterToken) || afterToken != tr.token)
+            {
+                activeLoads--;
+                yield break;
+            }
+
+            if (req.result == UnityWebRequest.Result.Success)
+            {
+                Texture2D tex = DownloadHandlerTexture.GetContent(req);
+                if (tex != null)
+                {
+                    tileCache[tr.key] = tex;
+                    if (tr.img != null && tileLoadToken.TryGetValue(tr.key, out int nowToken) && nowToken == tr.token)
+                    {
+                        if (useFadeAnimation)
+                        {
+                            StartCoroutine(FadeInTile(tr.img, tex));
+                        }
+                        else
+                        {
+                            tr.img.texture = tex;
+                            tr.img.color = Color.white;
+                        }
+                    }
+                }
+            }
+            else
+            {
+                Debug.LogError($"Failed to load tile {tr.key}: {req.error}. URL: {finalUrl}");
+            }
+        }
+
+        activeLoads--;
+    }
+
+    IEnumerator FadeInTile(RawImage img, Texture2D tex)
+    {
+        if (img == null || tex == null) yield break;
+
+        img.texture = tex;
+        float startAlpha = img.color.a; 
+        
+        if (startAlpha < 0.01f)
+        {
+            startAlpha = 0.01f;
+            img.color = new Color(1, 1, 1, startAlpha);
+        }
+        
+        float elapsed = 0f;
+
+        while (elapsed < tileFadeDuration)
+        {
+            elapsed += Time.deltaTime;
+            float currentAlpha = Mathf.Lerp(startAlpha, 1f, elapsed / tileFadeDuration);
+            img.color = new Color(1, 1, 1, currentAlpha);
+            yield return null;
+        }
+        
+        img.color = Color.white;
+    }
+
+    // ===========================
+    // Drag / Zoom (FINAL REVISI UNTUK INVERSION)
+    // ===========================
     void HandleDrag()
     {
         if (Mouse.current.leftButton.wasPressedThisFrame)
         {
             dragging = true;
             lastMousePos = Mouse.current.position.ReadValue();
+            dragLoadTimer = 0f; 
         }
 
         if (Mouse.current.leftButton.wasReleasedThisFrame)
-            dragging = false;
+            dragging = false; 
 
         if (!dragging) return;
 
         Vector2 now = Mouse.current.position.ReadValue();
-        Vector2 delta = now - lastMousePos;
+        Vector2 delta = now - lastMousePos; // Delta mouse dalam pixel
         lastMousePos = now;
 
-        tileContainer.anchoredPosition += delta;
+        // Hitung total pixel dunia di zoom saat ini
+        double totalPixels = TILE_SIZE * Math.Pow(2, zoom);
+        double pixelPerDeg = totalPixels / 360.0;
+        
+        // Pergerakan Longitude (X):
+        // Diubah dari -= menjadi +=.
+        // Jika drag ke kanan (delta.x positif) dan pergerakan sebelumnya terasa terbalik, 
+        // maka += akan membalikkan arah secara efektif.
+        longitude += delta.x / pixelPerDeg; 
 
-        if (tileContainer.anchoredPosition.x > TILE_SIZE / 2)
-        {
-            tileContainer.anchoredPosition -= new Vector2(TILE_SIZE, 0);
-            centerTile.x--;
-            LoadAllTiles();
-        }
-        else if (tileContainer.anchoredPosition.x < -TILE_SIZE / 2)
-        {
-            tileContainer.anchoredPosition += new Vector2(TILE_SIZE, 0);
-            centerTile.x++;
-            LoadAllTiles();
-        }
+        // Pergerakan Latitude (Y): Perlu koreksi Mercator (cos(lat))
+        double latRad = latitude * Mathf.Deg2Rad;
+        double scale = Math.Cos(latRad);
+        if (scale <= 0) scale = 0.0001; 
 
-        if (tileContainer.anchoredPosition.y > TILE_SIZE / 2)
+        // Diubah dari += menjadi -=.
+        // Jika drag ke atas (delta.y positif) dan pergerakan sebelumnya terasa terbalik,
+        // maka -= akan membalikkan arah secara efektif.
+        latitude -= delta.y / (pixelPerDeg * scale); 
+        
+        // Batasi latitude agar tidak melebihi batas Proyeksi Mercator
+        latitude = Mathf.Clamp((float)latitude, -85.0511287798f, 85.0511287798f); 
+
+        Vector2Int newCenter = LatLonToTile(latitude, longitude, zoom);
+        
+        if (newCenter != centerTile)
         {
-            tileContainer.anchoredPosition -= new Vector2(0, TILE_SIZE);
-            centerTile.y++;
-            LoadAllTiles();
+            centerTile = newCenter;
         }
-        else if (tileContainer.anchoredPosition.y < -TILE_SIZE / 2)
-        {
-            tileContainer.anchoredPosition += new Vector2(0, TILE_SIZE);
-            centerTile.y--;
-            LoadAllTiles();
-        }
+        
+        dragLoadTimer = dragLoadDelay;
+
+        Vector2 frac = GetFractionalOffset(latitude, longitude);
+        ApplyFractionalOffset(frac);
 
         UpdateMarkerPosition();
     }
+    // ===========================
+    // AKHIR REVISI HANDLE DRAG
+    // ===========================
 
-    // ======================================================
-    // ZOOM
-    // ======================================================
     void HandleZoom()
     {
         float s = Mouse.current.scroll.ReadValue().y;
         if (Mathf.Abs(s) < 0.1f) return;
-        SetZoom(zoom + (s > 0 ? 1 : -1));
+
+        if (s > 0) SetZoom(zoom + 1); else SetZoom(zoom - 1);
     }
 
     public void ZoomIn() => SetZoom(zoom + 1);
@@ -293,86 +544,82 @@ public class SlippyMapController_noproxy1 : MonoBehaviour
         if (newZoom == zoom) return;
 
         zoom = newZoom;
-
         centerTile = LatLonToTile(latitude, longitude, zoom);
-        tileContainer.anchoredPosition = Vector2.zero;
+        fractionalOffset = GetFractionalOffset(latitude, longitude);
 
-        LoadAllTiles();
+        loadQueue.Clear();
+        
+        LoadAllTiles(); 
+        
+        ApplyFractionalOffset(fractionalOffset);
         UpdateMarkerPosition();
     }
 
-    // ======================================================
-    // MARKER
-    // ======================================================
+    // ===========================
+    // Marker / Search / Pan
+    // ===========================
     void UpdateMarkerPosition()
     {
         if (!hasSearchMarker || marker == null) return;
 
         Vector2 frac = GetFractionalOffset(searchedLat, searchedLon);
-        searchedTile = LatLonToTile(searchedLat, searchedLon, zoom);
+        Vector2Int t = LatLonToTile(searchedLat, searchedLon, zoom);
 
-        int dx = searchedTile.x - centerTile.x;
-        int dy = searchedTile.y - centerTile.y;
+        int dx = t.x - centerTile.x;
+        int dy = t.y - centerTile.y;
 
-        Vector2 pos = new Vector2(
-            dx * TILE_SIZE + frac.x,
-            -(dy * TILE_SIZE + frac.y)
-        );
+        int n = 1 << zoom;
+        if (n > 0)
+        {
+            int wrappedDx = dx;
+            if (wrappedDx > n / 2) wrappedDx -= n;
+            if (wrappedDx < -n / 2) wrappedDx += n;
+            dx = wrappedDx;
+        }
 
+        Vector2 pos = new Vector2(dx * TILE_SIZE + frac.x, -(dy * TILE_SIZE + frac.y));
         marker.anchoredPosition = pos;
 
         if (infoBubble != null && infoBubble.activeSelf)
-        {
-            RectTransform bubble = infoBubble.GetComponent<RectTransform>();
-            bubble.anchoredPosition = pos + new Vector2(0, 90f);
-        }
+            infoBubble.GetComponent<RectTransform>().anchoredPosition = pos + new Vector2(0, 80f);
     }
 
-    // ======================================================
-    // SEARCH (PHOTON)
-    // ======================================================
     void OnSearch()
     {
+        if (searchField == null) return;
         string q = searchField.text.Trim();
         if (q.Length == 0) return;
-
         StartCoroutine(PhotonSearch(q));
     }
 
     IEnumerator PhotonSearch(string q)
     {
-        string url = "https://photon.komoot.io/api/?limit=1&q=" + UnityWebRequest.EscapeURL(q);
-
+        string url = $"https://photon.komoot.io/api/?limit=1&q={UnityWebRequest.EscapeURL(q)}";
         UnityWebRequest req = UnityWebRequest.Get(url);
         yield return req.SendWebRequest();
 
         if (req.result != UnityWebRequest.Result.Success) yield break;
 
-        PhotonResponse result = JsonUtility.FromJson<PhotonResponse>(req.downloadHandler.text);
-        if (result == null || result.features.Length == 0) yield break;
+        PhotonResponse res = JsonUtility.FromJson<PhotonResponse>(req.downloadHandler.text);
+        if (res == null || res.features == null || res.features.Length == 0) yield break;
 
-        var feature = result.features[0];
-        searchedLon = feature.geometry.coordinates[0];
-        searchedLat = feature.geometry.coordinates[1];
-        searchedName = feature.properties.name;
+        var f = res.features[0];
+        searchedLon = f.geometry.coordinates[0];
+        searchedLat = f.geometry.coordinates[1];
+        searchedName = BuildFullAddress(f.properties);
 
         hasSearchMarker = true;
-        marker.gameObject.SetActive(true);
+        if (marker) marker.gameObject.SetActive(true);
 
         StartPan(searchedLat, searchedLon);
     }
 
-    // ======================================================
-    // SMOOTH PAN
-    // ======================================================
     void StartPan(double lat, double lon)
     {
         isPanning = true;
-        panTime = 0;
-
+        panTime = 0f;
         panStartLat = latitude;
         panStartLon = longitude;
-
         panTargetLat = lat;
         panTargetLon = lon;
     }
@@ -383,58 +630,95 @@ public class SlippyMapController_noproxy1 : MonoBehaviour
         float t = Mathf.Clamp01(panTime / panDuration);
         t = t * t * (3 - 2 * t);
 
-        latitude = LerpDouble(panStartLat, panTargetLat, t);
-        longitude = LerpDouble(panStartLon, panTargetLon, t);
+        latitude = Mathf.Lerp((float)panStartLat, (float)panTargetLat, t);
+        longitude = Mathf.Lerp((float)panStartLon, (float)panTargetLon, t);
 
         Vector2 frac = GetFractionalOffset(latitude, longitude);
-        tileContainer.anchoredPosition = new Vector2(frac.x, -frac.y);
+        ApplyFractionalOffset(frac);
 
         Vector2Int newCenter = LatLonToTile(latitude, longitude, zoom);
+        
         if (newCenter != centerTile)
         {
             centerTile = newCenter;
-            LoadAllTiles();
+            dragLoadTimer = dragLoadDelay;
         }
 
         UpdateMarkerPosition();
 
-        if (t >= 1)
+        if (t >= 1f)
         {
             isPanning = false;
-            tileContainer.anchoredPosition = Vector2.zero;
-
             centerTile = LatLonToTile(latitude, longitude, zoom);
-            LoadAllTiles();
+            Vector2 finalFrac = GetFractionalOffset(latitude, longitude);
+            fractionalOffset = finalFrac;
+            
+            LoadAllTiles(); 
+            
+            ApplyFractionalOffset(finalFrac);
             UpdateMarkerPosition();
         }
     }
 
-    // ======================================================
-    // MARKER BUBBLE
-    // ======================================================
     public void OnMarkerClicked()
     {
         if (!hasSearchMarker) return;
-
-        if (infoBubble != null)
-        {
-            infoBubble.SetActive(true);
-            if (infoText != null)
-                infoText.text = searchedName;
-        }
-
+        if (infoBubble != null) infoBubble.SetActive(true);
+        if (infoText != null) infoText.text = searchedName;
         UpdateMarkerPosition();
     }
+    
+    // ===========================
+    // Map Style Control
+    // ===========================
+    public void SetMapStyleByIndex(int styleIndex)
+    {
+        if (styleIndex < 0 || styleIndex >= Enum.GetValues(typeof(MapStyle)).Length)
+        {
+            Debug.LogError($"Indeks gaya peta tidak valid: {styleIndex}");
+            return;
+        }
 
-    // ======================================================
-    // JSON TYPES
-    // ======================================================
-    [System.Serializable]
-    public class PhotonResponse { public PhotonFeature[] features; }
-    [System.Serializable]
-    public class PhotonFeature { public PhotonGeometry geometry; public PhotonProperties properties; }
-    [System.Serializable]
-    public class PhotonGeometry { public double[] coordinates; }
-    [System.Serializable]
-    public class PhotonProperties { public string name; }
+        MapStyle newStyle = (MapStyle)styleIndex;
+        
+        if (newStyle != currentStyle)
+        {
+            Debug.Log($"Mengubah gaya peta dari {currentStyle} ke {newStyle}");
+            currentStyle = newStyle;
+            
+            tileCache.Clear();
+            tileLoadToken.Clear();
+            
+            centerTile = LatLonToTile(latitude, longitude, zoom);
+            LoadAllTiles();
+            ApplyFractionalOffset(GetFractionalOffset(latitude, longitude));
+
+            UpdateMarkerPosition();
+        }
+    }
+
+    [Serializable] public class PhotonResponse { public PhotonFeature[] features; }
+    [Serializable] public class PhotonFeature { public PhotonGeometry geometry; public PhotonProperties properties; }
+    [Serializable] public class PhotonGeometry { public double[] coordinates; }
+    [Serializable] public class PhotonProperties
+    {
+        public string name; public string street; public string housenumber; public string city;
+        public string postcode; public string county; public string state; public string country;
+    }
+
+    string BuildFullAddress(PhotonProperties p)
+    {
+        if (p == null) return "";
+        List<string> parts = new List<string>();
+        if (!string.IsNullOrEmpty(p.name)) parts.Add(p.name);
+        string st = "";
+        if (!string.IsNullOrEmpty(p.street)) st += p.street;
+        if (!string.IsNullOrEmpty(p.housenumber)) st += " " + p.housenumber;
+        if (st.Length > 0) parts.Add(st);
+        if (!string.IsNullOrEmpty(p.city)) parts.Add(p.city);
+        if (!string.IsNullOrEmpty(p.postcode)) parts.Add(p.postcode);
+        if (!string.IsNullOrEmpty(p.state)) parts.Add(p.state);
+        if (!string.IsNullOrEmpty(p.country)) parts.Add(p.country);
+        return string.Join(", ", parts);
+    }
 }

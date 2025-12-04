@@ -9,6 +9,23 @@ using UnityEngine.InputSystem;
 
 public class SlippyMapController_noproxy1 : MonoBehaviour
 {
+
+    // ------------------ RESET TILE SYSTEM ------------------
+    void ResetTiles()
+    {
+        StopAllCoroutines();
+
+        if (tileContainer != null)
+        {
+            foreach (Transform child in tileContainer)
+                Destroy(child.gameObject);
+        }
+        tiles.Clear();
+
+        GenerateTileGrid();
+    }
+    
+    
     [Header("UI (assign in Inspector)")]
     public RectTransform tileContainer;
     public RectTransform inputArea;
@@ -17,6 +34,11 @@ public class SlippyMapController_noproxy1 : MonoBehaviour
     public RectTransform marker;
     public GameObject infoBubble;
     public Text infoText;
+
+    // TAMBAHAN BARU UNTUK SINKRONISASI
+    [Header("Tools Integration")]
+    public MeasureTool measureTool; // <-- Tambahkan ini
+    // AKHIR TAMBAHAN BARU
 
     // FITUR GAYA PETA
     [Header("Map Style Control")]
@@ -115,6 +137,8 @@ public class SlippyMapController_noproxy1 : MonoBehaviour
                 styleButtons[i].onClick.AddListener(() => SetMapStyleByIndex(styleIndex));
             }
         }
+        
+        // PASTIKAN LineContainer ADALAH CHILD dari tileContainer di Hierarchy!
     }
 
     void Update()
@@ -176,13 +200,13 @@ public class SlippyMapController_noproxy1 : MonoBehaviour
     {
         hasSearchMarker = false;
         if (marker) marker.gameObject.SetActive(false);
-        if (infoBubble) infoBubble.SetActive(false);
+        if (infoBubble) infoBubble.gameObject.SetActive(false);
     }
 
     // ===========================
     // Lat/Lon <-> tile math
     // ===========================
-    Vector2Int LatLonToTile(double lat, double lon, int z)
+    public Vector2Int LatLonToTile(double lat, double lon, int z)
     {
         double latRad = lat * Mathf.Deg2Rad;
         double n = Mathf.Pow(2, z);
@@ -194,9 +218,9 @@ public class SlippyMapController_noproxy1 : MonoBehaviour
         int y = Mathf.FloorToInt((float)tileY);
 
         return new Vector2Int(x, y);
-    }
+    } 
 
-    Vector2 GetFractionalOffset(double lat, double lon)
+    public  Vector2 GetFractionalOffset(double lat, double lon)
     {
         double latRad = lat * Mathf.Deg2Rad;
         double n = Mathf.Pow(2, zoom);
@@ -236,7 +260,7 @@ public class SlippyMapController_noproxy1 : MonoBehaviour
                 RawImage img = g.GetComponent<RawImage>();
                 img.rectTransform.sizeDelta = new Vector2(TILE_SIZE, TILE_SIZE);
                 img.raycastTarget = false;
-                img.color = new Color(1, 1, 1, 0.2f); 
+                img.color = new Color(1, 1, 1, 0f); 
 
                 tiles[new Vector2Int(dx, dy)] = img;
             }
@@ -245,6 +269,7 @@ public class SlippyMapController_noproxy1 : MonoBehaviour
 
     void ApplyFractionalOffset(Vector2 frac)
     {
+        // Geser semua tile
         foreach (var kv in tiles)
         {
             Vector2Int off = kv.Key;
@@ -255,6 +280,9 @@ public class SlippyMapController_noproxy1 : MonoBehaviour
             Vector2 pos = new Vector2(off.x * TILE_SIZE - frac.x, -off.y * TILE_SIZE + frac.y);
             img.rectTransform.anchoredPosition = pos;
         }
+
+        // KARENA LineContainer ADALAH CHILD DARI tileContainer, KITA TIDAK PERLU MENGGESERNYA SECARA MANUAL DI SINI.
+        // HANYA Perlu memastikan posisi tileContainer kembali ke (0,0) di LoadAllTiles.
     }
 
     string GetTileURLForStyle(int z, int x, int y)
@@ -287,6 +315,7 @@ public class SlippyMapController_noproxy1 : MonoBehaviour
     {
         loadQueue.Clear(); 
         
+        // PENTING: Mengatur posisi tileContainer ke nol (0,0) sebelum memuat tile baru
         if (tileContainer != null)
             tileContainer.anchoredPosition = Vector2.zero;
 
@@ -319,7 +348,7 @@ public class SlippyMapController_noproxy1 : MonoBehaviour
                 int ty = tyRaw;
                 
                 img.texture = null;
-                img.color = new Color(1, 1, 1, 0.2f);
+                img.color = new Color(1, 1, 1, 0f);
 
                 string key = TileKey(zoom, tx, ty);
                 int token = ++globalLoadCounter;
@@ -466,7 +495,7 @@ public class SlippyMapController_noproxy1 : MonoBehaviour
     }
 
     // ===========================
-    // Drag / Zoom (FINAL REVISI UNTUK INVERSION)
+    // Drag / Zoom
     // ===========================
     void HandleDrag()
     {
@@ -490,10 +519,7 @@ public class SlippyMapController_noproxy1 : MonoBehaviour
         double totalPixels = TILE_SIZE * Math.Pow(2, zoom);
         double pixelPerDeg = totalPixels / 360.0;
         
-        // Pergerakan Longitude (X):
-        // Diubah dari -= menjadi +=.
-        // Jika drag ke kanan (delta.x positif) dan pergerakan sebelumnya terasa terbalik, 
-        // maka += akan membalikkan arah secara efektif.
+        // REVISI (Mengikuti logika drag umum: drag ke kanan MENAMBAH longitude)
         longitude += delta.x / pixelPerDeg; 
 
         // Pergerakan Latitude (Y): Perlu koreksi Mercator (cos(lat))
@@ -501,12 +527,9 @@ public class SlippyMapController_noproxy1 : MonoBehaviour
         double scale = Math.Cos(latRad);
         if (scale <= 0) scale = 0.0001; 
 
-        // Diubah dari += menjadi -=.
-        // Jika drag ke atas (delta.y positif) dan pergerakan sebelumnya terasa terbalik,
-        // maka -= akan membalikkan arah secara efektif.
-        latitude -= delta.y / (pixelPerDeg * scale); 
+        // REVISI (Mengikuti logika drag umum: drag ke atas MENAMBAH latitude)
+        latitude += delta.y / (pixelPerDeg * scale); 
         
-        // Batasi latitude agar tidak melebihi batas Proyeksi Mercator
         latitude = Mathf.Clamp((float)latitude, -85.0511287798f, 85.0511287798f); 
 
         Vector2Int newCenter = LatLonToTile(latitude, longitude, zoom);
@@ -514,6 +537,7 @@ public class SlippyMapController_noproxy1 : MonoBehaviour
         if (newCenter != centerTile)
         {
             centerTile = newCenter;
+            LoadAllTiles(); 
         }
         
         dragLoadTimer = dragLoadDelay;
@@ -522,10 +546,15 @@ public class SlippyMapController_noproxy1 : MonoBehaviour
         ApplyFractionalOffset(frac);
 
         UpdateMarkerPosition();
+        
+        // TAMBAHAN BARU: Memberi tahu MeasureTool bahwa peta bergerak
+        if (measureTool != null && measureTool.isActive)
+        {
+            // Karena LineContainer adalah child dari TileContainer, kita hanya perlu memanggil UpdateLines
+            // atau memastikan LineContainer bergerak bersama TileContainer (diasumsikan sudah child)
+            // Jika LineContainer BUKAN child, lihat Solusi A Opsi B di jawaban sebelumnya
+        }
     }
-    // ===========================
-    // AKHIR REVISI HANDLE DRAG
-    // ===========================
 
     void HandleZoom()
     {
@@ -547,12 +576,18 @@ public class SlippyMapController_noproxy1 : MonoBehaviour
         centerTile = LatLonToTile(latitude, longitude, zoom);
         fractionalOffset = GetFractionalOffset(latitude, longitude);
 
+        // Hentikan pemuatan lama saat zoom berubah drastis
+        StopAllCoroutines(); 
         loadQueue.Clear();
         
         LoadAllTiles(); 
         
         ApplyFractionalOffset(fractionalOffset);
         UpdateMarkerPosition();
+        
+        // TAMBAHAN BARU: Memanggil fungsi reproyeksi
+        if (measureTool != null && measureTool.isActive)
+            measureTool.ReprojectAllPoints();
     }
 
     // ===========================
@@ -657,6 +692,10 @@ public class SlippyMapController_noproxy1 : MonoBehaviour
             
             ApplyFractionalOffset(finalFrac);
             UpdateMarkerPosition();
+            
+            // TAMBAHAN BARU: Memanggil fungsi reproyeksi
+            if (measureTool != null && measureTool.isActive)
+                measureTool.ReprojectAllPoints();
         }
     }
 
@@ -688,6 +727,9 @@ public class SlippyMapController_noproxy1 : MonoBehaviour
             
             tileCache.Clear();
             tileLoadToken.Clear();
+            
+            // PENTING: Menghentikan coroutine pemuatan lama
+            StopAllCoroutines(); 
             
             centerTile = LatLonToTile(latitude, longitude, zoom);
             LoadAllTiles();
@@ -721,4 +763,28 @@ public class SlippyMapController_noproxy1 : MonoBehaviour
         if (!string.IsNullOrEmpty(p.country)) parts.Add(p.country);
         return string.Join(", ", parts);
     }
+    // =========================================================================
+    // BARU: FUNGSI PINDAH LOKASI
+    // =========================================================================
+    public void GoToLocation(double targetLat, double targetLon, int targetZoom = 13)
+    {
+        Debug.Log($"[SlippyMap] Pindah ke: Lat={targetLat}, Lon={targetLon}");
+        
+        latitude = targetLat;
+        longitude = targetLon;
+        zoom = Mathf.Clamp(targetZoom, 2, 19);
+
+        centerTile = LatLonToTile(latitude, longitude, zoom);
+        
+        // Hentikan pemuatan lama
+        StopAllCoroutines(); 
+        
+        ResetTiles(); 
+        LoadAllTiles();
+        
+        // TAMBAHAN BARU: Memanggil fungsi reproyeksi
+        if (measureTool != null && measureTool.isActive)
+            measureTool.ReprojectAllPoints();
+    }
+    
 }

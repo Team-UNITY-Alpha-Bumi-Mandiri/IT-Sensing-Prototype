@@ -15155,9 +15155,19 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Pentool
   dotPrefab: {fileID: 5772534441876956759, guid: afa6796ec70780c4c906d70a30cfa10e, type: 3}
+  distanceModeDotPrefab: {fileID: 0}
+  drawLineModeDotPrefab: {fileID: 5772534441876956759, guid: 0ded3f0c369fe7b4c8e00a2a2056a038, type: 3}
+  drawPointModeDotPrefab: {fileID: 5772534441876956759, guid: 1329ba86cc5e1b04ea3282dcd1727f50, type: 3}
+  polygonModeDotPrefab: {fileID: 5772534441876956759, guid: 0ded3f0c369fe7b4c8e00a2a2056a038, type: 3}
   dotParent: {fileID: 275459367}
   linePrefab: {fileID: 5970537151531175388, guid: ad733679ece75bf42ab396c057c3744e, type: 3}
+  distanceModeLinePrefab: {fileID: 0}
+  drawLineModeLinePrefab: {fileID: 5970537151531175388, guid: 75762073694f19b4a842f0e6f96156c0, type: 3}
+  polygonModeLinePrefab: {fileID: 5970537151531175388, guid: 75762073694f19b4a842f0e6f96156c0, type: 3}
   lineParent: {fileID: 1378086271}
+  enablePreview: 1
+  previewDotAlpha: 0.5
+  previewLineAlpha: 0.5
   inputAreaImage: {fileID: 330928374}
   drawPointsOnly: 0
   polygonMode: 0

@@ -30,7 +30,7 @@ public class MeasureButton : MonoBehaviour
         UpdateVisuals();
     }
 
-    void UpdateVisuals()
+    void UpdateVisuals() 
     {
         buttonImage.color = isOn ? activeColor : inactiveColor;
     }

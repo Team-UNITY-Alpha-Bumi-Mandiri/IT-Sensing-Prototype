@@ -62,6 +62,7 @@
     <Compile Include="Assets\TextMesh Pro\Examples &amp; Extras\Scripts\SimpleScript.cs" />
     <Compile Include="Assets\TextMesh Pro\Examples &amp; Extras\Scripts\Benchmark04.cs" />
     <Compile Include="Assets\TextMesh Pro\Examples &amp; Extras\Scripts\ChatController.cs" />
+    <Compile Include="Assets\UI\Script\Script yang Final\MeasureAreaTool.cs" />
     <Compile Include="Assets\UI\Script\ObjectToggler.cs" />
     <Compile Include="Assets\Script kedua\MeasureSimple.cs" />
     <Compile Include="Assets\UI\Script Uji Coba\TileLoader.cs" />
@@ -116,8 +117,10 @@
     <Compile Include="Assets\UI\Script Uji Coba\UIController.cs" />
     <Compile Include="Assets\TextMesh Pro\Examples &amp; Extras\Scripts\WarpTextExample.cs" />
     <Compile Include="Assets\TextMesh Pro\Examples &amp; Extras\Scripts\TextMeshProFloatingText.cs" />
+    <Compile Include="Assets\UI\Script\Script yang Final\PolygonRenderer.cs" />
     <Compile Include="Assets\UI\Script\SlippyMapController.cs" />
     <Compile Include="Assets\TextMesh Pro\Examples &amp; Extras\Scripts\ShaderPropAnimator.cs" />
+    <Compile Include="Assets\UI\Script\Script yang Final\MeasureAreaButton.cs" />
     <Compile Include="Assets\UI\Script\Script yang Final\MapCursorButton.cs" />
     <Compile Include="Assets\UI\Script\DistanceRulerController.cs" />
     <Compile Include="Assets\Script kedua\PanAndZoom.cs" />

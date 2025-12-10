@@ -1,5 +1,7 @@
 # IT-Sensing-Prototype
-Pembuatan aplikasi Desktop berdasarkan website IT Sensing 
+Pembuatan aplikasi Desktop berdasarkan website IT Sensing
+
+Protyping 1
 
 ✅ CHECKLIST FITUR YANG SUDAH DIBUAT :
 - Layout UI (Sudah ada UI) ✔
@@ -24,3 +26,21 @@ Pembuatan aplikasi Desktop berdasarkan website IT Sensing
 -	Gambar peta masih sering stuttering⚠️
 -	Ada bug yang membuat pergerakan mouse drag dan zoom inverted (sedang diperbaiki) ⚠️
 -	Solusi pencegahan stuttering sebagian tiles sudah pre-fetch dan lazyloading alias loading yang terlambat supaya tidak menumpuk tiles tetapi masih tidak berjalan lancar sepenuhnya ⚠️
+
+
+
+------------------------------------------------------
+Prototyping 2
+------------------------------------------------------
+
+✅ LIST DEBUGGING DAN FITUR :
+- Layout UI ada pop up ✔
+- Rework framework untuk mapping supaya lebih mulus loadingnya ✔
+- Fitur Measurement berhasil dan menempel di map jika digerakan ✔
+- Tidak ada penggunaan script proxy cloudflare lagi ✔
+- masih memiliki fitur yg sama dengan prototyping 1 ✔
+
+  KENDALA :
+  - Map jika digerakan terlalu jauh masih tidak real time
+  - Garis measurement jika di zoom in zoom out masih bergeser terlalu jauh
+  - Kemungkinan masih harus debugging dan rework framework map lagi

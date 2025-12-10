@@ -307,11 +307,7 @@ public class DrawTool : MonoBehaviour
         {
             if (pts == 0) msg = "Click to start shape";
             else if (pts < 3) msg = "Click to continue shape";
-            else
-            {
-                var temp = new List<Vector2>(currentDrawObject.coordinates) { mouseLL };
-                msg = $"Area: {FormatArea(CalcArea(temp))}\nClick first point to close";
-            }
+            else msg = "Click first point to close";
         }
 
         if (tooltipText) tooltipText.text = msg;
@@ -340,27 +336,7 @@ public class DrawTool : MonoBehaviour
         return t;
     }
 
-    float CalcArea(List<Vector2> coords)
-    {
-        if (coords.Count < 3) return 0;
-        float avgLat = 0;
-        foreach (var c in coords) avgLat += c.x;
-        avgLat /= coords.Count;
 
-        float kmLat = 111.32f, kmLon = 111.32f * Mathf.Cos(avgLat * Mathf.Deg2Rad);
-        var km = new List<Vector2>();
-        foreach (var c in coords) km.Add(new Vector2(c.y * kmLon, c.x * kmLat));
-
-        float area = 0;
-        for (int i = 0; i < km.Count; i++)
-        {
-            int j = (i + 1) % km.Count;
-            area += km[i].x * km[j].y - km[j].x * km[i].y;
-        }
-        return Mathf.Abs(area) / 2f;
-    }
-
-    string FormatArea(float km2) => km2 < 1 ? $"{km2 * 1000000:F0} m²" : $"{km2:F2} km²";
 
     // ========== PUBLIC API ==========
     public void RebuildAllVisuals()

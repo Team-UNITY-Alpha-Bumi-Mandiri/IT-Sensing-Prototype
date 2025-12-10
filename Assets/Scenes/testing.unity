@@ -8789,17 +8789,6 @@ GameObject:
   m_CorrespondingSourceObject: {fileID: 2055070364418848888, guid: 783b4a1dcf2eaa742b874c759526f13b, type: 3}
   m_PrefabInstance: {fileID: 145850068}
   m_PrefabAsset: {fileID: 0}
---- !u!114 &308197933 stripped
-MonoBehaviour:
-  m_CorrespondingSourceObject: {fileID: 3683547884663849430, guid: 783b4a1dcf2eaa742b874c759526f13b, type: 3}
-  m_PrefabInstance: {fileID: 145850068}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 308197930}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 4e29b1a8efbd4b44bb3f3716e73f07ff, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
 --- !u!114 &308197937
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -8814,9 +8803,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::DrawModeButton
   targetMode: 0
   drawTool: {fileID: 1971986123}
-  mapController: {fileID: 1845380334}
-  myButton: {fileID: 308197933}
-  buttonImage: {fileID: 0}
   activeColor: {r: 0.1, g: 0.55, b: 0.28, a: 1}
   inactiveColor: {r: 1, g: 1, b: 1, a: 1}
 --- !u!1 &308284080
@@ -22797,17 +22783,6 @@ GameObject:
   m_CorrespondingSourceObject: {fileID: 2055070364418848888, guid: 783b4a1dcf2eaa742b874c759526f13b, type: 3}
   m_PrefabInstance: {fileID: 576121535}
   m_PrefabAsset: {fileID: 0}
---- !u!114 &828265717 stripped
-MonoBehaviour:
-  m_CorrespondingSourceObject: {fileID: 3683547884663849430, guid: 783b4a1dcf2eaa742b874c759526f13b, type: 3}
-  m_PrefabInstance: {fileID: 576121535}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 828265714}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 4e29b1a8efbd4b44bb3f3716e73f07ff, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
 --- !u!114 &828265721
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -22822,9 +22797,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::LineDrawButton
   targetMode: 2
   drawTool: {fileID: 1971986123}
-  mapController: {fileID: 1845380334}
-  myButton: {fileID: 828265717}
-  buttonImage: {fileID: 0}
   activeColor: {r: 0.1, g: 0.55, b: 0.28, a: 1}
   inactiveColor: {r: 1, g: 1, b: 1, a: 1}
 --- !u!1 &836765600
@@ -56146,22 +56118,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::LineDrawButton
   targetMode: 1
   drawTool: {fileID: 1971986123}
-  mapController: {fileID: 1845380334}
-  myButton: {fileID: 1970962226}
-  buttonImage: {fileID: 0}
   activeColor: {r: 0.1, g: 0.55, b: 0.28, a: 1}
   inactiveColor: {r: 1, g: 1, b: 1, a: 1}
---- !u!114 &1970962226 stripped
-MonoBehaviour:
-  m_CorrespondingSourceObject: {fileID: 3683547884663849430, guid: 783b4a1dcf2eaa742b874c759526f13b, type: 3}
-  m_PrefabInstance: {fileID: 1829697889}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1970962223}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 4e29b1a8efbd4b44bb3f3716e73f07ff, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
 --- !u!1 &1971986121
 GameObject:
   m_ObjectHideFlags: 0
@@ -56215,13 +56173,8 @@ MonoBehaviour:
   pointMarkerPrefab: {fileID: 1535625938121269306, guid: 402d1f229ad6e0947b49edce65f93966, type: 3}
   lineSegmentPrefab: {fileID: 1680065311165506179, guid: 14091ed4ab447834b9ef5bbc547b1c0c, type: 3}
   polygonFillPrefab: {fileID: 8721766589298691168, guid: d1adcd2aacd739e47b7201f3277d131e, type: 3}
-  vertexPointPrefab: {fileID: 2987193039161309952, guid: 4abc467253eb98c468ed4efb68999513, type: 3}
+  vertexPointPrefab: {fileID: 4020721946471017464, guid: d13dc7cabdcfdf243b0bb924c726892d, type: 3}
   tooltipPrefab: {fileID: 4361726373713627783, guid: cd65bac8ef410f74f87a319c46e8640a, type: 3}
-  pointColor: {r: 0, g: 0, b: 1, a: 1}
-  lineColor: {r: 1, g: 0, b: 0, a: 1}
-  polygonLineColor: {r: 0, g: 1, b: 0, a: 1}
-  polygonFillColor: {r: 0, g: 1, b: 0, a: 0.3}
-  doubleClickThreshold: 0.3
   snapDistancePixels: 30
   currentMode: 0
 --- !u!1001 &1975075207

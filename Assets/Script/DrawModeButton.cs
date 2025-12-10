@@ -1,68 +1,40 @@
 using UnityEngine;
 using UnityEngine.UI;
 
-/// <summary>
-/// Generic button untuk mengaktifkan mode drawing (Point/Line/Polygon)
-/// Menggantikan PointDrawButton, LineDrawButton, dan PolygonDrawButton
-/// </summary>
 public class DrawModeButton : MonoBehaviour
 {
-    [Header("Mode Selection")]
-    public DrawTool.DrawMode targetMode = DrawTool.DrawMode.Point;
-
-    [Header("References")]
+    public DrawTool.DrawMode targetMode;
     public DrawTool drawTool;
-    public SimpleMapController_Baru mapController;
-    public Button myButton;
-    public Image buttonImage;
+    public Color activeColor = new Color(0.1f, 0.55f, 0.28f), inactiveColor = Color.white;
     
-    [Header("Colors")]
-    public Color activeColor = new Color(0.1f, 0.55f, 0.28f);
-    public Color inactiveColor = Color.white;
-
-    private bool isOn = false;
+    Button btn;
+    Image img;
+    bool isOn;
 
     void Start()
     {
-        if (myButton == null) myButton = GetComponent<Button>();
-        if (buttonImage == null) buttonImage = GetComponent<Image>();
-        
-        myButton?.onClick.AddListener(OnClick);
+        if (TryGetComponent(out btn)) btn.onClick.AddListener(OnClick);
+        TryGetComponent(out img);
         UpdateVisuals();
     }
 
     void OnClick()
     {
         isOn = !isOn;
-
-        if (isOn)
-        {
-            drawTool?.ActivateMode(targetMode);
-        }
-        else
-        {
-            drawTool?.DeactivateMode(targetMode);
-        }
-
+        if (isOn) drawTool?.ActivateMode(targetMode);
+        else drawTool?.DeactivateMode(targetMode);
         UpdateVisuals();
     }
 
     void UpdateVisuals()
     {
-        if (buttonImage != null)
-            buttonImage.color = isOn ? activeColor : inactiveColor;
+        if (img) img.color = isOn ? activeColor : inactiveColor;
     }
 
     void Update()
     {
-        if (drawTool == null) return;
-        
-        bool modeActive = drawTool.IsModeActive(targetMode);
-        
-        if (modeActive != isOn)
-        {
-            isOn = modeActive;
-            UpdateVisuals();
-        }
+        if (!drawTool) return;
+        bool active = drawTool.IsModeActive(targetMode);
+        if (active != isOn) { isOn = active; UpdateVisuals(); }
     }
 }

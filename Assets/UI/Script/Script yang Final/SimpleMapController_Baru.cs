@@ -48,6 +48,7 @@ public bool isInputEnabled = true; // <-- Tambahkan ini (Default True/Hijau)
     // Drag Logic
     private bool isDragging = false;
     private Vector2 lastMousePos;
+    private bool wasInputEnabled = true; // Track previous state
     private int globalUpdateID = 0; // Token validasi update
 
     struct TileRequest
@@ -76,7 +77,20 @@ public bool isInputEnabled = true; // <-- Tambahkan ini (Default True/Hijau)
     void HandleInput()
     {
         if (Mouse.current == null) return;
-        if (!isInputEnabled) return;
+        
+        // Reset lastMousePos when input is re-enabled to prevent jump
+        if (isInputEnabled && !wasInputEnabled)
+        {
+            lastMousePos = Mouse.current.position.ReadValue();
+        }
+        wasInputEnabled = isInputEnabled;
+        
+        if (!isInputEnabled) 
+        {
+            // Reset drag state when input is disabled
+            isDragging = false;
+            return;
+        }
         // --- ZOOM ---
         if (IsMouseInArea())
         {

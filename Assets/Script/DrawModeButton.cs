@@ -38,12 +38,10 @@ public class DrawModeButton : MonoBehaviour
         if (isOn)
         {
             drawTool?.ActivateMode(targetMode);
-            if (mapController != null) mapController.isInputEnabled = false;
         }
         else
         {
             drawTool?.DeactivateMode(targetMode);
-            if (mapController != null) mapController.isInputEnabled = true;
         }
 
         UpdateVisuals();
@@ -65,7 +63,6 @@ public class DrawModeButton : MonoBehaviour
         {
             isOn = modeActive;
             UpdateVisuals();
-            if (mapController != null) mapController.isInputEnabled = !isOn;
         }
     }
 }

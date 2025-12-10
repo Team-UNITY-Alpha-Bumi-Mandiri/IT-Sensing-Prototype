@@ -44,3 +44,10 @@ Prototyping 2
   - Map jika digerakan terlalu jauh masih tidak real time
   - Garis measurement jika di zoom in zoom out masih bergeser terlalu jauh
   - Kemungkinan masih harus debugging dan rework framework map lagi
+
+
+---------------------------------------------------------
+Prototyping 3
+---------------------------------------------------------
+✅ LIST DEBUGGING DAN FITUR :
+- 

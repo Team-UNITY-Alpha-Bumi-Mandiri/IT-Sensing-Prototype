@@ -21,7 +21,7 @@ public class DrawTool : MonoBehaviour
     Color lineColor = new Color(0f, 0.424f, 1f), polygonLineColor = new Color(0f, 0.424f, 1f);
     Color polygonFillColor = new Color(0f, 0.424f, 1f, 0.3f);
 
-    public enum DrawMode { Point, Line, Polygon }
+    public enum DrawMode { Point, Line, Polygon, Delete }
     public DrawMode currentMode = DrawMode.Point;
 
     // State
@@ -76,9 +76,12 @@ public class DrawTool : MonoBehaviour
         else HideGhost();
         UpdateTooltip(mousePos);
 
-        // Left click = Add point
+        // Left click
         if (Mouse.current.leftButton.wasPressedThisFrame)
-            AddPoint(mapController.ScreenToLatLon(mousePos), mousePos);
+        {
+            if (activeMode == DrawMode.Delete) HandleDeleteClick(mousePos);
+            else AddPoint(mapController.ScreenToLatLon(mousePos), mousePos);
+        }
         // Right click = Undo
         if (Mouse.current.rightButton.wasPressedThisFrame) UndoLast();
         // ESC = Cancel
@@ -153,6 +156,78 @@ public class DrawTool : MonoBehaviour
         activeMode = DrawMode.Point;
         HideGhost();
         HideTooltip();
+    }
+
+    void HandleDeleteClick(Vector2 mousePos)
+    {
+        DrawObject toDelete = null;
+        float minDist = snapDistancePixels; 
+
+        // Reverse iterate to check topmost objects first
+        for (int i = allDrawObjects.Count - 1; i >= 0; i--)
+        {
+            var obj = allDrawObjects[i];
+            if (obj.coordinates == null || obj.coordinates.Count == 0) continue;
+
+            // Convert all points to Screen Space for accurate distance check
+            List<Vector2> screenPoints = new();
+            foreach(var c in obj.coordinates) screenPoints.Add(LatLonToScreen(c));
+
+            bool hit = false;
+            if (obj.type == DrawMode.Point)
+            {
+                if (Vector2.Distance(mousePos, screenPoints[0]) < minDist) hit = true;
+            }
+            else
+            {
+                // Check distance to each segment
+                for (int k = 0; k < screenPoints.Count - 1; k++)
+                    if (GetPointLineDistance(mousePos, screenPoints[k], screenPoints[k+1]) < minDist) { hit = true; break; }
+                
+                // For polygons, also check the closing segment
+                if (!hit && obj.type == DrawMode.Polygon && screenPoints.Count >= 3)
+                {
+                    if (GetPointLineDistance(mousePos, screenPoints[^1], screenPoints[0]) < minDist) hit = true;
+                    if (!hit && IsPointInPolygon(mousePos, screenPoints)) hit = true;
+                }
+            }
+
+            if (hit)
+            {
+                toDelete = obj;
+                break;
+            }
+        }
+
+        if (toDelete != null)
+        {
+            if (toDelete.parentObject) Destroy(toDelete.parentObject);
+            else ClearVisuals(toDelete);
+            allDrawObjects.Remove(toDelete);
+        }
+    }
+
+    bool IsPointInPolygon(Vector2 p, List<Vector2> poly)
+    {
+        bool inside = false;
+        for (int i = 0, j = poly.Count - 1; i < poly.Count; j = i++)
+        {
+            if (((poly[i].y > p.y) != (poly[j].y > p.y)) &&
+                (p.x < (poly[j].x - poly[i].x) * (p.y - poly[i].y) / (poly[j].y - poly[i].y) + poly[i].x))
+            {
+                inside = !inside;
+            }
+        }
+        return inside;
+    }
+
+    float GetPointLineDistance(Vector2 p, Vector2 a, Vector2 b)
+    {
+        Vector2 n = b - a;
+        float len2 = n.sqrMagnitude;
+        if (len2 == 0) return Vector2.Distance(p, a);
+        float t = Mathf.Clamp01(Vector2.Dot(p - a, n) / len2);
+        return Vector2.Distance(p, a + n * t);
     }
 
     void CreatePointObject(Vector2 latLon)
@@ -335,8 +410,6 @@ public class DrawTool : MonoBehaviour
             t += CalcDist(currentDrawObject.coordinates[i - 1], currentDrawObject.coordinates[i]);
         return t;
     }
-
-
 
     // ========== PUBLIC API ==========
     public void RebuildAllVisuals()

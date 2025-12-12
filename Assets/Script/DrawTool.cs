@@ -3,6 +3,7 @@ using UnityEngine.UI;
 using System.Collections.Generic;
 using UnityEngine.InputSystem;
 using TMPro;
+using UnityEngine.Events;
 
 public class DrawTool : MonoBehaviour
 {
@@ -23,6 +24,9 @@ public class DrawTool : MonoBehaviour
 
     public enum DrawMode { Point, Line, Polygon, Delete }
     public DrawMode currentMode = DrawMode.Point;
+    
+    [Header("Events")]
+    public UnityEvent<DrawObject> onDrawComplete;
 
     // State
     bool isDrawing, isToolActive;
@@ -138,6 +142,8 @@ public class DrawTool : MonoBehaviour
 
         RebuildVisuals(currentDrawObject, false);
         allDrawObjects.Add(currentDrawObject);
+        // Invoke event
+        onDrawComplete?.Invoke(currentDrawObject);
         ResetState();
     }
 
@@ -450,6 +456,37 @@ public class DrawTool : MonoBehaviour
             else ClearVisuals(last);
             allDrawObjects.RemoveAt(allDrawObjects.Count - 1);
         }
+    }
+
+    public void ClearAll()
+    {
+        Debug.Log($"[DrawTool] ClearAll called. Objects: {allDrawObjects.Count}");
+        // Iterate backwards for safety when removing/modifying
+        for (int i = allDrawObjects.Count - 1; i >= 0; i--)
+        {
+            var obj = allDrawObjects[i];
+            if (obj.parentObject) Destroy(obj.parentObject);
+            else ClearVisuals(obj); // Fallback
+        }
+        allDrawObjects.Clear();
+        drawingCounter = 0;
+        ResetState();
+    }
+
+    public void LoadPolygon(List<Vector2> coords)
+    {
+        if (coords == null || coords.Count == 0) return;
+        
+        var obj = new DrawObject
+        {
+            id = System.Guid.NewGuid().ToString(),
+            type = DrawMode.Polygon,
+            coordinates = new List<Vector2>(coords),
+            parentObject = CreateParent($"Loaded_Polygon")
+        };
+        
+        RebuildVisuals(obj, false);
+        allDrawObjects.Add(obj);
     }
 
     public string ExportToJSON() => JsonUtility.ToJson(new Wrapper { objects = allDrawObjects });

@@ -244,9 +244,9 @@ MonoBehaviour:
   m_SceneHierarchy:
     m_TreeViewState:
       scrollPos: {x: 0, y: 0}
-      m_SelectedIDs: 
-      m_LastClickedID: 0
-      m_ExpandedIDs: 02fbffff
+      m_SelectedIDs: 6ee1ffff
+      m_LastClickedID: -7826
+      m_ExpandedIDs: 30ddffff5ce0ffff70e0ffff6ee1ffffe6e1ffff8ce3ffff72e4ffff02fbffff829b0000269c0000c49d00008aa40000e2a50000
       m_RenameOverlay:
         m_UserAcceptedRename: 0
         m_Name: 
@@ -779,9 +779,9 @@ MonoBehaviour:
   m_AudioPlay: 0
   m_DebugDrawModesUseInteractiveLightBakingData: 0
   m_Position:
-    m_Target: {x: 997.834, y: 527.97473, z: -6.733408}
+    m_Target: {x: 506.4194, y: 653.9108, z: -4.962851}
     speed: 2
-    m_Value: {x: 997.834, y: 527.97473, z: -6.733408}
+    m_Value: {x: 521.63904, y: 645.01764, z: -5.197111}
   m_RenderMode: 0
   m_CameraMode:
     drawMode: 0
@@ -831,9 +831,9 @@ MonoBehaviour:
     speed: 2
     m_Value: {x: 0, y: 0, z: 0, w: 1}
   m_Size:
-    m_Target: 674.2063
+    m_Target: 497.15088
     speed: 2
-    m_Value: 674.2063
+    m_Value: 520.57684
   m_Ortho:
     m_Target: 1
     speed: 2
@@ -941,7 +941,7 @@ MonoBehaviour:
     m_SkipHidden: 0
     m_SearchArea: 1
     m_Folders:
-    - Assets/Script
+    - Assets/Prefabs
     m_Globs: []
     m_ProductIds: 
     m_AnyWithAssetOrigin: 0
@@ -951,16 +951,16 @@ MonoBehaviour:
   m_ViewMode: 1
   m_StartGridSize: 64
   m_LastFolders:
-  - Assets/Script
+  - Assets/Prefabs
   m_LastFoldersGridSize: -1
   m_LastProjectPath: F:\MagangHUB Batch 2\Git\IT-Sensing-Prototype
   m_LockTracker:
     m_IsLocked: 0
   m_FolderTreeState:
-    scrollPos: {x: 0, y: 34}
-    m_SelectedIDs: feab0000
-    m_LastClickedID: 44030
-    m_ExpandedIDs: 000000009aab00009cab00009eab000000ca9a3b
+    scrollPos: {x: 0, y: 50}
+    m_SelectedIDs: 0cac0000
+    m_LastClickedID: 44044
+    m_ExpandedIDs: 00000000aeab0000b0ab0000b2ab000018ac000000ca9a3b
     m_RenameOverlay:
       m_UserAcceptedRename: 0
       m_Name: 
@@ -989,7 +989,7 @@ MonoBehaviour:
     scrollPos: {x: 0, y: 0}
     m_SelectedIDs: 
     m_LastClickedID: 0
-    m_ExpandedIDs: 000000009aab00009cab00009eab0000
+    m_ExpandedIDs: 00000000aeab0000b0ab0000b2ab0000
     m_RenameOverlay:
       m_UserAcceptedRename: 0
       m_Name: 
@@ -1015,8 +1015,8 @@ MonoBehaviour:
       m_Icon: {fileID: 0}
       m_ResourceFile: 
   m_ListAreaState:
-    m_SelectedInstanceIDs: 
-    m_LastClickedInstanceID: 0
+    m_SelectedInstanceIDs: 6ee1ffff
+    m_LastClickedInstanceID: -7826
     m_HadKeyboardFocusLastEvent: 1
     m_ExpandedInstanceIDs: c623000030b5000096f00200
     m_RenameOverlay:
@@ -1068,10 +1068,10 @@ MonoBehaviour:
     m_TextWithWhitespace: "Console\u200B"
   m_Pos:
     serializedVersion: 2
-    x: 0
-    y: 786
-    width: 1352
-    height: 248
+    x: 1
+    y: 787
+    width: 1351
+    height: 246
   m_SerializedDataModeController:
     m_DataMode: 0
     m_PreferredDataMode: 0
@@ -1102,8 +1102,8 @@ MonoBehaviour:
     y: 0
     width: 566
     height: 972
-  m_MinSize: {x: 276, y: 76}
-  m_MaxSize: {x: 4001, y: 4026}
+  m_MinSize: {x: 275, y: 50}
+  m_MaxSize: {x: 4000, y: 4000}
   m_ActualView: {fileID: 13}
   m_Panes:
   - {fileID: 13}

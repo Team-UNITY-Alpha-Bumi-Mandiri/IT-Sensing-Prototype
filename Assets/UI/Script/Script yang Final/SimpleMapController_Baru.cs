@@ -249,8 +249,12 @@ public bool isInputEnabled = true; // <-- Tambahkan ini (Default True/Hijau)
         foreach (var kvp in tiles)
         {
             // Posisi relatif terhadap anchor container
-            float posX = (kvp.Key.x * TILE_SIZE) - offset.x;
-            float posY = -(kvp.Key.y * TILE_SIZE) + offset.y;
+            // RAWIMAGE PIVOT IS CENTER (0.5, 0.5) BUT LOGIC ASSUMES TOP-LEFT?
+            // Compensate for Pivot (0.5, 0.5) -> Add TILE_SIZE/2 to X, Subtract TILE_SIZE/2 from Y
+            
+            float posX = (kvp.Key.x * TILE_SIZE) - offset.x + (TILE_SIZE * 0.5f);
+            float posY = -(kvp.Key.y * TILE_SIZE) + offset.y - (TILE_SIZE * 0.5f);
+            
             kvp.Value.rectTransform.anchoredPosition = new Vector2(posX, posY);
         }
     }

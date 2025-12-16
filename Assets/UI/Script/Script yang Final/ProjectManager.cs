@@ -162,6 +162,7 @@ public class ProjectManager : MonoBehaviour
         drawTool.ClearAll();
 
         // Activate Polygon Mode
+        drawTool.forceTextureOnNext = true; // Enable custom texture for this specific drawing
         drawTool.ActivateMode(DrawTool.DrawMode.Polygon);
         Debug.Log("Draw mode activated. Draw a polygon to define the project area.");
     }
@@ -221,7 +222,7 @@ public class ProjectManager : MonoBehaviour
             
             if (proj.polygonCoords != null && proj.polygonCoords.Count > 0)
             {
-                drawTool.LoadPolygon(proj.polygonCoords); // Show this one
+                drawTool.LoadPolygon(proj.polygonCoords, true); // Show this one WITH texture
             }
         }
         

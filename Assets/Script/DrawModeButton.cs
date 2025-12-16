@@ -1,6 +1,7 @@
 using UnityEngine;
 using UnityEngine.UI;
 
+// Script tombol untuk pilih mode gambar (Point, Line, Polygon, Delete)
 public class DrawModeButton : MonoBehaviour
 {
     public DrawTool.DrawMode targetMode;
@@ -18,6 +19,7 @@ public class DrawModeButton : MonoBehaviour
         UpdateVisuals();
     }
 
+    // Toggle mode saat diklik
     void OnClick()
     {
         isOn = !isOn;
@@ -26,11 +28,10 @@ public class DrawModeButton : MonoBehaviour
         UpdateVisuals();
     }
 
-    void UpdateVisuals()
-    {
-        if (img) img.color = isOn ? activeColor : inactiveColor;
-    }
+    // Ubah warna tombol sesuai status aktif
+    void UpdateVisuals() => img.color = isOn ? activeColor : inactiveColor;
 
+    // Sinkronisasi status tombol dengan mode yang aktif di DrawTool
     void Update()
     {
         if (!drawTool) return;

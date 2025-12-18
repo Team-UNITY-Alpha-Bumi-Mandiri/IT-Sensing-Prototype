@@ -2,9 +2,7 @@ using UnityEngine;
 using UnityEngine.UI;
 using System.Collections.Generic;
 using UnityEngine.InputSystem;
-using UnityEngine.EventSystems;
 using TMPro;
-using System.Linq;
 
 public class MeasureAreaTool : MonoBehaviour
 {
@@ -12,35 +10,36 @@ public class MeasureAreaTool : MonoBehaviour
     public SimpleMapController_Baru mapController;
     public RectTransform container; 
 
+    [Header("UI References")]
+    public GameObject infoBoxPanel;      // Panel Kotak Putih di kiri bawah
+    public TextMeshProUGUI infoBoxText;  // Teks di dalam kotak tersebut
+
     [Header("Prefabs")]
     public GameObject pointPrefab; 
     public GameObject linePrefab;  
     public GameObject tooltipPrefab; 
-    public GameObject areaFillPrefab; 
+    public GameObject measurementLabelPrefab; // Label kecil di atas garis
+    public GameObject centerLabelPrefab;      // (BARU) Label Area di tengah Polygon
 
     [Header("Settings")]
     public Color drawingColor = Color.white;  
     public Color finishedColor = new Color(1f, 0.92f, 0.016f, 0.5f); // Kuning Transparan
     public float closeSnapDistancePixels = 30f; 
 
-    // State
+    // STATE
     private bool isActive = false;
     private bool isComplete = false;
     private List<Vector2> waypoints = new List<Vector2>(); 
     private List<GameObject> spawnedVisuals = new List<GameObject>(); 
 
-    // Visual Objects
+    // HELPER
     private GameObject ghostLineObj;
-    private RectTransform ghostLineRect;
     private GameObject tooltipObj;
     private TMP_Text tooltipText;
-    private RectTransform tooltipRect;
-    
-    // FILL OBJECT (Disimpan agar bisa diupdate tiap frame)
     private GameObject currentFillObj; 
     private PolygonRenderer currentPolyRenderer;
 
-    // Cache Sync Peta
+    // CACHE
     private double lastLat, lastLon;
     private int lastZoom;
 
@@ -52,15 +51,16 @@ public class MeasureAreaTool : MonoBehaviour
             CreateGhostLine();
             CreateTooltip();
         }
+        UpdateInfoBoxUI(); 
     }
 
     void Update()
     {
         if (!isActive) return;
-        if (mapController == null || container == null) return;
-
-        bool mapChanged = (mapController.latitude != lastLat) ||
-                          (mapController.longitude != lastLon) ||
+        
+        // SYNC PETA
+        bool mapChanged = (mapController.latitude != lastLat) || 
+                          (mapController.longitude != lastLon) || 
                           (mapController.zoom != lastZoom);
 
         if (mapChanged)
@@ -71,309 +71,242 @@ public class MeasureAreaTool : MonoBehaviour
             lastZoom = mapController.zoom;
         }
 
-        if (!isComplete)
-        {
-            HandleInput();
-        }
+        // INPUT
+        if (!isComplete) HandleInput();
         else
         {
-            if (tooltipObj != null) tooltipObj.SetActive(false);
-            if (ghostLineObj != null) ghostLineObj.SetActive(false);
+            if (tooltipObj) tooltipObj.SetActive(false);
+            if (ghostLineObj) ghostLineObj.SetActive(false);
         }
     }
 
-    void HandleInput()
+    void HandleInput() 
     {
         if (Mouse.current == null) return;
         Vector2 mousePos = Mouse.current.position.ReadValue();
-
-        if (ghostLineObj == null) CreateGhostLine();
-        if (tooltipObj == null) CreateTooltip();
-
-        // 1. UPDATE VISUAL FILL & GHOST LINE (REAL-TIME)
+        
+        if (!ghostLineObj) CreateGhostLine();
+        if (!tooltipObj) CreateTooltip();
+        
         Vector2 mouseLatLon = mapController.ScreenToLatLon(mousePos);
-        bool canClose = false;
+        DrawAreaFill(mouseLatLon); 
 
-        // --- PREVIEW FILL AREA (Fitur Baru) ---
-        // Kita kirim posisi mouse saat ini sebagai "ujung" sementara poligon
-        DrawAreaFill(mouseLatLon);
-
-        if (tooltipObj != null)
-        {
-            RectTransformUtility.ScreenPointToLocalPointInRectangle(container, mousePos, null, out Vector2 localMouse);
-            tooltipRect.anchoredPosition = localMouse + new Vector2(20, -20);
-            tooltipObj.SetActive(true);
-
-            string msg = "Click to start drawing shape.";
-            
-            if (waypoints.Count > 0)
-            {
-                msg = "Click to continue drawing shape.";
-                
-                // Cek Snap Close (Minimal 3 titik total termasuk mouse cursor jika waypoints count >= 2)
-                if (waypoints.Count >= 3)
-                {
-                    Vector2 startPos = mapController.LatLonToLocalPosition(waypoints[0].x, waypoints[0].y);
-                    if (Vector2.Distance(startPos, localMouse) < closeSnapDistancePixels)
-                    {
-                        msg = "Click first point to close this shape.";
-                        canClose = true;
-                    }
-                }
-            }
-            tooltipText.text = msg;
-            tooltipObj.transform.SetAsLastSibling(); 
-
-            // Update Ghost Line
-            if (waypoints.Count > 0 && ghostLineObj != null)
-            {
-                Vector2 lastPoint = waypoints[waypoints.Count - 1];
-                Vector2 targetForGhost = mouseLatLon;
-                
-                if (canClose) targetForGhost = waypoints[0]; 
-
-                DrawLineUI(ghostLineRect, lastPoint, targetForGhost, drawingColor);
-                ghostLineObj.SetActive(true);
-                ghostLineObj.transform.SetAsLastSibling();
-            }
-            else if (ghostLineObj != null)
-            {
-                ghostLineObj.SetActive(false);
-            }
+        // Update Tooltip
+        if (tooltipObj != null) {
+             RectTransformUtility.ScreenPointToLocalPointInRectangle(container, mousePos, null, out Vector2 localMouse);
+             tooltipObj.GetComponent<RectTransform>().anchoredPosition = localMouse + new Vector2(20, -20);
+             tooltipObj.SetActive(true);
+             tooltipText.text = "Click to add point";
+             
+             if (waypoints.Count >= 3) {
+                 Vector2 startScreen = mapController.LatLonToLocalPosition(waypoints[0].x, waypoints[0].y);
+                 if (Vector2.Distance(startScreen, localMouse) < closeSnapDistancePixels) {
+                     tooltipText.text = "Click Start to Finish";
+                 }
+             }
+             tooltipObj.transform.SetAsLastSibling();
         }
 
-        // --- KLIK KIRI ---
-        if (Mouse.current.leftButton.wasPressedThisFrame)
-        {
-            // Cek Close Shape
-            if (waypoints.Count >= 3)
-            {
-                Vector2 startScreenPos = mapController.LatLonToLocalPosition(waypoints[0].x, waypoints[0].y);
+        if (Mouse.current.leftButton.wasPressedThisFrame) {
+            if (waypoints.Count >= 3) {
+                Vector2 startScreen = mapController.LatLonToLocalPosition(waypoints[0].x, waypoints[0].y);
                 RectTransformUtility.ScreenPointToLocalPointInRectangle(container, mousePos, null, out Vector2 localM);
-
-                if (Vector2.Distance(startScreenPos, localM) < closeSnapDistancePixels)
-                {
-                    FinishShape();
+                
+                if (Vector2.Distance(startScreen, localM) < closeSnapDistancePixels) {
+                    FinishShape(); 
                     return;
                 }
             }
-
             AddPoint(mouseLatLon);
         }
     }
 
-    void AddPoint(Vector2 latLon)
-    {
-        waypoints.Add(latLon);
-        // RebuildVisuals akan menggambar ulang titik & garis statis
+    void AddPoint(Vector2 latLon) { waypoints.Add(latLon); RebuildVisuals(); }
+
+    void FinishShape() { 
+        isComplete = true; 
         RebuildVisuals(); 
+        UpdateInfoBoxUI(); 
     }
 
-    void FinishShape()
+    // =================================================================
+    // LOGIKA UI UTAMA (FORMAT TEKS PERSIS REFERENSI)
+    // =================================================================
+    void UpdateInfoBoxUI()
     {
-        isComplete = true;
+        if (infoBoxPanel == null || infoBoxText == null) return;
         
-        if (ghostLineObj != null) ghostLineObj.SetActive(false);
-        if (tooltipObj != null) tooltipObj.SetActive(false);
-        
-        RebuildVisuals();
-        
-        Debug.Log("Area selesai dibuat!");
+        infoBoxPanel.SetActive(isActive);
+
+        if (!isComplete || waypoints.Count < 3)
+        {
+            // Tampilan Awal (Kosong)
+            infoBoxText.text = "<b><u>Measurement</u></b>\n\nArea & Perimeter\nwill appear here.";
+        }
+        else
+        {
+            float perimeter = CalculatePerimeter();
+            float area = CalculateArea();
+
+            // Format Angka: "N2" artinya angka dengan koma pemisah ribuan dan 2 desimal
+            // Contoh: 155,489,393.23
+            string sArea = $"{area:N2} m²"; 
+            string sPerim = $"{perimeter:N2} m";
+
+            // FORMAT HTML TEXT MESH PRO
+            // <u> = Underline, <b> = Bold
+            infoBoxText.text = $"<b><u>Measurement</u></b>\n\n" +
+                               $"<b>Area:</b>\n{sArea}\n\n" +
+                               $"<b>Perimeter :</b>\n{sPerim}";
+        }
     }
 
-    // ========================================================================
-    // LOGIKA FILL (REAL-TIME UPDATE)
-    // ========================================================================
-    
-    // Parameter 'dynamicTip' adalah posisi kursor mouse.
-    // Jika null, berarti kita hanya menggambar waypoints yang sudah fix.
-    void DrawAreaFill(Vector2? dynamicTip = null)
+    // =================================================================
+    // LOGIKA MATEMATIKA
+    // =================================================================
+    float CalculatePerimeter()
     {
-        // Hitung total titik yang tersedia
-        int totalPoints = waypoints.Count + (dynamicTip.HasValue ? 1 : 0);
+        float total = 0;
+        for (int i = 0; i < waypoints.Count; i++)
+            total += CalculateDistanceMeters(waypoints[i], waypoints[(i + 1) % waypoints.Count]);
+        return total;
+    }
 
-        // Jika kurang dari 3 titik, sembunyikan fill dan return
-        if (totalPoints < 3) 
-        {
-            if (currentFillObj != null) currentFillObj.SetActive(false);
-            return;
-        }
-
-        // 1. Pastikan Objek Fill Ada
-        if (currentFillObj == null)
-        {
-            currentFillObj = new GameObject("GeneratedAreaFill");
-            currentFillObj.transform.SetParent(container, false);
-            
-            currentFillObj.AddComponent<CanvasRenderer>();
-            currentPolyRenderer = currentFillObj.AddComponent<PolygonRenderer>();
-
-            RectTransform rect = currentFillObj.GetComponent<RectTransform>();
-            rect.anchorMin = Vector2.zero;
-            rect.anchorMax = Vector2.one;
-            rect.offsetMin = Vector2.zero;
-            rect.offsetMax = Vector2.zero;
-            rect.localScale = Vector3.one;
-
-            currentPolyRenderer.raycastTarget = false;
-        }
-
-        currentFillObj.SetActive(true);
-
-        // 2. Susun Daftar Titik (Fixed Waypoints + Mouse Tip)
-        List<Vector2> localPoints = new List<Vector2>();
-        
-        // Masukkan titik yang sudah diklik
+    float CalculateArea()
+    {
+        float area = 0;
+        Vector2 origin = waypoints[0];
         for (int i = 0; i < waypoints.Count; i++)
         {
-            Vector2 pos = mapController.LatLonToLocalPosition(waypoints[i].x, waypoints[i].y);
-            localPoints.Add(pos);
+            Vector2 p1 = waypoints[i];
+            Vector2 p2 = waypoints[(i + 1) % waypoints.Count];
+            Vector2 m1 = LatLonToMetersRelative(p1, origin);
+            Vector2 m2 = LatLonToMetersRelative(p2, origin);
+            area += (m1.x * m2.y) - (m1.y * m2.x);
         }
-
-        // Masukkan titik mouse (jika ada dan belum selesai)
-        if (dynamicTip.HasValue && !isComplete)
-        {
-            Vector2 mouseLocal = mapController.LatLonToLocalPosition(dynamicTip.Value.x, dynamicTip.Value.y);
-            localPoints.Add(mouseLocal);
-        }
-
-        // 3. Update Polygon Renderer
-        if (currentPolyRenderer != null)
-        {
-            currentPolyRenderer.SetPoints(localPoints, finishedColor);
-        }
-
-        // Taruh di belakang garis
-        currentFillObj.transform.SetAsFirstSibling();
+        return Mathf.Abs(area / 2.0f);
     }
 
-    // ========================================================================
-    // VISUALISASI TITIK & GARIS (STATIS)
-    // ========================================================================
+    Vector2 LatLonToMetersRelative(Vector2 p, Vector2 origin)
+    {
+        float x = CalculateDistanceMeters(new Vector2(origin.x, origin.y), new Vector2(origin.x, p.y));
+        float y = CalculateDistanceMeters(new Vector2(origin.x, origin.y), new Vector2(p.x, origin.y));
+        if (p.y < origin.y) x = -x; 
+        if (p.x < origin.x) y = -y;
+        return new Vector2(x, y);
+    }
+
+    float CalculateDistanceMeters(Vector2 p1, Vector2 p2)
+    {
+        float R = 6371000f; 
+        float dLat = (p2.x - p1.x) * Mathf.Deg2Rad;
+        float dLon = (p2.y - p1.y) * Mathf.Deg2Rad;
+        float a = Mathf.Sin(dLat/2) * Mathf.Sin(dLat/2) + Mathf.Cos(p1.x * Mathf.Deg2Rad) * Mathf.Cos(p2.x * Mathf.Deg2Rad) * Mathf.Sin(dLon/2) * Mathf.Sin(dLon/2);
+        return R * 2 * Mathf.Atan2(Mathf.Sqrt(a), Mathf.Sqrt(1-a));
+    }
+
+    // =================================================================
+    // VISUALISASI (LABEL MIRING & TENGAH)
+    // =================================================================
     public void RebuildVisuals()
     {
-        // Hapus visual lama (KECUALI Fill, Fill dihandle terpisah agar performa bagus)
         foreach (var obj in spawnedVisuals) { if (obj != null) Destroy(obj); }
         spawnedVisuals.Clear();
 
         if (waypoints.Count == 0) return;
-
         Color useColor = isComplete ? finishedColor : drawingColor;
+
+        Vector2 centerSum = Vector2.zero; // Untuk mencari titik tengah polygon
 
         for (int i = 0; i < waypoints.Count; i++)
         {
             Vector2 currentPos = mapController.LatLonToLocalPosition(waypoints[i].x, waypoints[i].y);
             GameObject p = Instantiate(pointPrefab, container);
             p.GetComponent<RectTransform>().anchoredPosition = currentPos;
-            
-            Image pImg = p.GetComponent<Image>();
-            if (pImg) 
-            {
-                pImg.color = useColor;
-                pImg.raycastTarget = false; 
-            }
             spawnedVisuals.Add(p);
+            
+            centerSum += currentPos;
 
-            if (i > 0)
-            {
-                DrawSegment(waypoints[i - 1], waypoints[i], useColor);
-            }
+            if (i > 0) DrawSegment(waypoints[i - 1], waypoints[i], useColor);
         }
 
-        // Jika selesai, tutup loop & gambar fill final (tanpa mouse tip)
         if (isComplete)
         {
-            if(waypoints.Count > 2)
-                DrawSegment(waypoints[waypoints.Count - 1], waypoints[0], useColor);
-            
-            DrawAreaFill(null); // Gambar fill statis
-        }
-        else
-        {
-            // Jika belum selesai, RebuildVisuals dipanggil saat AddPoint
-            // Kita biarkan HandleInput yang mengurus DrawAreaFill(mousePos)
-        }
-    }
+            if(waypoints.Count > 2) DrawSegment(waypoints[waypoints.Count - 1], waypoints[0], useColor);
+            DrawAreaFill(null);
 
-    void DrawSegment(Vector2 start, Vector2 end, Color c)
-    {
-        GameObject line = Instantiate(linePrefab, container);
-        DrawLineUI(line.GetComponent<RectTransform>(), start, end, c);
-        spawnedVisuals.Add(line);
-    }
-
-    void DrawLineUI(RectTransform lineRect, Vector2 startLatLon, Vector2 endLatLon, Color c)
-    {
-        if (lineRect == null) return;
-
-        Vector2 startPos = mapController.LatLonToLocalPosition(startLatLon.x, startLatLon.y);
-        Vector2 endPos = mapController.LatLonToLocalPosition(endLatLon.x, endLatLon.y);
-
-        Vector2 dir = endPos - startPos;
-        float dist = dir.magnitude;
-        float angle = Mathf.Atan2(dir.y, dir.x) * Mathf.Rad2Deg;
-
-        lineRect.anchoredPosition = startPos + (dir * 0.5f);
-        lineRect.sizeDelta = new Vector2(dist, isComplete ? 5f : 3f);
-        lineRect.localRotation = Quaternion.Euler(0, 0, angle);
-        
-        Image img = lineRect.GetComponent<Image>();
-        if (img) 
-        {
-            img.color = c;
-            img.raycastTarget = false;
-        }
-    }
-
-    public void ToggleAreaTool(bool status)
-    {
-        isActive = status;
-        if (container == null) return;
-        container.gameObject.SetActive(status);
-
-        if (status)
-        {
-            if (isComplete)
+            // --- BARU: LABEL AREA DI TENGAH POLYGON ---
+            if (centerLabelPrefab != null)
             {
-                isComplete = false;
-                waypoints.Clear();
-                RebuildVisuals();
-                // Bersihkan fill saat reset
-                if (currentFillObj != null) Destroy(currentFillObj);
-                currentFillObj = null;
+                Vector2 centroid = centerSum / waypoints.Count; // Rata-rata posisi (sederhana)
+                GameObject centerLbl = Instantiate(centerLabelPrefab, container);
+                centerLbl.GetComponent<RectTransform>().anchoredPosition = centroid;
+                
+                float areaKm = CalculateArea() / 1000000f;
+                // Format: "155 km2"
+                centerLbl.GetComponentInChildren<TextMeshProUGUI>().text = $"{areaKm:N0} km\u00B2"; 
+                spawnedVisuals.Add(centerLbl);
             }
-            CreateGhostLine();
-            CreateTooltip();
         }
-        else
+        else DrawAreaFill(null);
+    }
+
+    void DrawSegment(Vector2 start, Vector2 end, Color c) 
+    {
+        Vector2 startPos = mapController.LatLonToLocalPosition(start.x, start.y);
+        Vector2 endPos = mapController.LatLonToLocalPosition(end.x, end.y);
+        Vector2 dir = endPos - startPos;
+        float angle = Mathf.Atan2(dir.y, dir.x) * Mathf.Rad2Deg;
+        float distPixel = dir.magnitude;
+
+        // Gambar Garis
+        GameObject line = Instantiate(linePrefab, container);
+        RectTransform rt = line.GetComponent<RectTransform>();
+        rt.anchoredPosition = startPos + (dir * 0.5f);
+        rt.sizeDelta = new Vector2(distPixel, 3f);
+        rt.localRotation = Quaternion.Euler(0, 0, angle);
+        line.GetComponent<Image>().color = c;
+        spawnedVisuals.Add(line);
+
+        // Gambar Label Jarak (Hanya jika Selesai)
+        if (isComplete && measurementLabelPrefab != null)
         {
-            if (ghostLineObj != null) ghostLineObj.SetActive(false);
-            if (tooltipObj != null) tooltipObj.SetActive(false);
+            GameObject label = Instantiate(measurementLabelPrefab, container);
+            RectTransform labelRT = label.GetComponent<RectTransform>();
+            labelRT.anchoredPosition = startPos + (dir * 0.5f);
+            
+            // Rotasi label mengikuti garis (Anti terbalik)
+            float textAngle = angle;
+            if (textAngle > 90 || textAngle < -90) textAngle += 180;
+            labelRT.localRotation = Quaternion.Euler(0, 0, textAngle);
+
+            float distKm = CalculateDistanceMeters(start, end) / 1000f;
+            label.GetComponentInChildren<TextMeshProUGUI>().text = $"{distKm:F1} km"; // Contoh: "21.2 km"
+            spawnedVisuals.Add(label);
         }
     }
 
-    void CreateGhostLine()
+    void DrawAreaFill(Vector2? dynamicTip = null)
     {
-        if (container == null || ghostLineObj != null || linePrefab == null) return;
-        ghostLineObj = Instantiate(linePrefab, container);
-        ghostLineRect = ghostLineObj.GetComponent<RectTransform>();
-        Image img = ghostLineObj.GetComponent<Image>();
-        if (img)
-        {
-            img.color = new Color(drawingColor.r, drawingColor.g, drawingColor.b, 0.5f);
-            img.raycastTarget = false; 
+        int totalPoints = waypoints.Count + (dynamicTip.HasValue ? 1 : 0);
+        if (totalPoints < 3) { if (currentFillObj) currentFillObj.SetActive(false); return; }
+        if (!currentFillObj) {
+            currentFillObj = new GameObject("GeneratedAreaFill");
+            currentFillObj.transform.SetParent(container, false);
+            currentFillObj.AddComponent<CanvasRenderer>();
+            currentPolyRenderer = currentFillObj.AddComponent<PolygonRenderer>();
+            currentPolyRenderer.material = new Material(Shader.Find("UI/Default"));
+            currentPolyRenderer.raycastTarget = false; 
         }
-        ghostLineObj.SetActive(false);
+        currentFillObj.SetActive(true);
+        List<Vector2> pts = new List<Vector2>();
+        foreach(var p in waypoints) pts.Add(mapController.LatLonToLocalPosition(p.x, p.y));
+        if(dynamicTip.HasValue && !isComplete) pts.Add(mapController.LatLonToLocalPosition(dynamicTip.Value.x, dynamicTip.Value.y));
+        if(currentPolyRenderer) currentPolyRenderer.SetPoints(pts, finishedColor);
+        currentFillObj.transform.SetAsFirstSibling(); 
     }
 
-    void CreateTooltip()
-    {
-        if (container == null || tooltipObj != null || tooltipPrefab == null) return;
-        tooltipObj = Instantiate(tooltipPrefab, container);
-        tooltipRect = tooltipObj.GetComponent<RectTransform>();
-        tooltipText = tooltipObj.GetComponentInChildren<TMP_Text>();
-        if(tooltipObj.GetComponent<Image>()) tooltipObj.GetComponent<Image>().raycastTarget = false;
-        if(tooltipText != null) tooltipText.raycastTarget = false;
-        tooltipObj.SetActive(false);
-    }
+    void CreateGhostLine() { if (!ghostLineObj) { ghostLineObj = Instantiate(linePrefab, container); ghostLineObj.GetComponent<Image>().raycastTarget = false; ghostLineObj.SetActive(false); } }
+    void CreateTooltip() { if (!tooltipObj) { tooltipObj = Instantiate(tooltipPrefab, container); tooltipText = tooltipObj.GetComponentInChildren<TMP_Text>(); tooltipObj.SetActive(false); } }
+    public void ToggleAreaTool(bool status) { isActive = status; if(container) container.gameObject.SetActive(status); if (infoBoxPanel) infoBoxPanel.SetActive(status); if(status) { isComplete = false; waypoints.Clear(); UpdateInfoBoxUI(); RebuildVisuals(); CreateGhostLine(); CreateTooltip(); } }
 }

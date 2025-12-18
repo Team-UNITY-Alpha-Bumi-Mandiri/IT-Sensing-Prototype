@@ -102,6 +102,10 @@ public class DropdownFilter : MonoBehaviour
             allItems.Add(newItem);
         }
         
+        // Paksa rebuild layout agar ScrollRect bisa scroll dengan benar
+        Canvas.ForceUpdateCanvases();
+        LayoutRebuilder.ForceRebuildLayoutImmediate(contentParent as RectTransform);
+        
         // Pertahankan filter jika dropdown aktif
         if (searchInput != null && dropdownPanel.activeSelf)
         {

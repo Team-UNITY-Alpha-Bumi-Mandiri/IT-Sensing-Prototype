@@ -1,16 +1,14 @@
 using UnityEngine;
-using UnityEngine.UI;
 
-// Script sederhana untuk toggle (on/off) GameObject UI
+// Script sederhana untuk mengaktifkan/menonaktifkan objek UI.
 public class ButtonCustom : MonoBehaviour
 {
-    private bool isActive;
-    [SerializeField] private GameObject button;
+    [SerializeField] private GameObject button; // Referensi objek yang akan di-toggle
 
-    // Toggle status aktif/non-aktif object target
-    public void CreateButtonActive()
+    // Fungsi ini dipanggil (misal dari Event Trigger) untuk mengubah status aktif objek.
+    public void CreateButtonActive() 
     {
-        isActive = !isActive;
-        button.SetActive(isActive);
+        // Cek jika null agar tidak error, lalu balikkan status aktifnya (Toggle)
+        if (button) button.SetActive(!button.activeSelf);
     }
 }

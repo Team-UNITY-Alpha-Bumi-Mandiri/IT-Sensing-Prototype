@@ -1,39 +1,76 @@
 using UnityEngine;
 using UnityEngine.UI;
 
-// Mengontrol tombol UI untuk memilih mode gambar (Point, Line, Polygon, Delete).
+// =========================================
+// Tombol untuk pilih mode gambar
+// Mode: Point, Line, Polygon, Delete
+// =========================================
 public class DrawModeButton : MonoBehaviour
 {
-    public DrawTool.DrawMode targetMode; // Mode yang akan diaktifkan tombol ini
-    public DrawTool drawTool; // Referensi ke script DrawTool utama
-    public Color activeColor = new Color(0.1f, 0.55f, 0.28f), inactiveColor = Color.white; // Warna indikator
+    // Mode yang dikontrol tombol ini
+    public DrawTool.DrawMode mode;
     
-    private Image img; // Komponen Image untuk mengubah warna tombol
+    // Referensi ke DrawTool
+    public DrawTool drawTool;
+    
+    // Warna saat aktif (hijau)
+    public Color onColor = new Color(0.1f, 0.55f, 0.28f);
+    
+    // Warna saat tidak aktif (putih)
+    public Color offColor = Color.white;
+
+    // Komponen internal
+    Image img;
 
     void Start()
     {
-        // Ambil komponen Image dan tambahkan listener klik ke tombol
+        // Ambil komponen Image
         img = GetComponent<Image>();
-        if (TryGetComponent(out Button btn)) btn.onClick.AddListener(OnClick);
-        UpdateVisuals(); // Set warna awal
+
+        // Tambah listener ke tombol
+        if (TryGetComponent(out Button btn))
+        {
+            btn.onClick.AddListener(OnClick);
+        }
+
+        // Set warna awal
+        UpdateColor();
     }
 
-    // Dipanggil saat tombol diklik: Toggle mode di DrawTool.
+    // Saat diklik: aktifkan mode jika belum aktif, matikan jika sudah
     void OnClick()
     {
-        // Jika mode ini belum aktif -> Aktifkan. Jika sudah -> Matikan.
-        if (!drawTool.IsModeActive(targetMode)) drawTool.ActivateMode(targetMode);
-        else drawTool.DeactivateMode(targetMode);
-        UpdateVisuals(); // Perbarui warna
+        if (!drawTool.IsModeActive(mode))
+        {
+            drawTool.ActivateMode(mode);
+        }
+        else
+        {
+            drawTool.DeactivateMode(mode);
+        }
+
+        UpdateColor();
     }
 
-    // Memperbarui warna tombol berdasarkan status aktif mode ini.
-    void UpdateVisuals() => img.color = drawTool.IsModeActive(targetMode) ? activeColor : inactiveColor;
+    // Update warna tombol sesuai status
+    void UpdateColor()
+    {
+        if (drawTool.IsModeActive(mode))
+        {
+            img.color = onColor;
+        }
+        else
+        {
+            img.color = offColor;
+        }
+    }
 
-    // Cek setiap frame untuk sinkronisasi warna jika mode diubah dari tempat lain.
+    // Cek terus tiap frame untuk sync warna (jika diubah dari luar)
     void Update()
     {
-        if (drawTool && img.color != (drawTool.IsModeActive(targetMode) ? activeColor : inactiveColor))
-            UpdateVisuals(); // Update visual hanya jika status berubah
+        if (drawTool != null && img != null)
+        {
+            UpdateColor();
+        }
     }
 }

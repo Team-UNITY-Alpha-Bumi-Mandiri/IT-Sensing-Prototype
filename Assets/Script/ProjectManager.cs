@@ -3,298 +3,484 @@ using UnityEngine.UI;
 using TMPro;
 using System.Collections.Generic;
 
-// Manajer utama sistem proyek: Handle Create, Read, Update, Delete (CRUD) & Visualisasi.
+// =========================================
+// Manager utama untuk CRUD project
+// Create, Read, Update, Delete
+// =========================================
 public class ProjectManager : MonoBehaviour
 {
     [Header("Dependencies")]
-    public SimpleMapController_Baru mapController;  // Kontrol navigasi peta
-    public SearchableDropdown projectDropdown;      // UI pilihan project
-    public DrawTool drawTool;                       // Alat menggambar peta
-    public PropertyPanel propertyPanel;             // Panel property toggle
+    public SimpleMapController_Baru mapController; // Kontrol peta
+    public SearchableDropdown projectDropdown;     // Dropdown pilih project
+    public DrawTool drawTool;                      // Tool gambar
+    public PropertyPanel propertyPanel;            // Panel property
 
     [Header("Form UI")]
-    public TMP_InputField newProjectNameInput;      // Input nama baru
-    public Button createProjectButton;              // Tombol buat
-    public Button deleteProjectButton;              // Tombol hapus
-    
-    [Header("Rename UI")]
-    public TMP_InputField renameProjectInput;       // Input ubah nama
-    public Button renameProjectButton;              // Tombol simpan nama
+    public TMP_InputField newProjectNameInput; // Input nama project baru
+    public Button createProjectButton;         // Tombol buat project
+    public Button deleteProjectButton;         // Tombol hapus project
 
-    // Struktur data property (untuk serialisasi)
+    [Header("Rename UI")]
+    public TMP_InputField renameProjectInput; // Input rename project
+    public Button renameProjectButton;        // Tombol rename
+
+    // =========================================
+    // STRUKTUR DATA
+    // =========================================
+
+    // Entry property (untuk serialisasi JSON)
     [System.Serializable]
     public class PropertyEntry
     {
         public string key;
         public bool value;
-        public PropertyEntry(string k, bool v) { key = k; value = v; }
+
+        public PropertyEntry(string k, bool v)
+        {
+            key = k;
+            value = v;
+        }
     }
 
-    // Struktur Data
+    // Data project
     [System.Serializable]
     public class ProjectData
     {
-        public string id, name;
-        public double lat, lon;
+        public string id;
+        public string name;
+        public double lat;
+        public double lon;
         public int zoom;
         public List<Vector2> polygonCoords;
-        public List<PropertyEntry> properties = new(); // Property toggle per project
-        
-        // Helper: Convert list ke dictionary
-        public Dictionary<string, bool> GetPropertiesDict()
+        public List<PropertyEntry> properties = new List<PropertyEntry>();
+
+        // Convert list ke dictionary
+        public Dictionary<string, bool> GetProps()
         {
-            var dict = new Dictionary<string, bool>();
+            Dictionary<string, bool> dict = new Dictionary<string, bool>();
+            
             if (properties != null)
-                foreach (var p in properties) dict[p.key] = p.value;
+            {
+                foreach (PropertyEntry p in properties)
+                {
+                    dict[p.key] = p.value;
+                }
+            }
+            
             return dict;
         }
-        
-        // Helper: Set properties dari dictionary
-        public void SetPropertiesFromDict(Dictionary<string, bool> dict)
+
+        // Set dari dictionary
+        public void SetProps(Dictionary<string, bool> dict)
         {
             properties = new List<PropertyEntry>();
-            foreach (var kvp in dict) properties.Add(new PropertyEntry(kvp.Key, kvp.Value));
+            
+            foreach (var kv in dict)
+            {
+                properties.Add(new PropertyEntry(kv.Key, kv.Value));
+            }
         }
     }
 
-    [System.Serializable] class Wrapper { public List<ProjectData> items; } // Helper JSON
+    // Wrapper untuk serialisasi JSON
+    [System.Serializable]
+    class Wrapper
+    {
+        public List<ProjectData> items;
+    }
 
-    private List<ProjectData> projects = new();
-    private ProjectData currentProject;
+    // Variabel internal
+    List<ProjectData> projects = new List<ProjectData>();
+    ProjectData current = null;
 
+    // =========================================
+    // INISIALISASI
+    // =========================================
     void Start()
     {
-        LoadProjects();  // 1. Muat data saved
-        SetupDropdown(); // 2. Isi UI Dropdown
+        // Load data tersimpan
+        LoadProjects();
 
-        // 3. Setup Listener Tombol
-        if (createProjectButton) createProjectButton.onClick.AddListener(StartCreating);
-        if (deleteProjectButton) deleteProjectButton.onClick.AddListener(DeleteProject);
-        if (renameProjectButton) renameProjectButton.onClick.AddListener(RenameProject);
-        if (drawTool) drawTool.onDrawComplete.AddListener(OnProjectDrawn);
+        // Setup dropdown
+        SetupDropdown();
 
-        currentProject = null; // Reset state awal
+        // Setup listener tombol
+        if (createProjectButton != null)
+        {
+            createProjectButton.onClick.AddListener(StartCreate);
+        }
+
+        if (deleteProjectButton != null)
+        {
+            deleteProjectButton.onClick.AddListener(Delete);
+        }
+
+        if (renameProjectButton != null)
+        {
+            renameProjectButton.onClick.AddListener(Rename);
+        }
+
+        // Listener selesai gambar
+        if (drawTool != null)
+        {
+            drawTool.onDrawComplete.AddListener(OnDrawn);
+        }
+
+        current = null;
     }
 
-    // --- FITUR: UI DROPDOWN ---
-
-    // Mengisi opsi dropdown dan reset listener
+    // =========================================
+    // DROPDOWN
+    // =========================================
     void SetupDropdown()
     {
-        if (!projectDropdown) return;
-        List<string> names = new();
-        foreach (var p in projects) names.Add(p.name);
+        if (projectDropdown == null) return;
 
+        // Buat list nama project
+        List<string> names = new List<string>();
+        foreach (ProjectData p in projects)
+        {
+            names.Add(p.name);
+        }
+
+        // Set ke dropdown
         projectDropdown.SetOptions(names);
-        projectDropdown.onValueChanged.RemoveListener(OnSelectProjectByName);
-        projectDropdown.onValueChanged.AddListener(OnSelectProjectByName);
+        
+        // Setup listener
+        projectDropdown.onValueChanged.RemoveListener(OnSelect);
+        projectDropdown.onValueChanged.AddListener(OnSelect);
     }
 
-    void OnSelectProjectByName(string name)
+    // Saat project dipilih dari dropdown
+    void OnSelect(string name)
     {
-        var proj = projects.Find(p => p.name == name);
-        if (proj != null) SelectProject(proj);
+        ProjectData p = projects.Find(x => x.name == name);
+        if (p != null)
+        {
+            Select(p);
+        }
     }
 
-    // --- FITUR: BUAT PROJECT (CREATE) ---
-
-    // Mulai mode gambar untuk project baru
-    void StartCreating()
+    // =========================================
+    // CREATE (Buat Project Baru)
+    // =========================================
+    void StartCreate()
     {
-        if (string.IsNullOrEmpty(newProjectNameInput.text)) { Debug.LogWarning("Isi nama project!"); return; }
-        if (!drawTool) return;
+        // Validasi nama
+        if (newProjectNameInput == null || string.IsNullOrEmpty(newProjectNameInput.text))
+        {
+            Debug.LogWarning("Isi nama project terlebih dahulu!");
+            return;
+        }
 
-        drawTool.ClearAll(); // Bersihkan peta
-        drawTool.forceTextureOnNext = true; // Pakai tekstur untuk area
-        drawTool.ActivateMode(DrawTool.DrawMode.Polygon); // Aktifkan tool polygon
+        if (drawTool == null) return;
+
+        // Mulai gambar polygon
+        drawTool.ClearAll();
+        drawTool.forceTextureOnNext = true;
+        drawTool.ActivateMode(DrawTool.DrawMode.Polygon);
     }
 
-    // Callback saat gambar selesai: Simpan data project baru
-    void OnProjectDrawn(DrawTool.DrawObject obj)
+    // Callback selesai gambar
+    void OnDrawn(DrawTool.DrawObject obj)
     {
-        if (string.IsNullOrEmpty(newProjectNameInput.text) || obj.coordinates.Count == 0) return;
+        // Validasi
+        if (newProjectNameInput == null || string.IsNullOrEmpty(newProjectNameInput.text))
+        {
+            return;
+        }
 
-        // Buat objek data baru
-        var newProj = new ProjectData {
+        if (obj.coordinates.Count == 0)
+        {
+            return;
+        }
+
+        // Buat project baru
+        ProjectData proj = new ProjectData
+        {
             id = System.Guid.NewGuid().ToString(),
             name = newProjectNameInput.text,
             lat = obj.coordinates[0].x,
             lon = obj.coordinates[0].y,
-            zoom = mapController ? mapController.zoom : 15,
+            zoom = (mapController != null) ? mapController.zoom : 15,
             polygonCoords = new List<Vector2>(obj.coordinates)
         };
-        
-        // Tambahkan dummy properties berbeda untuk setiap project
-        AddRandomDummyProperties(newProj);
 
-        projects.Add(newProj);
-        SaveProjects();
+        // Tambah dummy properties
+        AddDummyProps(proj);
+
+        // Simpan
+        projects.Add(proj);
+        Save();
+
+        // Update dropdown
+        SetupDropdown();
+        projectDropdown.onValueChanged.RemoveListener(OnSelect);
+        projectDropdown.SelectItem(proj.name);
+        projectDropdown.onValueChanged.AddListener(OnSelect);
+
+        // Set sebagai current
+        current = proj;
         
-        // Update UI Dropdown tanpa memicu event select ulang (cegah glitch)
-        SetupDropdown(); 
-        projectDropdown.onValueChanged.RemoveListener(OnSelectProjectByName);
-        projectDropdown.SelectItem(newProj.name); 
-        projectDropdown.onValueChanged.AddListener(OnSelectProjectByName);
-        
-        // Set manual state project yang baru dibuat
-        currentProject = newProj;
-        if (renameProjectInput) renameProjectInput.text = newProj.name;
+        if (renameProjectInput != null)
+        {
+            renameProjectInput.text = proj.name;
+        }
+
         newProjectNameInput.text = "";
-        
-        // Tampilkan property panel untuk project baru
-        if (propertyPanel) propertyPanel.ShowProperties(newProj.GetPropertiesDict());
-        
-        // Catatan: Jangan panggil DeactivateMode disini agar tidak membatalkan gambar yang baru jadi.
+
+        // Tampilkan property
+        if (propertyPanel != null)
+        {
+            propertyPanel.ShowProperties(proj.GetProps());
+        }
     }
-    
-    // Menambahkan dummy properties acak ke project baru
-    void AddRandomDummyProperties(ProjectData proj)
+
+    // Tambah property dummy acak (untuk demo)
+    void AddDummyProps(ProjectData proj)
     {
-        // Daftar property dummy yang mungkin
-        string[] allProperties = {
-            "Show Label", "Enable Zoom", "Auto Refresh", "Show Grid",
-            "Night Mode", "Show Coordinates", "Lock View", "Show Scale"
+        string[] allProps = {
+            "Show Label",
+            "Enable Zoom",
+            "Auto Refresh",
+            "Show Grid",
+            "Night Mode",
+            "Show Coordinates",
+            "Lock View",
+            "Show Scale"
         };
-        
-        // Pilih 1-3 property secara acak
-        int count = Random.Range(1, 4);
-        var usedIndices = new List<int>();
-        var dict = new Dictionary<string, bool>();
-        
-        for (int i = 0; i < count && i < allProperties.Length; i++)
+
+        int count = Random.Range(1, 4); // 1-3 property
+        List<int> used = new List<int>();
+        Dictionary<string, bool> dict = new Dictionary<string, bool>();
+
+        for (int i = 0; i < count && i < allProps.Length; i++)
         {
             int idx;
-            do { idx = Random.Range(0, allProperties.Length); }
-            while (usedIndices.Contains(idx));
-            
-            usedIndices.Add(idx);
-            dict[allProperties[idx]] = Random.value > 0.5f; // Random true/false
+            do
+            {
+                idx = Random.Range(0, allProps.Length);
+            }
+            while (used.Contains(idx));
+
+            used.Add(idx);
+            dict[allProps[idx]] = Random.value > 0.5f;
         }
-        
-        proj.SetPropertiesFromDict(dict);
+
+        proj.SetProps(dict);
     }
 
-    // --- FITUR: PILIH PROJECT (READ) ---
-
-    // Muat visual dan kamera ke lokasi project
-    void SelectProject(ProjectData proj)
+    // =========================================
+    // SELECT / READ (Pilih Project)
+    // =========================================
+    void Select(ProjectData proj)
     {
-        currentProject = proj;
-        if (renameProjectInput) renameProjectInput.text = proj.name; // Isi form rename
-        if (mapController) mapController.GoToLocation(proj.lat, proj.lon, proj.zoom); // Pindah kamera
+        current = proj;
 
-        // Tampilkan Polygon
-        if (drawTool) {
+        // Set nama di input rename
+        if (renameProjectInput != null)
+        {
+            renameProjectInput.text = proj.name;
+        }
+
+        // Pindah ke lokasi
+        if (mapController != null)
+        {
+            mapController.GoToLocation(proj.lat, proj.lon, proj.zoom);
+        }
+
+        // Tampilkan polygon
+        if (drawTool != null)
+        {
             drawTool.ClearAll();
-            if (proj.polygonCoords?.Count > 0) drawTool.LoadPolygon(proj.polygonCoords, true);
+
+            if (proj.polygonCoords != null && proj.polygonCoords.Count > 0)
+            {
+                drawTool.LoadPolygon(proj.polygonCoords, true);
+            }
         }
-        
-        // Tampilkan PropertyPanel dengan properties project ini
-        if (propertyPanel) propertyPanel.ShowProperties(proj.GetPropertiesDict());
+
+        // Tampilkan property
+        if (propertyPanel != null)
+        {
+            propertyPanel.ShowProperties(proj.GetProps());
+        }
     }
 
-    // --- FITUR: UBAH NAMA (UPDATE) ---
-
-    void RenameProject()
+    // =========================================
+    // RENAME / UPDATE (Ubah Nama)
+    // =========================================
+    void Rename()
     {
-        if (currentProject == null || !renameProjectInput || string.IsNullOrEmpty(renameProjectInput.text)) return;
-        
-        string newName = renameProjectInput.text;
-        if (currentProject.name == newName) return; // Tidak berubah
+        // Validasi
+        if (current == null) return;
+        if (renameProjectInput == null) return;
+        if (string.IsNullOrEmpty(renameProjectInput.text)) return;
 
-        currentProject.name = newName;
-        SaveProjects(); // Simpan ke file
-        SetupDropdown(); // Refresh list UI
-        
-        // Update selection UI agar sinkron
-        if (projectDropdown) projectDropdown.SelectItem(newName);
-    }
+        // Cek apakah berubah
+        if (current.name == renameProjectInput.text)
+        {
+            return;
+        }
 
-    // --- FITUR: HAPUS (DELETE) ---
+        // Update nama
+        current.name = renameProjectInput.text;
+        Save();
 
-    void DeleteProject()
-    {
-        if (currentProject == null) return;
-        
-        projects.Remove(currentProject);
-        SaveProjects();
-
-        // Reset semua ke kondisi kosong
-        currentProject = null;
-        if (drawTool) drawTool.ClearAll();
-        if (propertyPanel) propertyPanel.ClearPanel(); // Kosongkan property panel
+        // Refresh dropdown
         SetupDropdown();
-        if (renameProjectInput) renameProjectInput.text = "";
-        if (projectDropdown) projectDropdown.SelectItem("Select Project");
-    }
 
-    // --- FITUR: MANAJEMEN PROPERTY ---
-
-    // Tambah property baru ke project yang aktif
-    public void AddPropertyToCurrentProject(string propertyName, bool defaultValue = false)
-    {
-        if (currentProject == null) return;
-        
-        var dict = currentProject.GetPropertiesDict();
-        if (!dict.ContainsKey(propertyName))
+        if (projectDropdown != null)
         {
-            dict[propertyName] = defaultValue;
-            currentProject.SetPropertiesFromDict(dict);
-            SaveProjects();
-            
-            // Update UI
-            if (propertyPanel) propertyPanel.ShowProperties(dict);
+            projectDropdown.SelectItem(current.name);
         }
     }
 
-    // Hapus property dari project yang aktif
-    public void RemovePropertyFromCurrentProject(string propertyName)
+    // =========================================
+    // DELETE (Hapus Project)
+    // =========================================
+    void Delete()
     {
-        if (currentProject == null) return;
-        
-        var dict = currentProject.GetPropertiesDict();
-        if (dict.ContainsKey(propertyName))
+        if (current == null) return;
+
+        // Hapus dari list
+        projects.Remove(current);
+        Save();
+
+        // Reset state
+        current = null;
+
+        if (drawTool != null)
         {
-            dict.Remove(propertyName);
-            currentProject.SetPropertiesFromDict(dict);
-            SaveProjects();
-            
-            // Update UI
-            if (propertyPanel) propertyPanel.ShowProperties(dict);
+            drawTool.ClearAll();
+        }
+
+        if (propertyPanel != null)
+        {
+            propertyPanel.ClearPanel();
+        }
+
+        // Refresh dropdown
+        SetupDropdown();
+
+        if (renameProjectInput != null)
+        {
+            renameProjectInput.text = "";
+        }
+
+        if (projectDropdown != null)
+        {
+            projectDropdown.SelectItem("Select Project");
         }
     }
 
-    // Callback saat property toggle berubah di panel (untuk dipanggil dari PropertyPanel event)
-    public void OnPropertyToggleChanged(string propertyName, bool value)
+    // =========================================
+    // PROPERTY MANAGEMENT
+    // =========================================
+
+    // Tambah property baru
+    public void AddProperty(string name, bool value = false)
     {
-        if (currentProject == null) return;
+        if (current == null) return;
+
+        Dictionary<string, bool> dict = current.GetProps();
         
-        var dict = currentProject.GetPropertiesDict();
-        dict[propertyName] = value;
-        currentProject.SetPropertiesFromDict(dict);
-        SaveProjects();
+        if (!dict.ContainsKey(name))
+        {
+            dict[name] = value;
+            current.SetProps(dict);
+            Save();
+
+            if (propertyPanel != null)
+            {
+                propertyPanel.ShowProperties(dict);
+            }
+        }
     }
 
-    // Getter project yang sedang aktif
-    public ProjectData GetCurrentProject() => currentProject;
-
-    // --- SISTEM PENYIMPANAN (JSON) ---
-
-    string SavePath => System.IO.Path.Combine(Application.persistentDataPath, "projects.json");
-
-    void SaveProjects()
+    // Hapus property
+    public void RemoveProperty(string name)
     {
-        try {
-            System.IO.File.WriteAllText(SavePath, JsonUtility.ToJson(new Wrapper { items = projects }, true));
-        } catch (System.Exception e) { Debug.LogError("Gagal simpan: " + e.Message); }
+        if (current == null) return;
+
+        Dictionary<string, bool> dict = current.GetProps();
+        
+        if (dict.ContainsKey(name))
+        {
+            dict.Remove(name);
+            current.SetProps(dict);
+            Save();
+
+            if (propertyPanel != null)
+            {
+                propertyPanel.ShowProperties(dict);
+            }
+        }
     }
 
+    // Callback saat property berubah dari panel
+    public void OnPropertyChanged(string name, bool value)
+    {
+        if (current == null) return;
+
+        Dictionary<string, bool> dict = current.GetProps();
+        dict[name] = value;
+        current.SetProps(dict);
+        Save();
+    }
+
+    // Getter project saat ini
+    public ProjectData GetCurrentProject()
+    {
+        return current;
+    }
+
+    // =========================================
+    // SAVE / LOAD
+    // =========================================
+    
+    // Path file save
+    string SavePath
+    {
+        get { return System.IO.Path.Combine(Application.persistentDataPath, "projects.json"); }
+    }
+
+    // Simpan ke file
+    void Save()
+    {
+        try
+        {
+            Wrapper wrapper = new Wrapper { items = projects };
+            string json = JsonUtility.ToJson(wrapper, true);
+            System.IO.File.WriteAllText(SavePath, json);
+        }
+        catch (System.Exception e)
+        {
+            Debug.LogError("Gagal menyimpan: " + e.Message);
+        }
+    }
+
+    // Load dari file
     void LoadProjects()
     {
-        if (!System.IO.File.Exists(SavePath)) return;
-        try {
-            var w = JsonUtility.FromJson<Wrapper>(System.IO.File.ReadAllText(SavePath));
-            if (w?.items != null) projects = w.items;
-        } catch { } // Abaikan error load
+        if (!System.IO.File.Exists(SavePath))
+        {
+            return;
+        }
+
+        try
+        {
+            string json = System.IO.File.ReadAllText(SavePath);
+            Wrapper wrapper = JsonUtility.FromJson<Wrapper>(json);
+
+            if (wrapper != null && wrapper.items != null)
+            {
+                projects = wrapper.items;
+            }
+        }
+        catch
+        {
+            // Abaikan error load
+        }
     }
 }

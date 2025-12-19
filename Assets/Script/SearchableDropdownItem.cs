@@ -3,26 +3,32 @@ using UnityEngine.UI;
 using TMPro;
 using System;
 
-// Mewakili satu item/baris dalam list dropdown yang bisa dicari.
+// =========================================
+// Satu item di dalam dropdown list
+// Digunakan oleh: SearchableDropdown
+// =========================================
 public class SearchableDropdownItem : MonoBehaviour
 {
-    public TMP_Text itemText; // Label teks item
-    public Button button;     // Tombol untuk memilih item
+    // Teks yang ditampilkan
+    public TMP_Text itemText;
+    
+    // Tombol untuk klik
+    public Button button;
 
-    // Mengatur isi item (teks & logika klik).
-    // value: Teks yang ditampilkan.
-    // onSelectAction: Fungsi callback saat item ini diklik.
-    public void Setup(string value, Action<string> onSelectAction)
+    // Setup item ini dengan teks dan aksi saat diklik
+    public void Setup(string text, Action<string> onClick)
     {
-        // Set teks label jika komponen ada
-        if (itemText) itemText.text = value;
-        
-        // Setup tombol
-        if (button)
+        // Set teks
+        if (itemText != null)
         {
-            button.onClick.RemoveAllListeners(); // Bersihkan listener lama
-            // Tambahkan listener baru yang memanggil callback dengan value item ini
-            button.onClick.AddListener(() => onSelectAction?.Invoke(value));
+            itemText.text = text;
+        }
+
+        // Set aksi tombol
+        if (button != null)
+        {
+            button.onClick.RemoveAllListeners();
+            button.onClick.AddListener(() => onClick?.Invoke(text));
         }
     }
 }

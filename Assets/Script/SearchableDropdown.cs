@@ -1,140 +1,201 @@
 using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
-using System.Collections.Generic;
 using System.Collections;
+using System.Collections.Generic;
 using UnityEngine.Events;
 
-// Dropdown kustom dengan fitur pencarian filter.
+// =========================================
+// Dropdown dengan fitur search/filter
+// Contoh: Dropdown pilih project
+// =========================================
 public class SearchableDropdown : MonoBehaviour
 {
     [Header("UI References")]
-    public Button mainButton;         // Tombol pembuka dropdown
-    public TMP_Text mainButtonText;   // Teks pada tombol utama
-    public GameObject dropdownPanel;  // Panel yang berisi list & search bar
-    public TMP_InputField searchInput;// Input field pencarian
-    public Transform contentContainer;// Wadah tempat item di-spawn
-    public GameObject itemPrefab;     // Prefab item dropdown
-    public ScrollRect scrollRect;     // ScrollRect untuk scroll list (opsional, auto-detect)
+    public Button mainButton;          // Tombol pembuka dropdown
+    public TMP_Text mainButtonText;    // Teks di tombol utama
+    public GameObject dropdownPanel;   // Panel dropdown
+    public TMP_InputField searchInput; // Input pencarian
+    public Transform content;          // Wadah item-item
+    public GameObject itemPrefab;      // Prefab satu item
+    public ScrollRect scrollRect;      // Untuk scroll
 
     [Header("Settings")]
-    public string defaultPlaceholder = "Select Option"; // Teks default jika kosong
+    public string placeholder = "Pilih..."; // Teks default
 
-    [Header("Events")]
-    public UnityEvent<string> onValueChanged; // Event saat pilihan berubah
+    // Event saat pilihan berubah
+    public UnityEvent<string> onValueChanged;
 
-    // Data internal
-    private List<string> _allOptions = new List<string>();
-    private bool _isOpen = false;
-    private RectTransform _contentRect; // Cache RectTransform content
+    // Variabel internal
+    List<string> options = new List<string>();
+    bool isOpen = false;
+    RectTransform contentRect;
 
     void Start()
     {
-        // Setup awal UI
-        if (dropdownPanel) dropdownPanel.SetActive(false);
-        if (mainButton) mainButton.onClick.AddListener(ToggleDropdown);
-        if (searchInput) searchInput.onValueChanged.AddListener(OnSearchInput);
-        
-        // Cache content RectTransform
-        if (contentContainer) _contentRect = contentContainer as RectTransform;
-        
-        // Auto-detect ScrollRect jika tidak diassign manual
-        if (!scrollRect && dropdownPanel) scrollRect = dropdownPanel.GetComponentInChildren<ScrollRect>();
-        
-        // Set placeholder default jika teks kosong
-        if (mainButtonText && string.IsNullOrEmpty(mainButtonText.text))
-            UpdateMainText(defaultPlaceholder);
+        // Sembunyikan dropdown saat mulai
+        if (dropdownPanel != null)
+        {
+            dropdownPanel.SetActive(false);
+        }
+
+        // Setup listener tombol utama
+        if (mainButton != null)
+        {
+            mainButton.onClick.AddListener(ToggleDropdown);
+        }
+
+        // Setup listener input pencarian
+        if (searchInput != null)
+        {
+            searchInput.onValueChanged.AddListener(Filter);
+        }
+
+        // Cache RectTransform content
+        if (content != null)
+        {
+            contentRect = content as RectTransform;
+        }
+
+        // Auto-detect ScrollRect jika tidak diassign
+        if (scrollRect == null && dropdownPanel != null)
+        {
+            scrollRect = dropdownPanel.GetComponentInChildren<ScrollRect>();
+        }
+
+        // Set placeholder jika kosong
+        if (mainButtonText != null && string.IsNullOrEmpty(mainButtonText.text))
+        {
+            mainButtonText.text = placeholder;
+        }
     }
 
-    // Mengisi daftar opsi dropdown dari luar string list
-    public void SetOptions(List<string> options)
+    // Set daftar opsi dari luar
+    public void SetOptions(List<string> opts)
     {
-        _allOptions = new List<string>(options);
-        RefreshList(_allOptions); // Tampilkan semua opsi awal
+        options = new List<string>(opts);
+        ShowItems(options);
     }
 
-    // Memilih item: update teks, tutup dropdown, dan trigger event
+    // Pilih item tertentu
     public void SelectItem(string item)
     {
-        UpdateMainText(item);
-        if (_isOpen) ToggleDropdown(); // Tutup jika sedang terbuka
+        // Update teks tombol
+        if (mainButtonText != null)
+        {
+            mainButtonText.text = item;
+        }
+
+        // Tutup dropdown
+        if (isOpen)
+        {
+            ToggleDropdown();
+        }
+
+        // Trigger event
         onValueChanged?.Invoke(item);
     }
 
-    // Buka/Tutup panel dropdown
+    // Buka/tutup dropdown
     public void ToggleDropdown()
     {
-        if (!dropdownPanel) return;
-        
-        _isOpen = !dropdownPanel.activeSelf;
-        dropdownPanel.SetActive(_isOpen);
+        if (dropdownPanel == null) return;
 
-        if (_isOpen)
+        isOpen = !dropdownPanel.activeSelf;
+        dropdownPanel.SetActive(isOpen);
+
+        // Jika baru dibuka
+        if (isOpen)
         {
-            // Reset pencarian saat dibuka
-            if (searchInput) { searchInput.text = ""; searchInput.ActivateInputField(); }
-            RefreshList(_allOptions); // Tampilkan semua item kembali
+            // Reset pencarian
+            if (searchInput != null)
+            {
+                searchInput.text = "";
+                searchInput.ActivateInputField();
+            }
+
+            // Tampilkan semua item
+            ShowItems(options);
+
             // Reset scroll ke atas
-            if (scrollRect) scrollRect.verticalNormalizedPosition = 1f;
+            if (scrollRect != null)
+            {
+                scrollRect.verticalNormalizedPosition = 1f;
+            }
         }
     }
 
-    // Filter list berdasarkan query input
-    private void OnSearchInput(string query)
+    // Filter berdasarkan teks pencarian
+    void Filter(string query)
     {
-        // Jika kosong tampilkan semua, jika tidak filter yang mengandung teks query (case-insensitive)
-        var filtered = string.IsNullOrEmpty(query) ? _allOptions : _allOptions.FindAll(x => x.ToLower().Contains(query.ToLower()));
-        RefreshList(filtered);
+        List<string> hasil;
+
+        if (string.IsNullOrEmpty(query))
+        {
+            // Jika kosong, tampilkan semua
+            hasil = options;
+        }
+        else
+        {
+            // Filter yang mengandung query (case insensitive)
+            hasil = options.FindAll(x => x.ToLower().Contains(query.ToLower()));
+        }
+
+        ShowItems(hasil);
     }
 
-    // Render ulang daftar item di UI
-    private void RefreshList(List<string> displayOptions)
+    // Tampilkan item-item di dropdown
+    void ShowItems(List<string> items)
     {
-        if (!contentContainer || !itemPrefab) return;
+        if (content == null || itemPrefab == null) return;
 
-        // Hapus item-item lama
-        foreach (Transform child in contentContainer) Destroy(child.gameObject);
+        // Hapus item lama
+        foreach (Transform child in content)
+        {
+            Destroy(child.gameObject);
+        }
 
         // Buat item baru
-        foreach (string opt in displayOptions)
+        foreach (string item in items)
         {
-            var obj = Instantiate(itemPrefab, contentContainer);
-            // Setup script item jika ada, atau fallback manual
-            if (obj.TryGetComponent(out SearchableDropdownItem itemScript))
-                itemScript.Setup(opt, SelectItem); 
+            GameObject obj = Instantiate(itemPrefab, content);
+
+            // Setup menggunakan script SearchableDropdownItem
+            if (obj.TryGetComponent(out SearchableDropdownItem script))
+            {
+                script.Setup(item, SelectItem);
+            }
             else
             {
-                // Fallback sederhana jika prefab tidak pakai script khusus
-                var txt = obj.GetComponentInChildren<TMP_Text>();
-                if (txt) txt.text = opt;
-                obj.GetComponent<Button>()?.onClick.AddListener(() => SelectItem(opt));
+                // Fallback manual jika tidak pakai script
+                TMP_Text txt = obj.GetComponentInChildren<TMP_Text>();
+                if (txt != null) txt.text = item;
+
+                Button btn = obj.GetComponent<Button>();
+                if (btn != null) btn.onClick.AddListener(() => SelectItem(item));
             }
         }
-        
-        // Rebuild layout di frame berikutnya agar ukuran content ter-update dengan benar
-        StartCoroutine(RebuildLayoutDelayed());
+
+        // Rebuild layout
+        StartCoroutine(RebuildLayout());
     }
 
-    // Coroutine untuk rebuild layout - diperlukan karena Destroy baru execute di akhir frame
-    private IEnumerator RebuildLayoutDelayed()
+    // Rebuild layout setelah item berubah
+    IEnumerator RebuildLayout()
     {
-        yield return null; // Tunggu 1 frame agar Destroy selesai
-        
-        if (_contentRect)
+        // Tunggu 1 frame agar Destroy selesai
+        yield return null;
+
+        if (contentRect != null)
         {
-            // Rebuild layout dari content ke atas
-            LayoutRebuilder.ForceRebuildLayoutImmediate(_contentRect);
+            LayoutRebuilder.ForceRebuildLayoutImmediate(contentRect);
             Canvas.ForceUpdateCanvases();
-            
-            // Update ScrollRect agar mengenali ukuran content baru
-            if (scrollRect)
-            {
-                scrollRect.verticalNormalizedPosition = 1f; // Reset ke atas
-                LayoutRebuilder.ForceRebuildLayoutImmediate(scrollRect.GetComponent<RectTransform>());
-            }
+        }
+
+        if (scrollRect != null)
+        {
+            scrollRect.verticalNormalizedPosition = 1f;
+            LayoutRebuilder.ForceRebuildLayoutImmediate(scrollRect.GetComponent<RectTransform>());
         }
     }
-
-    // Update teks visual tombol utama
-    private void UpdateMainText(string text) { if (mainButtonText) mainButtonText.text = text; }
 }

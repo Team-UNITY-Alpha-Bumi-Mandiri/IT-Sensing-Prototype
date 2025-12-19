@@ -3,43 +3,58 @@ using UnityEngine.UI;
 using TMPro;
 using System;
 
-// Komponen UI untuk satu item toggle property.
+// =========================================
+// Satu item toggle di panel property
+// Contoh: "Night Mode [x]", "Show Grid [ ]"
+// =========================================
 public class PropertyToggleItem : MonoBehaviour
 {
-    [Header("UI References")]
-    public Toggle toggle;         // Komponen toggle
-    public TMP_Text labelText;    // Label nama property
+    // Checkbox on/off
+    public Toggle toggle;
+    
+    // Label nama property
+    public TMP_Text labelText;
 
-    private string _propertyName;
-    private Action<string, bool> _onValueChanged;
+    // Variabel internal
+    string _name;
+    Action<string, bool> _onChange;
 
-    // Setup item dengan nama dan callback
-    public void Setup(string propertyName, bool initialValue, Action<string, bool> onChanged)
+    // Getter nama property
+    public string PropertyName => _name;
+
+    // Setup toggle dengan nama, nilai awal, dan callback saat berubah
+    public void Setup(string name, bool value, Action<string, bool> onChange)
     {
-        _propertyName = propertyName;
-        _onValueChanged = onChanged;
+        _name = name;
+        _onChange = onChange;
 
-        if (labelText) labelText.text = propertyName;
-        if (toggle)
+        // Set label
+        if (labelText != null)
         {
-            toggle.isOn = initialValue;
+            labelText.text = name;
+        }
+
+        // Set toggle
+        if (toggle != null)
+        {
+            toggle.isOn = value;
             toggle.onValueChanged.RemoveAllListeners();
-            toggle.onValueChanged.AddListener(OnToggleChanged);
+            toggle.onValueChanged.AddListener(OnValueChanged);
         }
     }
 
-    // Callback saat toggle berubah
-    private void OnToggleChanged(bool value)
+    // Callback internal saat toggle berubah
+    void OnValueChanged(bool value)
     {
-        _onValueChanged?.Invoke(_propertyName, value);
+        _onChange?.Invoke(_name, value);
     }
 
-    // Getter nama property
-    public string PropertyName => _propertyName;
-
-    // Setter nilai toggle tanpa trigger event
+    // Set nilai tanpa trigger event (untuk update dari luar)
     public void SetValueWithoutNotify(bool value)
     {
-        if (toggle) toggle.SetIsOnWithoutNotify(value);
+        if (toggle != null)
+        {
+            toggle.SetIsOnWithoutNotify(value);
+        }
     }
 }

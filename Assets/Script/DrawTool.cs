@@ -6,357 +6,746 @@ using TMPro;
 using UnityEngine.Events;
 using System.IO;
 
-// Tool utama untuk menggambar Titik, Garis, dan Polygon di atas peta.
+// =========================================
+// Tool untuk menggambar Point, Line, dan Polygon di peta
+// Mode: Point (titik), Line (garis), Polygon (area), Delete (hapus)
+// =========================================
 public class DrawTool : MonoBehaviour
 {
     [Header("Dependencies")]
-    public SimpleMapController_Baru mapController; // Referensi Peta
-    public RectTransform container; // Wadah objek gambar (UI Parent)
+    public SimpleMapController_Baru mapController; // Kontrol peta
+    public RectTransform container;                // Parent objek gambar
 
     [Header("Prefabs")]
     public GameObject pointMarkerPrefab; // Prefab titik
-    public GameObject lineSegmentPrefab; // Prefab segmen garis
-    public GameObject polygonFillPrefab; // Prefab isi polygon (tidak dipakai langsung krn generate mesh)
-    public GameObject vertexPointPrefab; // Prefab titik sudut polygon
-    public GameObject tooltipPrefab;     // Prefab tooltip info
+    public GameObject lineSegmentPrefab; // Prefab garis
+    public GameObject polygonFillPrefab; // Prefab fill (tidak dipakai langsung)
+    public GameObject vertexPointPrefab; // Prefab sudut polygon
+    public GameObject tooltipPrefab;     // Prefab tooltip
 
     [Header("Settings")]
-    public float snapDist = 30f; // Jarak snapping (pixel)
-    public bool forceTextureOnNext = false; // Flag untuk pakai tekstur di gambar berikutnya
+    public float snapDist = 30f;            // Jarak snap dalam pixel
+    public bool forceTextureOnNext = false; // Pakai tekstur di gambar berikutnya
+
+    // Enum mode gambar
     public enum DrawMode { Point, Line, Polygon, Delete }
-    public UnityEvent<DrawObject> onDrawComplete; // Event saat selesai gambar
+
+    // Event selesai gambar (untuk didengarkan script lain)
+    public UnityEvent<DrawObject> onDrawComplete;
+
+    [Header("Warna")]
+    Color colPoint = Color.blue;
+    Color colVertex = Color.white;
+    Color colLine = new Color(0, 0.42f, 1);
+    Color colFill = new Color(0, 0.42f, 1, 0.3f);
     
-    [Header("Visuals")]
-    Color colPoint = Color.blue, colVertex = Color.white;
-    Color colLine = new Color(0, 0.42f, 1), colFill = new Color(0, 0.42f, 1, 0.3f);
-    public string customTexturePath = "Assets/Image Map/mapa del mundo pixel art.jpg";
-    private Texture2D cachedTex;
+    public string texturePath = "Assets/Image Map/mapa del mundo pixel art.jpg";
+    Texture2D cachedTex;
 
-    // State Internal
-    bool isDrawing, isToolActive;
-    DrawMode currentMode = DrawMode.Point;
-    int drawIdCounter;
-    double lastLat, lastLon; int lastZoom; // Cache posisi peta untuk update visual
+    // State internal
+    bool isDrawing = false;
+    bool isActive = false;
+    DrawMode mode = DrawMode.Point;
+    int drawId = 0;
+    
+    // Cache posisi peta
+    double lastLat, lastLon;
+    int lastZoom;
 
-    // Data Objek
-    List<DrawObject> allObjs = new(); // Semua objek yg sudah digambar
-    DrawObject activeObj; // Objek yang sedang digambar
+    // Data objek
+    List<DrawObject> allObjs = new List<DrawObject>();
+    DrawObject activeObj;
     
     // UI Helper
-    GameObject ghostObj, tooltipObj;
+    GameObject ghost;
+    GameObject tooltip;
     TMP_Text tooltipText;
 
-    // Kelas pembungkus data gambar
+    // =========================================
+    // Kelas data objek gambar
+    // =========================================
     [System.Serializable]
-    public class DrawObject {
+    public class DrawObject
+    {
         public string id = System.Guid.NewGuid().ToString();
         public DrawMode type;
         public bool useTexture;
-        public List<Vector2> coordinates = new(); // Data Geo-Spasial (Lat, Lon)
-        public List<GameObject> visuals = new();  // Referensi objek UI (Line, Dot)
-        public GameObject rootObj; // Parent GameObject di Hierarchy
+        public List<Vector2> coordinates = new List<Vector2>(); // Lat, Lon
+        public List<GameObject> visuals = new List<GameObject>();  // UI objects
+        public GameObject rootObj;
     }
 
-    void Start() {
-        if (!container) return;
-        CreateHelpers(); // Buat Ghost & Tooltip
-        LoadTexture();   // Muat tekstur custom
+    // =========================================
+    // INISIALISASI
+    // =========================================
+    void Start()
+    {
+        if (container != null)
+        {
+            CreateHelpers();
+            LoadTexture();
+        }
     }
 
-    // Muat tekstur dari file sistem
-    void LoadTexture() {
-        string path = Path.Combine(Directory.GetParent(Application.dataPath).FullName, customTexturePath);
-        if (!File.Exists(path)) path = customTexturePath; // Fallback path relatif
-        if (File.Exists(path)) {
+    // Muat tekstur dari file
+    void LoadTexture()
+    {
+        string path = Path.Combine(Directory.GetParent(Application.dataPath).FullName, texturePath);
+        
+        if (!File.Exists(path))
+        {
+            path = texturePath;
+        }
+
+        if (File.Exists(path))
+        {
             cachedTex = new Texture2D(2, 2);
             cachedTex.LoadImage(File.ReadAllBytes(path));
         }
     }
 
-    void Update() {
-        if (!mapController || !container) return;
+    // =========================================
+    // UPDATE LOOP
+    // =========================================
+    void Update()
+    {
+        if (mapController == null || container == null) return;
+
+        // Refresh visual jika peta bergerak
+        bool mapMoved = mapController.latitude != lastLat || 
+                        mapController.longitude != lastLon || 
+                        mapController.zoom != lastZoom;
         
-        // Cek jika peta bergerak -> Rebuild posisi visual agar tetap nempel di lokasi geografis
-        if (mapController.latitude != lastLat || mapController.longitude != lastLon || mapController.zoom != lastZoom) {
-            RefreshAllVisuals();
-            (lastLat, lastLon, lastZoom) = (mapController.latitude, mapController.longitude, mapController.zoom);
+        if (mapMoved)
+        {
+            RefreshAll();
+            lastLat = mapController.latitude;
+            lastLon = mapController.longitude;
+            lastZoom = mapController.zoom;
         }
-        
-        InputHandler(); // Proses Input Mouse/Keyboard
+
+        HandleInput();
     }
 
-    // --- LOGIKA INPUT ---
+    // =========================================
+    // HANDLE INPUT
+    // =========================================
+    void HandleInput()
+    {
+        if (!isActive || Mouse.current == null) return;
 
-    void InputHandler() {
-        if (!isToolActive || Mouse.current == null) return;
-        Vector2 mPos = Mouse.current.position.ReadValue();
-        
-        // Update Ghost Line & Tooltip
-        if (isDrawing && activeObj?.coordinates.Count > 0) UpdateGhost(mPos); else ghostObj?.SetActive(false);
-        UpdateTooltip(mPos);
+        Vector2 mousePos = Mouse.current.position.ReadValue();
 
-        // Klik Kiri: Tambah Titik / Hapus
-        if (Mouse.current.leftButton.wasPressedThisFrame) {
-            if (currentMode == DrawMode.Delete) TryDelete(mPos);
-            else AddPoint(mapController.ScreenToLatLon(mPos), mPos);
+        // Update ghost dan tooltip
+        if (isDrawing && activeObj != null && activeObj.coordinates.Count > 0)
+        {
+            UpdateGhost(mousePos);
         }
-        // Klik Kanan: Undo titik terakhir
-        if (Mouse.current.rightButton.wasPressedThisFrame) Undo();
-        // ESC: Batal gambar
-        if (Keyboard.current?.escapeKey.wasPressedThisFrame == true && isDrawing) CancelDraw();
+        else
+        {
+            if (ghost != null) ghost.SetActive(false);
+        }
+        UpdateTooltip(mousePos);
+
+        // Klik kiri: tambah titik atau hapus
+        if (Mouse.current.leftButton.wasPressedThisFrame)
+        {
+            if (mode == DrawMode.Delete)
+            {
+                TryDelete(mousePos);
+            }
+            else
+            {
+                Vector2 latLon = mapController.ScreenToLatLon(mousePos);
+                AddPoint(latLon, mousePos);
+            }
+        }
+
+        // Klik kanan: undo
+        if (Mouse.current.rightButton.wasPressedThisFrame)
+        {
+            Undo();
+        }
+
+        // ESC: batal gambar
+        if (Keyboard.current != null && Keyboard.current.escapeKey.wasPressedThisFrame && isDrawing)
+        {
+            Cancel();
+        }
     }
 
-    // --- LOGIKA GAMBAR (DRAWING) ---
-
-    void AddPoint(Vector2 latLon, Vector2 screenPos) {
-        // Mode Titik: Langsung jadi
-        if (currentMode == DrawMode.Point) { 
-            CreateObject(DrawMode.Point, new List<Vector2>{ latLon }); 
-            onDrawComplete?.Invoke(allObjs[^1]); // Trigger event
-            return; 
+    // =========================================
+    // LOGIKA GAMBAR
+    // =========================================
+    
+    // Tambah titik baru
+    void AddPoint(Vector2 latLon, Vector2 screenPos)
+    {
+        // Mode Point: langsung jadi 1 titik
+        if (mode == DrawMode.Point)
+        {
+            CreateObj(DrawMode.Point, new List<Vector2> { latLon });
+            onDrawComplete?.Invoke(allObjs[allObjs.Count - 1]);
+            return;
         }
 
-        // Mode Garis/Polygon: Mulai baru jika belum
-        if (!isDrawing) StartDrawing();
+        // Mode Line/Polygon: mulai baru jika belum
+        if (!isDrawing)
+        {
+            StartDraw();
+        }
 
-        // Cek Snapping untuk Finish (Tutup Loop / Akhiri Garis)
-        if (activeObj.coordinates.Count >= (currentMode == DrawMode.Polygon ? 3 : 2)) {
-            Vector2 target = activeObj.coordinates[currentMode == DrawMode.Line ? ^1 : 0]; // Snap ke awal(Poly) atau akhir(Line)
-            if (Vector2.Distance(screenPos, GeoToScreen(target)) < snapDist) { FinishDrawing(); return; }
+        // Cek snap untuk selesai
+        int minPoints = (mode == DrawMode.Polygon) ? 3 : 2;
+        if (activeObj.coordinates.Count >= minPoints)
+        {
+            // Target snap: awal (polygon) atau akhir (line)
+            int targetIdx = (mode == DrawMode.Line) ? activeObj.coordinates.Count - 1 : 0;
+            Vector2 target = activeObj.coordinates[targetIdx];
+            Vector2 targetScreen = GeoToScreen(target);
+
+            if (Vector2.Distance(screenPos, targetScreen) < snapDist)
+            {
+                FinishDraw();
+                return;
+            }
         }
 
         // Tambah titik
         activeObj.coordinates.Add(latLon);
-        RebuildVisual(activeObj, true); // Update tampilan
+        Rebuild(activeObj, true);
     }
 
-    // Mulai sesi gambar baru
-    void StartDrawing() {
+    // Mulai gambar baru
+    void StartDraw()
+    {
         isDrawing = true;
-        activeObj = new DrawObject { type = currentMode, useTexture = forceTextureOnNext, rootObj = CreateRoot($"Draw_{++drawIdCounter}_{currentMode}") };
+        drawId++;
+        
+        activeObj = new DrawObject
+        {
+            type = mode,
+            useTexture = forceTextureOnNext,
+            rootObj = CreateRoot($"Draw_{drawId}_{mode}")
+        };
     }
 
-    // Selesai gambar -> Simpan ke list permanen
-    void FinishDrawing() {
+    // Selesai gambar
+    void FinishDraw()
+    {
         if (activeObj == null) return;
-        RebuildVisual(activeObj, false); // Finalize visual (tutup polygon)
+
+        Rebuild(activeObj, false); // Finalize visual
         allObjs.Add(activeObj);
         onDrawComplete?.Invoke(activeObj);
-        ResetState();
+        Reset();
     }
 
-    // Batal gambar -> Hapus data sementara
-    void CancelDraw() {
-        if (activeObj?.rootObj) Destroy(activeObj.rootObj);
-        ResetState();
+    // Batal gambar
+    void Cancel()
+    {
+        if (activeObj != null && activeObj.rootObj != null)
+        {
+            Destroy(activeObj.rootObj);
+        }
+        Reset();
     }
 
-    void ResetState() {
-        activeObj = null; isDrawing = forceTextureOnNext = isToolActive = false;
-        currentMode = DrawMode.Point; // Reset ke default
-        ghostObj?.SetActive(false); tooltipObj?.SetActive(false);
+    // Reset state
+    void Reset()
+    {
+        activeObj = null;
+        isDrawing = false;
+        forceTextureOnNext = false;
+        isActive = false;
+        mode = DrawMode.Point;
+
+        if (ghost != null) ghost.SetActive(false);
+        if (tooltip != null) tooltip.SetActive(false);
     }
 
-    // --- LOGIKA VISUALISASI ---
+    // =========================================
+    // VISUAL
+    // =========================================
+    
+    // Refresh semua visual
+    void RefreshAll()
+    {
+        foreach (DrawObject obj in allObjs)
+        {
+            Rebuild(obj);
+        }
 
-    // Refresh posisi semua objek (dipanggil saat map geser)
-    void RefreshAllVisuals() {
-        foreach (var obj in allObjs) RebuildVisual(obj);
-        if (activeObj != null) RebuildVisual(activeObj, true);
+        if (activeObj != null)
+        {
+            Rebuild(activeObj, true);
+        }
     }
 
-    // Bangun ulang elemen UI (Garis, Titik, Fill) dari data koordinat
-    void RebuildVisual(DrawObject obj, bool isEditing = false) {
-        ClearVisuals(obj); // Hapus elemen lama
+    // Bangun ulang visual satu objek
+    void Rebuild(DrawObject obj, bool editing = false)
+    {
+        ClearVisuals(obj);
+
         if (obj.coordinates.Count == 0) return;
-        
-        Transform parent = obj.rootObj ? obj.rootObj.transform : container;
-        Color cLine = obj.type == DrawMode.Line ? colLine : colLine;
 
-        // Render Titik Tunggal
-        if (obj.type == DrawMode.Point) { 
-            SpawnIcon(pointMarkerPrefab, obj.coordinates[0], parent, colPoint, obj); 
-            return; 
+        Transform parent = (obj.rootObj != null) ? obj.rootObj.transform : container;
+
+        // Point: hanya 1 marker
+        if (obj.type == DrawMode.Point)
+        {
+            SpawnIcon(pointMarkerPrefab, obj.coordinates[0], parent, colPoint, obj);
+            return;
         }
 
-        // Render Vertex (Titik Sudut) saat mode edit
-        if (isEditing) foreach (var p in obj.coordinates) SpawnIcon(vertexPointPrefab, p, parent, colVertex, obj);
-        
-        // Render Garis-garis segmen
-        for (int i = 1; i < obj.coordinates.Count; i++) 
-            SpawnLine(obj.coordinates[i-1], obj.coordinates[i], parent, cLine, obj);
+        // Vertex (titik sudut) saat editing
+        if (editing)
+        {
+            foreach (Vector2 p in obj.coordinates)
+            {
+                SpawnIcon(vertexPointPrefab, p, parent, colVertex, obj);
+            }
+        }
 
-        // Render Polygon (Tutup Loop & Isi)
-        if (obj.type == DrawMode.Polygon && obj.coordinates.Count >= 3) {
-            if (!isEditing) SpawnLine(obj.coordinates[^1], obj.coordinates[0], parent, cLine, obj); // Garis penutup
-            CreateFill(obj); // Luas area (Mesh)
+        // Garis-garis penghubung
+        for (int i = 1; i < obj.coordinates.Count; i++)
+        {
+            SpawnLine(obj.coordinates[i - 1], obj.coordinates[i], parent, colLine, obj);
+        }
+
+        // Polygon: tutup loop dan fill
+        if (obj.type == DrawMode.Polygon && obj.coordinates.Count >= 3)
+        {
+            // Garis penutup (saat tidak editing)
+            if (!editing)
+            {
+                int lastIdx = obj.coordinates.Count - 1;
+                SpawnLine(obj.coordinates[lastIdx], obj.coordinates[0], parent, colLine, obj);
+            }
+
+            // Fill area
+            CreateFill(obj);
         }
     }
 
-    // Spawn Icon/Marker di posisi geo
-    void SpawnIcon(GameObject prefab, Vector2 ll, Transform p, Color c, DrawObject container) {
-        var go = Instantiate(prefab, p);
-        go.GetComponent<RectTransform>().anchoredPosition = MapLoc(ll);
-        if (go.TryGetComponent<Image>(out var img)) img.color = c;
-        container.visuals.Add(go);
-    }
-
-    // Spawn Garis Antara 2 Titik Geo
-    void SpawnLine(Vector2 a, Vector2 b, Transform p, Color c, DrawObject container) {
-        var go = Instantiate(lineSegmentPrefab, p);
-        var rt = go.GetComponent<RectTransform>();
-        SetRectGeo(rt, a, b);
-        if (go.TryGetComponent<Image>(out var img)) img.color = c;
-        container.visuals.Add(go);
-    }
-
-    // Atur posisi & rotasi RectTransform agar menghubungkan titik A dan B
-    void SetRectGeo(RectTransform rt, Vector2 a, Vector2 b) {
-        var p1 = MapLoc(a); var p2 = MapLoc(b);
-        var dir = p2 - p1;
-        rt.anchoredPosition = p1 + dir * 0.5f; // Titik tengah
-        rt.sizeDelta = new Vector2(dir.magnitude, rt.sizeDelta.y); // Panjang
-        rt.localRotation = Quaternion.Euler(0, 0, Mathf.Atan2(dir.y, dir.x) * Mathf.Rad2Deg); // Sudut
-    }
-
-    // Generate Mesh Polygon Fill
-    void CreateFill(DrawObject obj) {
-        var go = new GameObject("Fill", typeof(RectTransform), typeof(UIPolygonRenderer));
-        go.transform.SetParent(obj.rootObj.transform, false); go.transform.SetAsFirstSibling();
+    // Spawn icon/marker di posisi geo
+    void SpawnIcon(GameObject prefab, Vector2 latLon, Transform parent, Color c, DrawObject obj)
+    {
+        GameObject go = Instantiate(prefab, parent);
+        go.GetComponent<RectTransform>().anchoredPosition = MapLoc(latLon);
         
-        var rt = go.GetComponent<RectTransform>();
-        rt.anchorMin = rt.anchorMax = new Vector2(0.5f, 0.5f); rt.sizeDelta = container.sizeDelta; rt.anchoredPosition = Vector2.zero;
-
-        // Konversi LatLon -> Screen Local Position
-        var pts = new List<Vector2>();
-        foreach (var c in obj.coordinates) pts.Add(MapLoc(c));
-
-        var r = go.GetComponent<UIPolygonRenderer>();
-        if (obj.useTexture && cachedTex) { r.SetPolygon(pts, Color.white); r.texture = cachedTex; }
-        else r.SetPolygon(pts, colFill);
+        Image img = go.GetComponent<Image>();
+        if (img != null)
+        {
+            img.color = c;
+        }
         
         obj.visuals.Add(go);
     }
 
-    // --- HELPER & UTILITY ---
+    // Spawn garis antara 2 titik
+    void SpawnLine(Vector2 a, Vector2 b, Transform parent, Color c, DrawObject obj)
+    {
+        GameObject go = Instantiate(lineSegmentPrefab, parent);
+        SetLineRect(go.GetComponent<RectTransform>(), a, b);
+        
+        Image img = go.GetComponent<Image>();
+        if (img != null)
+        {
+            img.color = c;
+        }
+        
+        obj.visuals.Add(go);
+    }
 
-    void ClearVisuals(DrawObject obj) {
-        foreach (var v in obj.visuals) if (v) Destroy(v);
+    // Set posisi dan rotasi garis
+    void SetLineRect(RectTransform rt, Vector2 a, Vector2 b)
+    {
+        Vector2 p1 = MapLoc(a);
+        Vector2 p2 = MapLoc(b);
+        Vector2 dir = p2 - p1;
+
+        rt.anchoredPosition = p1 + dir * 0.5f; // Titik tengah
+        rt.sizeDelta = new Vector2(dir.magnitude, rt.sizeDelta.y); // Panjang
+        rt.localRotation = Quaternion.Euler(0, 0, Mathf.Atan2(dir.y, dir.x) * Mathf.Rad2Deg); // Rotasi
+    }
+
+    // Buat fill polygon
+    void CreateFill(DrawObject obj)
+    {
+        GameObject go = new GameObject("Fill", typeof(RectTransform), typeof(UIPolygonRenderer));
+        go.transform.SetParent(obj.rootObj.transform, false);
+        go.transform.SetAsFirstSibling();
+
+        RectTransform rt = go.GetComponent<RectTransform>();
+        rt.anchorMin = new Vector2(0.5f, 0.5f);
+        rt.anchorMax = new Vector2(0.5f, 0.5f);
+        rt.sizeDelta = container.sizeDelta;
+        rt.anchoredPosition = Vector2.zero;
+
+        // Konversi koordinat
+        List<Vector2> pts = new List<Vector2>();
+        foreach (Vector2 c in obj.coordinates)
+        {
+            pts.Add(MapLoc(c));
+        }
+
+        UIPolygonRenderer renderer = go.GetComponent<UIPolygonRenderer>();
+        if (obj.useTexture && cachedTex != null)
+        {
+            renderer.SetPolygon(pts, Color.white);
+            renderer.texture = cachedTex;
+        }
+        else
+        {
+            renderer.SetPolygon(pts, colFill);
+        }
+
+        obj.visuals.Add(go);
+    }
+
+    // =========================================
+    // HELPER
+    // =========================================
+    
+    void ClearVisuals(DrawObject obj)
+    {
+        foreach (GameObject v in obj.visuals)
+        {
+            if (v != null) Destroy(v);
+        }
         obj.visuals.Clear();
     }
 
-    GameObject CreateRoot(string name) {
-        var go = new GameObject(name, typeof(RectTransform));
+    GameObject CreateRoot(string name)
+    {
+        GameObject go = new GameObject(name, typeof(RectTransform));
         go.transform.SetParent(container, false);
-        var rt = go.GetComponent<RectTransform>();
-        rt.anchorMin = Vector2.zero; rt.anchorMax = Vector2.one; rt.sizeDelta = Vector2.zero;
+
+        RectTransform rt = go.GetComponent<RectTransform>();
+        rt.anchorMin = Vector2.zero;
+        rt.anchorMax = Vector2.one;
+        rt.sizeDelta = Vector2.zero;
+
         return go;
     }
 
-    // Konversi LatLon -> Local UI Pos
-    Vector2 MapLoc(Vector2 ll) => mapController.LatLonToLocalPosition(ll.x, ll.y);
-    Vector2 GeoToScreen(Vector2 ll) => RectTransformUtility.WorldToScreenPoint(null, container.TransformPoint(MapLoc(ll)));
+    // Konversi LatLon ke posisi lokal UI
+    Vector2 MapLoc(Vector2 latLon)
+    {
+        return mapController.LatLonToLocalPosition(latLon.x, latLon.y);
+    }
 
-    // --- LOGIKA HAPUS (DELETE) ---
+    // Konversi LatLon ke posisi layar
+    Vector2 GeoToScreen(Vector2 latLon)
+    {
+        Vector3 worldPos = container.TransformPoint(MapLoc(latLon));
+        return RectTransformUtility.WorldToScreenPoint(null, worldPos);
+    }
 
-    void TryDelete(Vector2 mPos) {
-        for (int i = allObjs.Count - 1; i >= 0; i--) {
-            if (HitTest(allObjs[i], mPos)) {
-                if (allObjs[i].rootObj) Destroy(allObjs[i].rootObj);
+    // =========================================
+    // DELETE
+    // =========================================
+    void TryDelete(Vector2 mousePos)
+    {
+        for (int i = allObjs.Count - 1; i >= 0; i--)
+        {
+            if (HitTest(allObjs[i], mousePos))
+            {
+                if (allObjs[i].rootObj != null)
+                {
+                    Destroy(allObjs[i].rootObj);
+                }
                 allObjs.RemoveAt(i);
-                return; // Hapus satu per satu
+                return;
             }
         }
     }
 
-    // Cek apakah mouse mengenai objek (Point/Line/Poly)
-    bool HitTest(DrawObject obj, Vector2 mPos) {
-        var pts = new List<Vector2>();
-        foreach(var c in obj.coordinates) pts.Add(GeoToScreen(c));
-
-        // Cek Titik
-        if (obj.type == DrawMode.Point) return Vector2.Distance(mPos, pts[0]) < snapDist;
-
-        // Cek Garis (Jarak ke segmen garis)
-        for (int i = 0; i < pts.Count - 1; i++) if (DistLine(mPos, pts[i], pts[i+1]) < snapDist) return true;
-        
-        // Cek Polygon (Garis tutup & Area dalam)
-        if (obj.type == DrawMode.Polygon && pts.Count >= 3) {
-            if (DistLine(mPos, pts[^1], pts[0]) < snapDist) return true;
-            if (IsInPoly(mPos, pts)) return true;
+    // Cek apakah mouse mengenai objek
+    bool HitTest(DrawObject obj, Vector2 mousePos)
+    {
+        // Konversi koordinat ke screen
+        List<Vector2> pts = new List<Vector2>();
+        foreach (Vector2 c in obj.coordinates)
+        {
+            pts.Add(GeoToScreen(c));
         }
+
+        // Cek titik
+        if (obj.type == DrawMode.Point)
+        {
+            return Vector2.Distance(mousePos, pts[0]) < snapDist;
+        }
+
+        // Cek garis
+        for (int i = 0; i < pts.Count - 1; i++)
+        {
+            if (DistToLine(mousePos, pts[i], pts[i + 1]) < snapDist)
+            {
+                return true;
+            }
+        }
+
+        // Cek polygon
+        if (obj.type == DrawMode.Polygon && pts.Count >= 3)
+        {
+            // Cek garis penutup
+            if (DistToLine(mousePos, pts[pts.Count - 1], pts[0]) < snapDist)
+            {
+                return true;
+            }
+
+            // Cek di dalam polygon
+            if (InPoly(mousePos, pts))
+            {
+                return true;
+            }
+        }
+
         return false;
     }
 
-    // Matematika: Jarak titik ke segmen garis
-    float DistLine(Vector2 p, Vector2 a, Vector2 b) {
-        Vector2 n = b - a; float len2 = n.sqrMagnitude;
-        float t = len2 == 0 ? 0 : Mathf.Clamp01(Vector2.Dot(p - a, n) / len2);
+    // Jarak titik ke segmen garis
+    float DistToLine(Vector2 p, Vector2 a, Vector2 b)
+    {
+        Vector2 n = b - a;
+        float len2 = n.sqrMagnitude;
+
+        float t = 0;
+        if (len2 != 0)
+        {
+            t = Mathf.Clamp01(Vector2.Dot(p - a, n) / len2);
+        }
+
         return Vector2.Distance(p, a + n * t);
     }
 
-    // Matematika: Point in Polygon (Raycasting)
-    bool IsInPoly(Vector2 p, List<Vector2> poly) {
-        bool inPoly = false;
-        for (int i = 0, j = poly.Count - 1; i < poly.Count; j = i++)
-            if (((poly[i].y > p.y) != (poly[j].y > p.y)) && (p.x < (poly[j].x - poly[i].x) * (p.y - poly[i].y) / (poly[j].y - poly[i].y) + poly[i].x)) 
-                inPoly = !inPoly;
-        return inPoly;
-    }
+    // Cek titik di dalam polygon (raycasting)
+    bool InPoly(Vector2 p, List<Vector2> poly)
+    {
+        bool inside = false;
+        int j = poly.Count - 1;
 
-    // --- UI HELPER GHOST & TOOLTIP ---
-
-    void CreateHelpers() {
-        if (!ghostObj && lineSegmentPrefab) {
-            ghostObj = Instantiate(lineSegmentPrefab, container);
-            ghostObj.GetComponent<Image>().color = new Color(1,1,1,0.5f);
-            ghostObj.SetActive(false);
+        for (int i = 0; i < poly.Count; i++)
+        {
+            if (((poly[i].y > p.y) != (poly[j].y > p.y)) &&
+                (p.x < (poly[j].x - poly[i].x) * (p.y - poly[i].y) / (poly[j].y - poly[i].y) + poly[i].x))
+            {
+                inside = !inside;
+            }
+            j = i;
         }
-        if (!tooltipObj && tooltipPrefab) {
-            tooltipObj = Instantiate(tooltipPrefab, container);
-            tooltipText = tooltipObj.GetComponentInChildren<TMP_Text>();
-            tooltipObj.SetActive(false);
+
+        return inside;
+    }
+
+    // =========================================
+    // GHOST & TOOLTIP
+    // =========================================
+    void CreateHelpers()
+    {
+        // Ghost line
+        if (ghost == null && lineSegmentPrefab != null)
+        {
+            ghost = Instantiate(lineSegmentPrefab, container);
+            ghost.GetComponent<Image>().color = new Color(1, 1, 1, 0.5f);
+            ghost.SetActive(false);
+        }
+
+        // Tooltip
+        if (tooltip == null && tooltipPrefab != null)
+        {
+            tooltip = Instantiate(tooltipPrefab, container);
+            tooltipText = tooltip.GetComponentInChildren<TMP_Text>();
+            tooltip.SetActive(false);
         }
     }
 
-    void UpdateGhost(Vector2 mPos) {
-        if (!ghostObj) return;
-        ghostObj.SetActive(true); ghostObj.transform.SetAsLastSibling();
-        SetRectGeo(ghostObj.GetComponent<RectTransform>(), activeObj.coordinates[^1], mapController.ScreenToLatLon(mPos));
+    void UpdateGhost(Vector2 mousePos)
+    {
+        if (ghost == null) return;
+
+        ghost.SetActive(true);
+        ghost.transform.SetAsLastSibling();
+
+        Vector2 lastPoint = activeObj.coordinates[activeObj.coordinates.Count - 1];
+        Vector2 mouseLatLon = mapController.ScreenToLatLon(mousePos);
+        SetLineRect(ghost.GetComponent<RectTransform>(), lastPoint, mouseLatLon);
     }
 
-    void UpdateTooltip(Vector2 mPos) {
-        if (!tooltipObj || currentMode == DrawMode.Point) { tooltipObj?.SetActive(false); return; }
-        
-        RectTransformUtility.ScreenPointToLocalPointInRectangle(container, mPos, null, out var lp);
-        tooltipObj.GetComponent<RectTransform>().anchoredPosition = lp + new Vector2(25, -15);
-        tooltipObj.SetActive(true); tooltipObj.transform.SetAsLastSibling();
+    void UpdateTooltip(Vector2 mousePos)
+    {
+        if (tooltip == null || mode == DrawMode.Point)
+        {
+            if (tooltip != null) tooltip.SetActive(false);
+            return;
+        }
 
-        // Teks info
-        int n = activeObj?.coordinates.Count ?? 0;
-        string txt = currentMode == DrawMode.Line ? (n > 0 ? $"Jarak: {CalcDist(activeObj.coordinates[^1], mapController.ScreenToLatLon(mPos)):F2} km" : "Klik mulai") : (n > 2 ? "Klik awal utk tutup" : "Klik tambah titik");
-        if (tooltipText) tooltipText.text = txt;
+        // Posisikan tooltip
+        RectTransformUtility.ScreenPointToLocalPointInRectangle(container, mousePos, null, out Vector2 localPos);
+        tooltip.GetComponent<RectTransform>().anchoredPosition = localPos + new Vector2(25, -15);
+        tooltip.SetActive(true);
+        tooltip.transform.SetAsLastSibling();
+
+        // Teks tooltip
+        int n = (activeObj != null) ? activeObj.coordinates.Count : 0;
+        string txt;
+
+        if (mode == DrawMode.Line)
+        {
+            if (n == 0)
+            {
+                // Belum mulai gambar
+                txt = "click to start drawing line";
+            }
+            else
+            {
+                // Sudah ada titik, hitung jarak
+                Vector2 lastPt = activeObj.coordinates[n - 1];
+                Vector2 mousePt = mapController.ScreenToLatLon(mousePos);
+                float dist = CalcDist(lastPt, mousePt);
+
+                if (n >= 2)
+                {
+                    // Bisa selesai
+                    txt = $"{dist:F2} km\nclick last point to finish line";
+                }
+                else
+                {
+                    // Lanjut gambar
+                    txt = $"{dist:F2} km\nclick to continue drawing line";
+                }
+            }
+        }
+        else
+        {
+            // Mode Polygon
+            if (n == 0)
+            {
+                txt = "click to start drawing shape";
+            }
+            else if (n > 2)
+            {
+                txt = "click the first point to close this shape";
+            }
+            else
+            {
+                txt = "click to continue drawing shape";
+            }
+        }
+
+        if (tooltipText != null)
+        {
+            tooltipText.text = txt;
+        }
     }
 
-    float CalcDist(Vector2 p1, Vector2 p2) => 12742 * Mathf.Asin(Mathf.Sqrt(0.5f - Mathf.Cos((p2.x - p1.x) * Mathf.Deg2Rad)/2 + Mathf.Cos(p1.x * Mathf.Deg2Rad) * Mathf.Cos(p2.x * Mathf.Deg2Rad) * (1 - Mathf.Cos((p2.y - p1.y) * Mathf.Deg2Rad))/2));
+    // Hitung jarak dalam km (rumus Haversine)
+    float CalcDist(Vector2 p1, Vector2 p2)
+    {
+        float dLat = (p2.x - p1.x) * Mathf.Deg2Rad;
+        float dLon = (p2.y - p1.y) * Mathf.Deg2Rad;
 
-    // --- PUBLIC API ---
+        float a = 0.5f - Mathf.Cos(dLat) / 2 +
+                  Mathf.Cos(p1.x * Mathf.Deg2Rad) * Mathf.Cos(p2.x * Mathf.Deg2Rad) *
+                  (1 - Mathf.Cos(dLon)) / 2;
 
-    public void ActivateMode(DrawMode m) { if (isDrawing && currentMode != m) CancelDraw(); isToolActive = true; currentMode = m; }
-    public void DeactivateMode(DrawMode m) { if (currentMode == m) { CancelDraw(); isToolActive = false; } }
-    public bool IsModeActive(DrawMode m) => isToolActive && currentMode == m;
-    public void LoadPolygon(List<Vector2> c, bool tex) { CreateObject(DrawMode.Polygon, c, tex); }
-    public void CreateObject(DrawMode type, List<Vector2> coords, bool tex = false) {
-        var obj = new DrawObject{ type = type, useTexture = tex, coordinates = new(coords), rootObj = CreateRoot("Loaded") };
-        RebuildVisual(obj); allObjs.Add(obj);
+        return 12742 * Mathf.Asin(Mathf.Sqrt(a)); // 12742 = diameter bumi (km)
     }
-    public void Undo() { 
-        if (isDrawing && activeObj?.coordinates.Count > 0) { 
-            activeObj.coordinates.RemoveAt(activeObj.coordinates.Count - 1); 
-            if (activeObj.coordinates.Count == 0) CancelDraw(); else RebuildVisual(activeObj, true); 
-        } else if (allObjs.Count > 0) { 
-            Destroy(allObjs[^1].rootObj); allObjs.RemoveAt(allObjs.Count - 1); 
-        } 
+
+    // =========================================
+    // PUBLIC API
+    // =========================================
+    
+    // Aktifkan mode tertentu
+    public void ActivateMode(DrawMode m)
+    {
+        if (isDrawing && mode != m)
+        {
+            Cancel();
+        }
+        isActive = true;
+        mode = m;
     }
-    public void ClearAll() { foreach(var o in allObjs) Destroy(o.rootObj); allObjs.Clear(); ResetState(); }
+
+    // Nonaktifkan mode
+    public void DeactivateMode(DrawMode m)
+    {
+        if (mode == m)
+        {
+            Cancel();
+            isActive = false;
+        }
+    }
+
+    // Cek apakah mode aktif
+    public bool IsModeActive(DrawMode m)
+    {
+        return isActive && mode == m;
+    }
+
+    // Load polygon dari luar
+    public void LoadPolygon(List<Vector2> coords, bool useTexture)
+    {
+        CreateObj(DrawMode.Polygon, coords, useTexture);
+    }
+
+    // Buat objek baru
+    public void CreateObj(DrawMode type, List<Vector2> coords, bool tex = false)
+    {
+        DrawObject obj = new DrawObject
+        {
+            type = type,
+            useTexture = tex,
+            coordinates = new List<Vector2>(coords),
+            rootObj = CreateRoot("Loaded")
+        };
+
+        Rebuild(obj);
+        allObjs.Add(obj);
+    }
+
+    // Undo: hapus titik terakhir atau objek terakhir
+    public void Undo()
+    {
+        if (isDrawing && activeObj != null && activeObj.coordinates.Count > 0)
+        {
+            // Hapus titik terakhir
+            activeObj.coordinates.RemoveAt(activeObj.coordinates.Count - 1);
+
+            if (activeObj.coordinates.Count == 0)
+            {
+                Cancel();
+            }
+            else
+            {
+                Rebuild(activeObj, true);
+            }
+        }
+        else if (allObjs.Count > 0)
+        {
+            // Hapus objek terakhir
+            int lastIdx = allObjs.Count - 1;
+            if (allObjs[lastIdx].rootObj != null)
+            {
+                Destroy(allObjs[lastIdx].rootObj);
+            }
+            allObjs.RemoveAt(lastIdx);
+        }
+    }
+
+    // Hapus semua objek
+    public void ClearAll()
+    {
+        foreach (DrawObject obj in allObjs)
+        {
+            if (obj.rootObj != null)
+            {
+                Destroy(obj.rootObj);
+            }
+        }
+        allObjs.Clear();
+        Reset();
+    }
 }

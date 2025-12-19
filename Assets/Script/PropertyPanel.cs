@@ -1,111 +1,126 @@
 using UnityEngine;
 using UnityEngine.UI;
-using TMPro;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine.Events;
 
-// Panel UI untuk menampilkan daftar property toggle per project.
+// =========================================
+// Panel untuk menampilkan daftar property toggle
+// Contoh: Panel berisi checkbox "Night Mode", "Show Grid", dll
+// =========================================
 public class PropertyPanel : MonoBehaviour
 {
     [Header("UI References")]
-    public GameObject panel;              // Panel utama (untuk show/hide)
-    public Transform contentContainer;    // Wadah tempat item toggle di-spawn
-    public GameObject toggleItemPrefab;   // Prefab PropertyToggleItem
-    public ScrollRect scrollRect;         // ScrollRect untuk scroll list
+    public GameObject panel;           // Panel utama
+    public Transform content;          // Wadah item toggle
+    public GameObject togglePrefab;    // Prefab PropertyToggleItem
+    public ScrollRect scrollRect;      // Untuk scroll
 
-    [Header("Events")]
-    public UnityEvent<string, bool> onPropertyChanged; // Event saat property toggle berubah (name, value)
+    // Event saat toggle berubah (nama property, nilai baru)
+    public UnityEvent<string, bool> onPropertyChanged;
 
-    // Data internal
-    private Dictionary<string, bool> _currentProperties = new();
-    private List<PropertyToggleItem> _spawnedItems = new();
-    private RectTransform _contentRect;
+    // Variabel internal
+    Dictionary<string, bool> props = new Dictionary<string, bool>();
+    List<PropertyToggleItem> items = new List<PropertyToggleItem>();
+    RectTransform contentRect;
 
     void Start()
     {
-        // Cache content RectTransform
-        if (contentContainer) _contentRect = contentContainer as RectTransform;
-        
-        // Auto-detect ScrollRect jika tidak diassign
-        if (!scrollRect && panel) scrollRect = panel.GetComponentInChildren<ScrollRect>();
+        // Cache RectTransform
+        if (content != null)
+        {
+            contentRect = content as RectTransform;
+        }
+
+        // Auto-detect ScrollRect
+        if (scrollRect == null && panel != null)
+        {
+            scrollRect = panel.GetComponentInChildren<ScrollRect>();
+        }
     }
 
-    // Tampilkan property list tertentu
+    // Tampilkan property dari dictionary
     public void ShowProperties(Dictionary<string, bool> properties)
     {
-        _currentProperties = new Dictionary<string, bool>(properties);
-        
-        // Refresh list item
+        props = new Dictionary<string, bool>(properties);
         RefreshList();
-        
+
         // Reset scroll ke atas
-        if (scrollRect) scrollRect.verticalNormalizedPosition = 1f;
+        if (scrollRect != null)
+        {
+            scrollRect.verticalNormalizedPosition = 1f;
+        }
     }
 
-    // Kosongkan panel (clear semua item)
+    // Kosongkan panel
     public void ClearPanel()
     {
         ClearItems();
-        _currentProperties.Clear();
+        props.Clear();
     }
 
-    // Refresh list toggle berdasarkan _currentProperties
-    private void RefreshList()
+    // Refresh tampilan list
+    void RefreshList()
     {
         ClearItems();
 
-        if (!contentContainer || !toggleItemPrefab) return;
+        if (content == null || togglePrefab == null) return;
 
-        foreach (var kvp in _currentProperties)
+        // Buat toggle untuk setiap property
+        foreach (var kv in props)
         {
-            var obj = Instantiate(toggleItemPrefab, contentContainer);
-            var item = obj.GetComponent<PropertyToggleItem>();
-            
-            if (item)
+            GameObject obj = Instantiate(togglePrefab, content);
+            PropertyToggleItem item = obj.GetComponent<PropertyToggleItem>();
+
+            if (item != null)
             {
-                item.Setup(kvp.Key, kvp.Value, OnToggleValueChanged);
-                _spawnedItems.Add(item);
+                item.Setup(kv.Key, kv.Value, OnToggle);
+                items.Add(item);
             }
         }
 
         // Rebuild layout
-        StartCoroutine(RebuildLayoutDelayed());
+        StartCoroutine(RebuildLayout());
     }
 
     // Hapus semua item yang di-spawn
-    private void ClearItems()
+    void ClearItems()
     {
-        foreach (var item in _spawnedItems)
+        foreach (PropertyToggleItem item in items)
         {
-            if (item) Destroy(item.gameObject);
+            if (item != null)
+            {
+                Destroy(item.gameObject);
+            }
         }
-        _spawnedItems.Clear();
+        items.Clear();
     }
 
     // Callback saat toggle berubah
-    private void OnToggleValueChanged(string propertyName, bool value)
+    void OnToggle(string name, bool value)
     {
         // Update dictionary internal
-        if (_currentProperties.ContainsKey(propertyName))
-            _currentProperties[propertyName] = value;
+        if (props.ContainsKey(name))
+        {
+            props[name] = value;
+        }
 
         // Trigger event ke luar
-        onPropertyChanged?.Invoke(propertyName, value);
+        onPropertyChanged?.Invoke(name, value);
     }
 
-    // Ambil semua property values saat ini
+    // Getter semua property saat ini
     public Dictionary<string, bool> GetCurrentProperties()
     {
-        return new Dictionary<string, bool>(_currentProperties);
+        return new Dictionary<string, bool>(props);
     }
 
     // Tambah property baru
-    public void AddProperty(string name, bool defaultValue = false)
+    public void AddProperty(string name, bool value = false)
     {
-        if (!_currentProperties.ContainsKey(name))
+        if (!props.ContainsKey(name))
         {
-            _currentProperties[name] = defaultValue;
+            props[name] = value;
             RefreshList();
         }
     }
@@ -113,9 +128,9 @@ public class PropertyPanel : MonoBehaviour
     // Hapus property
     public void RemoveProperty(string name)
     {
-        if (_currentProperties.ContainsKey(name))
+        if (props.ContainsKey(name))
         {
-            _currentProperties.Remove(name);
+            props.Remove(name);
             RefreshList();
         }
     }
@@ -123,39 +138,46 @@ public class PropertyPanel : MonoBehaviour
     // Set nilai property tertentu
     public void SetPropertyValue(string name, bool value, bool notify = true)
     {
-        if (_currentProperties.ContainsKey(name))
+        if (!props.ContainsKey(name)) return;
+
+        props[name] = value;
+
+        // Update UI
+        PropertyToggleItem item = items.Find(x => x.PropertyName == name);
+        if (item != null)
         {
-            _currentProperties[name] = value;
-            
-            // Update UI
-            var item = _spawnedItems.Find(x => x.PropertyName == name);
-            if (item)
+            if (notify)
             {
-                if (notify)
-                    item.Setup(name, value, OnToggleValueChanged);
-                else
-                    item.SetValueWithoutNotify(value);
+                item.Setup(name, value, OnToggle);
             }
-            
-            if (notify) onPropertyChanged?.Invoke(name, value);
+            else
+            {
+                item.SetValueWithoutNotify(value);
+            }
+        }
+
+        // Trigger event
+        if (notify)
+        {
+            onPropertyChanged?.Invoke(name, value);
         }
     }
 
-    // Coroutine untuk rebuild layout
-    private IEnumerator RebuildLayoutDelayed()
+    // Rebuild layout
+    IEnumerator RebuildLayout()
     {
         yield return null;
-        
-        if (_contentRect)
+
+        if (contentRect != null)
         {
-            LayoutRebuilder.ForceRebuildLayoutImmediate(_contentRect);
+            LayoutRebuilder.ForceRebuildLayoutImmediate(contentRect);
             Canvas.ForceUpdateCanvases();
-            
-            if (scrollRect)
-            {
-                scrollRect.verticalNormalizedPosition = 1f;
-                LayoutRebuilder.ForceRebuildLayoutImmediate(scrollRect.GetComponent<RectTransform>());
-            }
+        }
+
+        if (scrollRect != null)
+        {
+            scrollRect.verticalNormalizedPosition = 1f;
+            LayoutRebuilder.ForceRebuildLayoutImmediate(scrollRect.GetComponent<RectTransform>());
         }
     }
 }

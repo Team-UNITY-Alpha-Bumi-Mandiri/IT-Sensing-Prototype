@@ -57,6 +57,7 @@
     <Compile Include="Assets\Script\SearchableDropdownItem.cs" />
     <Compile Include="Assets\UI\Script\MeasureTool.cs" />
     <Compile Include="Assets\TextMesh Pro\Examples &amp; Extras\Scripts\EnvMapAnimator.cs" />
+    <Compile Include="Assets\Script\SimpleProcessor.cs" />
     <Compile Include="Assets\TextMesh Pro\Examples &amp; Extras\Scripts\TMP_TextSelector_A.cs" />
     <Compile Include="Assets\UI\Script\DropdownFilter.cs" />
     <Compile Include="Assets\UI\Script\GoogleStyleMap.cs" />
@@ -72,12 +73,13 @@
     <Compile Include="Assets\TextMesh Pro\Examples &amp; Extras\Scripts\TMP_FrameRateCounter.cs" />
     <Compile Include="Assets\Script kedua\PopupStarter.cs" />
     <Compile Include="Assets\UI\Script\MapControllerGoogle.cs" />
+    <Compile Include="Assets\Script\PropertyPanel.cs" />
     <Compile Include="Assets\Script\SearchableDropdown.cs" />
     <Compile Include="Assets\TextMesh Pro\Examples &amp; Extras\Scripts\Benchmark01.cs" />
     <Compile Include="Assets\TextMesh Pro\Examples &amp; Extras\Scripts\TextMeshSpawner.cs" />
     <Compile Include="Assets\TextMesh Pro\Examples &amp; Extras\Scripts\Benchmark02.cs" />
     <Compile Include="Assets\UI\Script\MapController.cs" />
-    <Compile Include="Assets\UI\Script\Script yang Final\ProjectManager.cs" />
+    <Compile Include="Assets\Script\PropertyToggleItem.cs" />
     <Compile Include="Assets\Script kedua\PopupFactory.cs" />
     <Compile Include="Assets\TextMesh Pro\Examples &amp; Extras\Scripts\CameraController.cs" />
     <Compile Include="Assets\UI\Script\ToggleFullscreen.cs" />
@@ -91,6 +93,7 @@
     <Compile Include="Assets\UI\Script\DistanceMeasureTool.cs" />
     <Compile Include="Assets\UI\Script\SlippyGoogleMap_Real.cs" />
     <Compile Include="Assets\UI\Script Uji Coba\Prefetcher.cs" />
+    <Compile Include="Assets\Script\FileBrowserHelper.cs" />
     <Compile Include="Assets\TextMesh Pro\Examples &amp; Extras\Scripts\TMP_ExampleScript_01.cs" />
     <Compile Include="Assets\TextMesh Pro\Examples &amp; Extras\Scripts\TMPro_InstructionOverlay.cs" />
     <Compile Include="Assets\TextMesh Pro\Examples &amp; Extras\Scripts\VertexShakeB.cs" />
@@ -125,6 +128,7 @@
     <Compile Include="Assets\UI\Script\Script yang Final\PolygonRenderer.cs" />
     <Compile Include="Assets\UI\Script\SlippyMapController.cs" />
     <Compile Include="Assets\TextMesh Pro\Examples &amp; Extras\Scripts\ShaderPropAnimator.cs" />
+    <Compile Include="Assets\Script\ProjectManager.cs" />
     <Compile Include="Assets\UI\Script\Script yang Final\MeasureAreaButton.cs" />
     <Compile Include="Assets\UI\Script\Script yang Final\MapCursorButton.cs" />
     <Compile Include="Assets\Script\ButtonCustom.cs" />

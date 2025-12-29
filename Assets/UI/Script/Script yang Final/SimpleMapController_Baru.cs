@@ -22,20 +22,20 @@ public class SimpleMapController_Baru : MonoBehaviour
     public MeasureTool2 measureToolRef;
 
     [Header("Input Settings")]
-public bool isInputEnabled = true; // <-- Tambahkan ini (Default True/Hijau)
+    public bool isInputEnabled = true;
 
     [Header("Smoothness Settings")]
     [Tooltip("Durasi animasi fade-in dalam detik")]
     public float fadeDuration = 0.3f; 
     [Tooltip("Maksimal download berjalan bersamaan")]
     public int maxConcurrentDownloads = 6; 
-    [Tooltip("Maksimal tekstur yang diproses per frame (mengurangi lag)")]
+    [Tooltip("Maksimal tekstur yang diproses per frame")]
     public int maxDecodesPerFrame = 2; 
 
     public enum MapStyle { OSM, Roadmap, Terrain, Satellite, Hybrid }
 
     const int TILE_SIZE = 256;
-    const int GRID_SIZE = 9; // Grid lebih besar sedikit untuk buffer
+    const int GRID_SIZE = 9; 
 
     private Vector2Int centerTile;
     private Dictionary<Vector2Int, RawImage> tiles = new Dictionary<Vector2Int, RawImage>();
@@ -48,8 +48,8 @@ public bool isInputEnabled = true; // <-- Tambahkan ini (Default True/Hijau)
     // Drag Logic
     private bool isDragging = false;
     private Vector2 lastMousePos;
-    private bool wasInputEnabled = true; // Track previous state
-    private int globalUpdateID = 0; // Token validasi update
+    private bool wasInputEnabled = true;
+    private int globalUpdateID = 0;
 
     struct TileRequest
     {
@@ -72,13 +72,12 @@ public bool isInputEnabled = true; // <-- Tambahkan ini (Default True/Hijau)
     }
 
     // ========================================================================
-    // 1. INPUT HANDLING (DRAG & ZOOM) - Smooth Logic
+    // 1. INPUT HANDLING (DRAG & ZOOM)
     // ========================================================================
     void HandleInput()
     {
         if (Mouse.current == null) return;
         
-        // Reset lastMousePos when input is re-enabled to prevent jump
         if (isInputEnabled && !wasInputEnabled)
         {
             lastMousePos = Mouse.current.position.ReadValue();
@@ -87,11 +86,10 @@ public bool isInputEnabled = true; // <-- Tambahkan ini (Default True/Hijau)
         
         if (!isInputEnabled) 
         {
-            // Reset drag state when input is disabled
             isDragging = false;
             return;
         }
-        // --- ZOOM ---
+
         if (IsMouseInArea())
         {
             float scroll = Mouse.current.scroll.ReadValue().y;
@@ -99,7 +97,6 @@ public bool isInputEnabled = true; // <-- Tambahkan ini (Default True/Hijau)
             else if (scroll < 0) ChangeZoom(-1);
         }
 
-        // --- DRAG ---
         if (Mouse.current.leftButton.wasPressedThisFrame && IsMouseInArea())
         {
             isDragging = true;
@@ -129,29 +126,24 @@ public bool isInputEnabled = true; // <-- Tambahkan ini (Default True/Hijau)
     void MoveMapByPixel(Vector2 deltaPixel)
     {
         double n = Math.Pow(2, zoom);
-        // Faktor koreksi agar drag terasa 1:1 dengan cursor
         double pixelsPerLon = (TILE_SIZE * n) / 360.0;
         double pixelsPerLat = (TILE_SIZE * n) / (2 * Math.PI);
         double latRad = latitude * Mathf.Deg2Rad;
         double cosLat = Math.Cos(latRad);
 
-        // Geser koordinat
         longitude -= deltaPixel.x / pixelsPerLon;
-        latitude -= (deltaPixel.y / pixelsPerLon) * cosLat; // Koreksi Mercator
+        latitude -= (deltaPixel.y / pixelsPerLon) * cosLat; 
         
         latitude = Math.Clamp(latitude, -85.0, 85.0);
 
-        // Cek apakah center tile berubah
         Vector2Int newCenter = LatLonToTile(latitude, longitude, zoom);
         
-        // Selalu update posisi fisik UI (Smooth movement)
         UpdateTilePositions();
 
-        // Hanya load ulang data jika pindah tile
         if (newCenter != centerTile)
         {
             centerTile = newCenter;
-            RefreshMap(false); // false = jangan clear cache visual dulu, biar smooth
+            RefreshMap(false); 
         }
     }
 
@@ -161,7 +153,6 @@ public bool isInputEnabled = true; // <-- Tambahkan ini (Default True/Hijau)
         if (newZoom != zoom)
         {
             zoom = newZoom;
-            // Saat zoom, kita reset total agar tidak ada glitch visual
             RefreshMap(true); 
         }
         if (measureToolRef != null) measureToolRef.RebuildAllVisuals();
@@ -185,7 +176,7 @@ public bool isInputEnabled = true; // <-- Tambahkan ini (Default True/Hijau)
                 
                 RawImage img = obj.GetComponent<RawImage>();
                 img.rectTransform.sizeDelta = new Vector2(TILE_SIZE, TILE_SIZE);
-                img.color = Color.clear; // Mulai Transparan
+                img.color = Color.clear;
 
                 tiles.Add(new Vector2Int(x, y), img);
             }
@@ -194,17 +185,14 @@ public bool isInputEnabled = true; // <-- Tambahkan ini (Default True/Hijau)
 
     public void RefreshMap(bool clearVisuals = true)
     {
-        globalUpdateID++; // Invalidasi request lama
-        downloadQueue.Clear(); // Batalkan antrian download
+        globalUpdateID++; 
+        downloadQueue.Clear(); 
         activeDownloads = 0;
         
         centerTile = LatLonToTile(latitude, longitude, zoom);
         UpdateTilePositions();
 
-        // Queue tile baru
         int n = 1 << zoom;
-        
-        // Prioritaskan tile tengah (spiral sort atau distance sort)
         var sortedKeys = tiles.Keys.OrderBy(k => Mathf.Abs(k.x) + Mathf.Abs(k.y));
 
         foreach (Vector2Int gridPos in sortedKeys)
@@ -213,10 +201,8 @@ public bool isInputEnabled = true; // <-- Tambahkan ini (Default True/Hijau)
             int tx = centerTile.x + gridPos.x;
             int ty = centerTile.y + gridPos.y;
 
-            // World Wrap X
             int finalX = (tx % n + n) % n;
             
-            // Validasi Y
             if (ty < 0 || ty >= n)
             {
                 img.color = Color.clear;
@@ -225,19 +211,17 @@ public bool isInputEnabled = true; // <-- Tambahkan ini (Default True/Hijau)
 
             string url = GetTileUrl(finalX, ty, zoom);
 
-            // Cek Cache
             if (tileCache.TryGetValue(url, out Texture2D cachedTex))
             {
                 if (img.texture != cachedTex)
                 {
                     img.texture = cachedTex;
-                    img.color = Color.white; // Langsung tampil jika cache
+                    img.color = Color.white;
                 }
             }
             else
             {
-                if (clearVisuals) img.color = Color.clear; // Sembunyikan kalau loading baru
-                // Masukkan ke antrian download
+                if (clearVisuals) img.color = Color.clear; 
                 downloadQueue.Enqueue(new TileRequest { gridPos = gridPos, url = url, id = globalUpdateID });
             }
         }
@@ -248,10 +232,6 @@ public bool isInputEnabled = true; // <-- Tambahkan ini (Default True/Hijau)
         Vector2 offset = GetFractionalOffset(latitude, longitude);
         foreach (var kvp in tiles)
         {
-            // Posisi relatif terhadap anchor container
-            // RAWIMAGE PIVOT IS CENTER (0.5, 0.5) BUT LOGIC ASSUMES TOP-LEFT?
-            // Compensate for Pivot (0.5, 0.5) -> Add TILE_SIZE/2 to X, Subtract TILE_SIZE/2 from Y
-            
             float posX = (kvp.Key.x * TILE_SIZE) - offset.x + (TILE_SIZE * 0.5f);
             float posY = -(kvp.Key.y * TILE_SIZE) + offset.y - (TILE_SIZE * 0.5f);
             
@@ -260,13 +240,12 @@ public bool isInputEnabled = true; // <-- Tambahkan ini (Default True/Hijau)
     }
 
     // ========================================================================
-    // 3. DOWNLOAD MANAGER (ANTI-STUTTER)
+    // 3. DOWNLOAD MANAGER
     // ========================================================================
     void ProcessDownloadQueue()
     {
         if (downloadQueue.Count == 0) return;
 
-        // Hanya izinkan N download berjalan bersamaan
         while (activeDownloads < maxConcurrentDownloads && downloadQueue.Count > 0)
         {
             TileRequest req = downloadQueue.Dequeue();
@@ -277,23 +256,16 @@ public bool isInputEnabled = true; // <-- Tambahkan ini (Default True/Hijau)
 
     IEnumerator DownloadRoutine(TileRequest req)
     {
-        // 1. Download Data
         using (UnityWebRequest www = UnityWebRequestTexture.GetTexture(req.url))
         {
             yield return www.SendWebRequest();
 
-            activeDownloads--; // Slot download bebas
+            activeDownloads--;
 
-            // Validasi: Apakah map sudah berubah (geser/zoom) sejak request ini dibuat?
             if (req.id != globalUpdateID) yield break;
 
             if (www.result == UnityWebRequest.Result.Success)
             {
-                // 2. Texture Decoding (Ini berat! Kita harus hati-hati)
-                // Kita gunakan DownloadHandlerTexture.GetContent, tapi..
-                // Tips Pro: Jangan lakukan ini semua dalam 1 frame jika banyak tile selesai.
-                
-                // Cek apakah tile masih relevan
                 if (tiles.TryGetValue(req.gridPos, out RawImage img))
                 {
                     Texture2D tex = DownloadHandlerTexture.GetContent(www);
@@ -303,8 +275,6 @@ public bool isInputEnabled = true; // <-- Tambahkan ini (Default True/Hijau)
                         tileCache.Add(req.url, tex);
 
                     img.texture = tex;
-                    
-                    // 3. Trigger Animasi Fade In
                     StartCoroutine(FadeIn(img));
                 }
             }
@@ -314,7 +284,7 @@ public bool isInputEnabled = true; // <-- Tambahkan ini (Default True/Hijau)
     IEnumerator FadeIn(RawImage img)
     {
         float t = 0;
-        img.color = new Color(1, 1, 1, 0); // Start Transparent
+        img.color = new Color(1, 1, 1, 0); 
         
         while (t < fadeDuration)
         {
@@ -343,11 +313,39 @@ public bool isInputEnabled = true; // <-- Tambahkan ini (Default True/Hijau)
         {
             case MapStyle.Roadmap: return $"https://mt1.google.com/vt/lyrs=m&x={x}&y={y}&z={z}";
             case MapStyle.Satellite: return $"https://mt1.google.com/vt/lyrs=s&x={x}&y={y}&z={z}";
+            case MapStyle.Hybrid: return $"https://mt1.google.com/vt/lyrs=y&x={x}&y={y}&z={z}";
+            case MapStyle.Terrain: return $"https://mt1.google.com/vt/lyrs=p&x={x}&y={y}&z={z}";
             default: return $"https://tile.openstreetmap.org/{z}/{x}/{y}.png";
         }
     }
 
-    // Math Helpers
+    // ========================================================================
+    // 5. FUNGSI UNTUK BUTTON (CHANGE STYLE)
+    // ========================================================================
+    
+    // Panggil ini di tombol Inspector dengan mengetik nama style (String)
+    public void SetMapStyle(string styleName)
+    {
+        if (Enum.TryParse(styleName, true, out MapStyle newStyle))
+        {
+            currentStyle = newStyle;
+            RefreshMap(true);
+        }
+        else
+        {
+            Debug.LogError("Style Name Invalid");
+        }
+    }
+
+    // Atau panggil ini langsung (tanpa parameter string)
+    public void SetStyleOSM() { currentStyle = MapStyle.OSM; RefreshMap(true); }
+    public void SetStyleSatellite() { currentStyle = MapStyle.Satellite; RefreshMap(true); }
+    public void SetStyleHybrid() { currentStyle = MapStyle.Hybrid; RefreshMap(true); }
+    public void SetStyleRoadmap() { currentStyle = MapStyle.Roadmap; RefreshMap(true); }
+
+    // ========================================================================
+    // 6. MATH HELPERS
+    // ========================================================================
     Vector2Int LatLonToTile(double lat, double lon, int z)
     {
         double n = Math.Pow(2, z);
@@ -368,55 +366,33 @@ public bool isInputEnabled = true; // <-- Tambahkan ini (Default True/Hijau)
 
     public void ZoomIn()
     {
-        ChangeZoom(1); // Memanggil logika zoom yang sudah ada
+        ChangeZoom(1);
     }
 
     public void ZoomOut()
     {
-        ChangeZoom(-1); // Memanggil logika zoom yang sudah ada
+        ChangeZoom(-1);
     }
 
-    // ========================================================================
-    // 6. HELPER UNTUK ALAT UKUR (MEASURE TOOL)
-    // ========================================================================
-
-    // Mengubah Lat/Lon dunia nyata menjadi posisi lokal di dalam TileContainer
+    // Helper untuk Measure Tool
     public Vector2 LatLonToLocalPosition(double lat, double lon)
     {
         Vector2 offset = GetFractionalOffset(latitude, longitude);
-        Vector2Int center = LatLonToTile(latitude, longitude, zoom);
-        Vector2Int target = LatLonToTile(lat, lon, zoom);
-
-        // Hitung selisih tile
-        int dx = target.x - center.x;
-        int dy = target.y - center.y;
-
-        // Hitung posisi pixel relatif terhadap pusat container
-        float posX = (dx * TILE_SIZE) + GetFractionalOffset(lat, lon).x - offset.x;
-        // Koreksi offset internal tile
         double n = Math.Pow(2, zoom);
         double x_pos = ((lon + 180.0) / 360.0 * n);
         double y_pos = (1.0 - Math.Log(Math.Tan(lat * Mathf.Deg2Rad) + 1.0 / Math.Cos(lat * Mathf.Deg2Rad)) / Math.PI) / 2.0 * n;
         
-        // Kalkulasi posisi pixel presisi (sub-tile accuracy)
-        float preciseX = (float)((x_pos - Math.Floor(x_pos)) * TILE_SIZE);
-        float preciseY = (float)((y_pos - Math.Floor(y_pos)) * TILE_SIZE);
-
-        // Gabungkan tile index + sub-tile offset
-        // (Kita hitung ulang offset relatif terhadap center tile yang sedang aktif)
         double centerX = ((longitude + 180.0) / 360.0 * n);
         double centerY = (1.0 - Math.Log(Math.Tan(latitude * Mathf.Deg2Rad) + 1.0 / Math.Cos(latitude * Mathf.Deg2Rad)) / Math.PI) / 2.0 * n;
 
         float finalX = (float)((x_pos - centerX) * TILE_SIZE);
-        float finalY = (float)-((y_pos - centerY) * TILE_SIZE); // Y terbalik
+        float finalY = (float)-((y_pos - centerY) * TILE_SIZE); 
 
         return new Vector2(finalX, finalY);
     }
 
-    // Mengubah posisi Mouse di layar menjadi Lat/Lon
     public Vector2 ScreenToLatLon(Vector2 screenPos)
     {
-        // Ubah posisi screen ke posisi lokal di dalam inputArea (atau TileContainer)
         RectTransformUtility.ScreenPointToLocalPointInRectangle(tileContainer, screenPos, null, out Vector2 localPos);
 
         double n = Math.Pow(2, zoom);
@@ -424,7 +400,7 @@ public bool isInputEnabled = true; // <-- Tambahkan ini (Default True/Hijau)
         double centerY = (1.0 - Math.Log(Math.Tan(latitude * Mathf.Deg2Rad) + 1.0 / Math.Cos(latitude * Mathf.Deg2Rad)) / Math.PI) / 2.0 * n;
 
         double targetTileX = centerX + (localPos.x / TILE_SIZE);
-        double targetTileY = centerY - (localPos.y / TILE_SIZE); // Y terbalik
+        double targetTileY = centerY - (localPos.y / TILE_SIZE); 
 
         double finalLon = (targetTileX / n) * 360.0 - 180.0;
         double latRad = Math.Atan(Math.Sinh(Math.PI * (1 - 2 * targetTileY / n)));

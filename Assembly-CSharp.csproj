@@ -116,6 +116,7 @@
     <Compile Include="Assets\UI\Script Uji Coba\Utils.cs" />
     <Compile Include="Assets\TextMesh Pro\Examples &amp; Extras\Scripts\TMP_UiFrameRateCounter.cs" />
     <Compile Include="Assets\UI\Script Uji Coba\MapCore.cs" />
+    <Compile Include="Assets\Script\SharpeningController.cs" />
     <Compile Include="Assets\UI\Script\MapRulerTool.cs" />
     <Compile Include="Assets\TextMesh Pro\Examples &amp; Extras\Scripts\VertexZoom.cs" />
     <Compile Include="Assets\TextMesh Pro\Examples &amp; Extras\Scripts\TMP_TextSelector_B.cs" />
@@ -132,6 +133,7 @@
     <Compile Include="Assets\UI\Script\Script yang Final\MeasureAreaButton.cs" />
     <Compile Include="Assets\UI\Script\Script yang Final\MapCursorButton.cs" />
     <Compile Include="Assets\Script\ButtonCustom.cs" />
+    <Compile Include="Assets\Script\FolderBrowserHelper.cs" />
     <Compile Include="Assets\UI\Script\DistanceRulerController.cs" />
     <Compile Include="Assets\Script kedua\PanAndZoom.cs" />
     <Compile Include="Assets\TextMesh Pro\Examples &amp; Extras\Scripts\TMP_TextInfoDebugTool.cs" />

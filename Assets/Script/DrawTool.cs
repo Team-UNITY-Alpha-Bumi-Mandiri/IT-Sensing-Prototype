@@ -6,10 +6,6 @@ using TMPro;
 using UnityEngine.Events;
 using System.IO;
 
-// =========================================
-// Tool untuk menggambar Point, Line, dan Polygon di peta
-// Mode: Point (titik), Line (garis), Polygon (area), Delete (hapus)
-// =========================================
 public class DrawTool : MonoBehaviour
 {
     [Header("Dependencies")]
@@ -61,9 +57,6 @@ public class DrawTool : MonoBehaviour
     GameObject tooltip;
     TMP_Text tooltipText;
 
-    // =========================================
-    // Kelas data objek gambar
-    // =========================================
     [System.Serializable]
     public class DrawObject
     {
@@ -75,9 +68,6 @@ public class DrawTool : MonoBehaviour
         public GameObject rootObj;
     }
 
-    // =========================================
-    // INISIALISASI
-    // =========================================
     void Start()
     {
         if (container != null)
@@ -104,9 +94,6 @@ public class DrawTool : MonoBehaviour
         }
     }
 
-    // =========================================
-    // UPDATE LOOP
-    // =========================================
     void Update()
     {
         if (mapController == null || container == null) return;
@@ -127,9 +114,6 @@ public class DrawTool : MonoBehaviour
         HandleInput();
     }
 
-    // =========================================
-    // HANDLE INPUT
-    // =========================================
     void HandleInput()
     {
         if (!isActive || Mouse.current == null) return;
@@ -174,10 +158,6 @@ public class DrawTool : MonoBehaviour
         }
     }
 
-    // =========================================
-    // LOGIKA GAMBAR
-    // =========================================
-    
     // Tambah titik baru
     void AddPoint(Vector2 latLon, Vector2 screenPos)
     {
@@ -264,10 +244,6 @@ public class DrawTool : MonoBehaviour
         if (tooltip != null) tooltip.SetActive(false);
     }
 
-    // =========================================
-    // VISUAL
-    // =========================================
-    
     // Refresh semua visual
     void RefreshAll()
     {
@@ -404,10 +380,6 @@ public class DrawTool : MonoBehaviour
         obj.visuals.Add(go);
     }
 
-    // =========================================
-    // HELPER
-    // =========================================
-    
     void ClearVisuals(DrawObject obj)
     {
         foreach (GameObject v in obj.visuals)
@@ -443,9 +415,6 @@ public class DrawTool : MonoBehaviour
         return RectTransformUtility.WorldToScreenPoint(null, worldPos);
     }
 
-    // =========================================
-    // DELETE
-    // =========================================
     void TryDelete(Vector2 mousePos)
     {
         for (int i = allObjs.Count - 1; i >= 0; i--)
@@ -540,9 +509,6 @@ public class DrawTool : MonoBehaviour
         return inside;
     }
 
-    // =========================================
-    // GHOST & TOOLTIP
-    // =========================================
     void CreateHelpers()
     {
         // Ghost line
@@ -654,10 +620,6 @@ public class DrawTool : MonoBehaviour
         return 12742 * Mathf.Asin(Mathf.Sqrt(a)); // 12742 = diameter bumi (km)
     }
 
-    // =========================================
-    // PUBLIC API
-    // =========================================
-    
     // Aktifkan mode tertentu
     public void ActivateMode(DrawMode m)
     {

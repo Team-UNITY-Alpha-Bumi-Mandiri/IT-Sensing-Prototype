@@ -3,10 +3,6 @@ using UnityEngine.UI;
 using TMPro;
 using System;
 
-// =========================================
-// Satu item di dalam dropdown list
-// Digunakan oleh: SearchableDropdown
-// =========================================
 public class SearchableDropdownItem : MonoBehaviour
 {
     // Teks yang ditampilkan

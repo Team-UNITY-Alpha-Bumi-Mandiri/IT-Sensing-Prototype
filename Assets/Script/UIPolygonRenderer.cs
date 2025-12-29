@@ -2,10 +2,6 @@ using UnityEngine;
 using UnityEngine.UI;
 using System.Collections.Generic;
 
-// =========================================
-// Komponen UI untuk render polygon dengan bentuk bebas
-// Menggunakan algoritma Ear-Clipping untuk triangulasi
-// =========================================
 [RequireComponent(typeof(CanvasRenderer))]
 public class UIPolygonRenderer : MaskableGraphic
 {

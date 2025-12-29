@@ -3,10 +3,6 @@ using UnityEngine.UI;
 using TMPro;
 using System.Collections.Generic;
 
-// =========================================
-// Manager utama untuk CRUD project
-// Create, Read, Update, Delete
-// =========================================
 public class ProjectManager : MonoBehaviour
 {
     [Header("Dependencies")]
@@ -24,9 +20,7 @@ public class ProjectManager : MonoBehaviour
     public TMP_InputField renameProjectInput; // Input rename project
     public Button renameProjectButton;        // Tombol rename
 
-    // =========================================
-    // STRUKTUR DATA
-    // =========================================
+
 
     // Entry property (untuk serialisasi JSON)
     [System.Serializable]
@@ -93,9 +87,7 @@ public class ProjectManager : MonoBehaviour
     List<ProjectData> projects = new List<ProjectData>();
     ProjectData current = null;
 
-    // =========================================
-    // INISIALISASI
-    // =========================================
+
     void Start()
     {
         // Load data tersimpan
@@ -129,9 +121,7 @@ public class ProjectManager : MonoBehaviour
         current = null;
     }
 
-    // =========================================
-    // DROPDOWN
-    // =========================================
+
     void SetupDropdown()
     {
         if (projectDropdown == null) return;
@@ -161,9 +151,7 @@ public class ProjectManager : MonoBehaviour
         }
     }
 
-    // =========================================
-    // CREATE (Buat Project Baru)
-    // =========================================
+
     void StartCreate()
     {
         // Validasi nama
@@ -270,9 +258,7 @@ public class ProjectManager : MonoBehaviour
         proj.SetProps(dict);
     }
 
-    // =========================================
-    // SELECT / READ (Pilih Project)
-    // =========================================
+
     void Select(ProjectData proj)
     {
         current = proj;
@@ -307,9 +293,7 @@ public class ProjectManager : MonoBehaviour
         }
     }
 
-    // =========================================
-    // RENAME / UPDATE (Ubah Nama)
-    // =========================================
+
     void Rename()
     {
         // Validasi
@@ -336,9 +320,7 @@ public class ProjectManager : MonoBehaviour
         }
     }
 
-    // =========================================
-    // DELETE (Hapus Project)
-    // =========================================
+
     void Delete()
     {
         if (current == null) return;
@@ -374,9 +356,7 @@ public class ProjectManager : MonoBehaviour
         }
     }
 
-    // =========================================
-    // PROPERTY MANAGEMENT
-    // =========================================
+
 
     // Tambah property baru
     public void AddProperty(string name, bool value = false)
@@ -435,9 +415,7 @@ public class ProjectManager : MonoBehaviour
         return current;
     }
 
-    // =========================================
-    // SAVE / LOAD
-    // =========================================
+
     
     // Path file save
     string SavePath

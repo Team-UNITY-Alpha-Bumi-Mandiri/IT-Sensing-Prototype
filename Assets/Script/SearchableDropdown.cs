@@ -5,10 +5,6 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine.Events;
 
-// =========================================
-// Dropdown dengan fitur search/filter
-// Contoh: Dropdown pilih project
-// =========================================
 public class SearchableDropdown : MonoBehaviour
 {
     [Header("UI References")]

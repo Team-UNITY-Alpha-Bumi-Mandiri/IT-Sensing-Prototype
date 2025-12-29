@@ -1,10 +1,6 @@
 using UnityEngine;
 using UnityEngine.UI;
 
-// =========================================
-// Tombol untuk pilih mode gambar
-// Mode: Point, Line, Polygon, Delete
-// =========================================
 public class DrawModeButton : MonoBehaviour
 {
     // Mode yang dikontrol tombol ini

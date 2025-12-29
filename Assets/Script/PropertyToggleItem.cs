@@ -3,10 +3,6 @@ using UnityEngine.UI;
 using TMPro;
 using System;
 
-// =========================================
-// Satu item toggle di panel property
-// Contoh: "Night Mode [x]", "Show Grid [ ]"
-// =========================================
 public class PropertyToggleItem : MonoBehaviour
 {
     // Checkbox on/off

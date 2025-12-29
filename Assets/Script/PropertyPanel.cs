@@ -4,10 +4,6 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine.Events;
 
-// =========================================
-// Panel untuk menampilkan daftar property toggle
-// Contoh: Panel berisi checkbox "Night Mode", "Show Grid", dll
-// =========================================
 public class PropertyPanel : MonoBehaviour
 {
     [Header("UI References")]

@@ -1,0 +1,769 @@
+using UnityEngine;
+using UnityEngine.UI;
+using System.Collections.Generic;
+using System.IO;
+using BitMiracle.LibTiff.Classic;
+
+// =========================================
+// Manager untuk membaca GeoTIFF multi-band
+// dan menampilkan layer sebagai overlay di peta
+// dengan posisi geografis yang benar
+// =========================================
+public class TiffLayerManager : MonoBehaviour
+{
+    [Header("References")]
+    public SimpleMapController_Baru mapController;
+    public PropertyPanel propertyPanel;
+    public ProjectManager projectManager; // Referensi ProjectManager
+    public RectTransform overlayContainer;  // Tempat spawn overlay
+
+    [Header("Settings")]
+    public float overlayOpacity = 1f;
+
+    // Data layer
+    List<LayerData> layers = new List<LayerData>();
+    List<GameObject> overlays = new List<GameObject>();
+    string currentTiffPath = "";
+
+    // GeoTIFF bounds (koordinat geografis)
+    double geoMinLat, geoMaxLat, geoMinLon, geoMaxLon;
+    int imageWidth, imageHeight;
+    bool hasGeoData = false;
+
+    // Cache untuk update posisi
+    double lastMapLat, lastMapLon;
+    int lastMapZoom;
+
+    // Struct untuk menyimpan data layer
+    class LayerData
+    {
+        public string name;
+        public Texture2D texture;
+        public bool isVisible;
+    }
+
+    void Start()
+    {
+        // Subscribe ke event PropertyPanel
+        if (propertyPanel != null)
+        {
+            propertyPanel.onPropertyChanged.AddListener(OnPropertyToggle);
+        }
+
+        // Subscribe ke event ProjectManager
+        if (projectManager != null)
+        {
+            projectManager.onTiffProjectLoaded.AddListener(OnTiffProjectLoaded);
+        }
+    }
+
+    void Update()
+    {
+        // Sync posisi overlay dengan peta jika peta bergerak/zoom
+        if (hasGeoData && mapController != null)
+        {
+            bool mapChanged = (mapController.latitude != lastMapLat) ||
+                              (mapController.longitude != lastMapLon) ||
+                              (mapController.zoom != lastMapZoom);
+
+            if (mapChanged)
+            {
+                UpdateAllOverlayPositions();
+                lastMapLat = mapController.latitude;
+                lastMapLon = mapController.longitude;
+                lastMapZoom = mapController.zoom;
+            }
+        }
+    }
+
+    // =========================================
+    // PUBLIC API
+    // =========================================
+
+    // Load file GeoTIFF dan extract semua band
+    public void LoadTiff(string path)
+    {
+        if (!File.Exists(path))
+        {
+            Debug.LogError($"[TiffLayerManager] File tidak ditemukan: {path}");
+            return;
+        }
+
+        // Clear layer lama
+        ClearLayers();
+        currentTiffPath = path;
+
+        // Baca TIFF menggunakan LibTiff.Net
+        using (Tiff tiff = Tiff.Open(path, "r"))
+        {
+            if (tiff == null)
+            {
+                Debug.LogError($"[TiffLayerManager] Gagal membuka TIFF: {path}");
+                return;
+            }
+
+            // Dapatkan info dasar
+            imageWidth = tiff.GetField(TiffTag.IMAGEWIDTH)[0].ToInt();
+            imageHeight = tiff.GetField(TiffTag.IMAGELENGTH)[0].ToInt();
+            int samplesPerPixel = 1;
+            
+            var sppField = tiff.GetField(TiffTag.SAMPLESPERPIXEL);
+            if (sppField != null) samplesPerPixel = sppField[0].ToInt();
+
+            int bitsPerSample = 8;
+            var bpsField = tiff.GetField(TiffTag.BITSPERSAMPLE);
+            if (bpsField != null) bitsPerSample = bpsField[0].ToInt();
+
+            Debug.Log($"[TiffLayerManager] TIFF: {imageWidth}x{imageHeight}, {samplesPerPixel} bands, {bitsPerSample} bits");
+
+            // Baca GeoTIFF tags untuk koordinat
+            ReadGeoTiffTags(tiff);
+
+            // ===========================================
+            // MANUAL READ: Mengatasi masalah 16-bit dark & skew
+            // & Support PlanarConfig (Interleaved vs Separate)
+            // ===========================================
+            
+            // Cek Planar Config & Tiling
+            FieldValue[] pConfigField = tiff.GetField(TiffTag.PLANARCONFIG);
+            int planarConfig = 1; // Default Contiguous
+            if (pConfigField != null && pConfigField.Length > 0) planarConfig = pConfigField[0].ToInt();
+            
+            bool isTiled = tiff.IsTiled();
+            
+            Debug.Log($"[TiffLayerManager] Mode: {(isTiled ? "TILED" : "STRIP")}, PlanarConfig: {planarConfig}, Bits: {bitsPerSample}, Samples: {samplesPerPixel}");
+
+            int totalPixels = imageWidth * imageHeight;
+            float[][] bandData = new float[samplesPerPixel][];
+            for (int b = 0; b < samplesPerPixel; b++) bandData[b] = new float[totalPixels];
+
+            float[] minVal = new float[samplesPerPixel];
+            float[] maxVal = new float[samplesPerPixel];
+            for (int k = 0; k < samplesPerPixel; k++) { minVal[k] = float.MaxValue; maxVal[k] = float.MinValue; }
+
+            // ===================================
+            // PATH A: TILED TIFF (Common for GeoTIFF)
+            // ===================================
+            if (isTiled)
+            {
+                int tileWidth = tiff.GetField(TiffTag.TILEWIDTH)[0].ToInt();
+                int tileHeight = tiff.GetField(TiffTag.TILELENGTH)[0].ToInt();
+                int tileSize = tiff.TileSize();
+                byte[] tileBuffer = new byte[tileSize];
+
+                for (int y = 0; y < imageHeight; y += tileHeight)
+                {
+                    for (int x = 0; x < imageWidth; x += tileWidth)
+                    {
+                        // Handle Contiguous vs Separate Tiles
+                        if (planarConfig == 1) // RGBRGB...
+                        {
+                            tiff.ReadTile(tileBuffer, 0, x, y, 0, 0);
+                            
+                            // Iterate pixels in tile
+                            for (int ty = 0; ty < tileHeight; ty++)
+                            {
+                                int globalY = y + ty;
+                                if (globalY >= imageHeight) break;
+
+                                for (int tx = 0; tx < tileWidth; tx++)
+                                {
+                                    int globalX = x + tx;
+                                    if (globalX >= imageWidth) break;
+
+                                    int pixelIdx = globalY * imageWidth + globalX;
+                                    
+                                    // Parse tile buffer (similar to scanline)
+                                    for (int s = 0; s < samplesPerPixel; s++)
+                                    {
+                                        int byteIdx = 0;
+                                        if (bitsPerSample == 8) byteIdx = (ty * tileWidth + tx) * samplesPerPixel + s;
+                                        else if (bitsPerSample == 16) byteIdx = ((ty * tileWidth + tx) * samplesPerPixel + s) * 2;
+                                        else if (bitsPerSample == 32) byteIdx = ((ty * tileWidth + tx) * samplesPerPixel + s) * 4;
+
+                                        if (byteIdx >= tileSize) continue;
+
+                                        float val = 0;
+                                        if (bitsPerSample == 8) val = tileBuffer[byteIdx] / 255f;
+                                        else if (bitsPerSample == 16) val = System.BitConverter.ToUInt16(tileBuffer, byteIdx) / 65535f;
+                                        else if (bitsPerSample == 32) val = System.BitConverter.ToSingle(tileBuffer, byteIdx);
+
+                                        bandData[s][pixelIdx] = val;
+                                        if (val < minVal[s]) minVal[s] = val;
+                                        if (val > maxVal[s]) maxVal[s] = val;
+                                    }
+                                }
+                            }
+                        }
+                        else // Separate (Band by Band)
+                        {
+                            for (int s = 0; s < samplesPerPixel; s++)
+                            {
+                                // Sample param is checked differently for tiles? No, ReadTile takes sample.
+                                tiff.ReadTile(tileBuffer, 0, x, y, 0, (short)s);
+                                
+                                for (int ty = 0; ty < tileHeight; ty++)
+                                {
+                                    int globalY = y + ty;
+                                    if (globalY >= imageHeight) break;
+
+                                    for (int tx = 0; tx < tileWidth; tx++)
+                                    {
+                                        int globalX = x + tx;
+                                        if (globalX >= imageWidth) break;
+                                        
+                                        int pixelIdx = globalY * imageWidth + globalX;
+                                        
+                                        int byteIdx = 0;
+                                        if (bitsPerSample == 8) byteIdx = (ty * tileWidth + tx);
+                                        else if (bitsPerSample == 16) byteIdx = (ty * tileWidth + tx) * 2;
+                                        
+                                        if (byteIdx >= tileSize) continue;
+                                        
+                                        float val = 0;
+                                        if (bitsPerSample == 8) val = tileBuffer[byteIdx] / 255f;
+                                        else if (bitsPerSample == 16) val = System.BitConverter.ToUInt16(tileBuffer, byteIdx) / 65535f;
+
+                                        bandData[s][pixelIdx] = val;
+                                        if (val < minVal[s]) minVal[s] = val;
+                                        if (val > maxVal[s]) maxVal[s] = val;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            // ===================================
+            // PATH B: STRIP TIFF (Standard)
+            // ===================================
+            else 
+            {
+                int scanlineSize = tiff.ScanlineSize();
+                byte[] scanlineBuffer = new byte[scanlineSize];
+
+                // Logic Pembacaan Berdasarkan Planar Config
+                if (planarConfig == 1) // Contiguous (RGBRGB...)
+                {
+                    for (int y = 0; y < imageHeight; y++)
+                    {
+                        tiff.ReadScanline(scanlineBuffer, y);
+                        
+                        for (int x = 0; x < imageWidth; x++)
+                        {
+                            int pixelIdx = y * imageWidth + x;
+                            for (int s = 0; s < samplesPerPixel; s++)
+                            {
+                                // Calculate byte offset
+                                int byteIdx = 0;
+                                if (bitsPerSample == 8) byteIdx = x * samplesPerPixel + s;
+                                else if (bitsPerSample == 16) byteIdx = (x * samplesPerPixel + s) * 2;
+                                else if (bitsPerSample == 32) byteIdx = (x * samplesPerPixel + s) * 4;
+
+                                if (byteIdx >= scanlineSize) continue;
+
+                                float val = 0;
+                                if (bitsPerSample == 8) val = scanlineBuffer[byteIdx] / 255f;
+                                else if (bitsPerSample == 16) val = System.BitConverter.ToUInt16(scanlineBuffer, byteIdx) / 65535f;
+                                else if (bitsPerSample == 32) val = System.BitConverter.ToSingle(scanlineBuffer, byteIdx);
+
+                                bandData[s][pixelIdx] = val;
+                                if (val < minVal[s]) minVal[s] = val;
+                                if (val > maxVal[s]) maxVal[s] = val;
+                            }
+                        }
+                    }
+                }
+                else // Separate (RRR..., GGG..., BBB...)
+                {
+                    for (int s = 0; s < samplesPerPixel; s++)
+                    {
+                        for (int y = 0; y < imageHeight; y++)
+                        {
+                            // Baca specific sample/band untuk baris ini
+                            tiff.ReadScanline(scanlineBuffer, y, (short)s);
+
+                            for (int x = 0; x < imageWidth; x++)
+                            {
+                                int pixelIdx = y * imageWidth + x;
+                                
+                                // Calculate byte offset (non-interleaved)
+                                int byteIdx = 0;
+                                if (bitsPerSample == 8) byteIdx = x;
+                                else if (bitsPerSample == 16) byteIdx = x * 2;
+                                else if (bitsPerSample == 32) byteIdx = x * 4;
+
+                                if (byteIdx >= scanlineSize) continue;
+
+                                float val = 0;
+                                if (bitsPerSample == 8) val = scanlineBuffer[byteIdx] / 255f;
+                                else if (bitsPerSample == 16) val = System.BitConverter.ToUInt16(scanlineBuffer, byteIdx) / 65535f;
+                                else if (bitsPerSample == 32) val = System.BitConverter.ToSingle(scanlineBuffer, byteIdx);
+
+                                bandData[s][pixelIdx] = val;
+                                if (val < minVal[s]) minVal[s] = val;
+                                if (val > maxVal[s]) maxVal[s] = val;
+                            }
+                        }
+                    }
+                }
+            }
+
+            // =========================================
+            // AUTO STRETCH (Normalization) & Create Texture
+            // =========================================
+            for (int s = 0; s < samplesPerPixel; s++)
+            {
+                // Safety check
+                if (maxVal[s] - minVal[s] < 0.0001f) maxVal[s] = minVal[s] + 1f;
+                Debug.Log($"[TiffLayerManager] Band {s} Range: {minVal[s]} - {maxVal[s]}");
+            }
+
+            // Helper to get normalized value
+            float GetNorm(int band, int idx)
+            {
+                float val = bandData[band][idx];
+                return Mathf.Clamp01((val - minVal[band]) / (maxVal[band] - minVal[band]));
+            }
+
+            // Buat Layer untuk SETIAP Band yang ada
+            for (int i = 0; i < samplesPerPixel; i++)
+            {
+                // Beri nama yang informatif & Backward Compatible
+                string bandName = $"Band {i + 1}";
+                
+                if (samplesPerPixel == 1 && i == 0)
+                {
+                     bandName = "Grayscale";
+                }
+                else if (samplesPerPixel >= 3)
+                {
+                    if (i == 0) bandName = "Red";
+                    else if (i == 1) bandName = "Green";
+                    else if (i == 2) bandName = "Blue";
+                    else if (i == 3) bandName = "NIR";
+                }
+
+                CreateLayerManual(bandData, imageWidth, imageHeight, bandName, i, minVal[i], maxVal[i]);
+            }
+
+            // Tambahkan Composite jika minimal 3 band
+            if (samplesPerPixel >= 3)
+            {
+                CreateCompositeManual(bandData, imageWidth, imageHeight, "RGB Composite", minVal, maxVal);
+            }
+        }
+
+        // Tampilkan di Panel (via ProjectManager jika ada)
+        SyncWithProject();
+
+        if (hasGeoData && mapController != null)
+        {
+            double centerLat = (geoMinLat + geoMaxLat) / 2.0;
+            double centerLon = (geoMinLon + geoMaxLon) / 2.0;
+            
+            // Hitung zoom level yang sesuai
+            int suggestedZoom = CalculateFitZoom();
+            
+            mapController.GoToLocation(centerLat, centerLon, suggestedZoom);
+            Debug.Log($"[TiffLayerManager] Navigasi ke: {centerLat}, {centerLon}, zoom {suggestedZoom}");
+        }
+    }
+    
+    // Callback dari ProjectManager
+    void OnTiffProjectLoaded(string path)
+    {
+        if (string.IsNullOrEmpty(path))
+        {
+            ClearLayers();
+            return;
+        }
+
+        // Jangan reload jika path sama (kecuali dipaksa)
+        if (currentTiffPath != path || layers.Count == 0)
+        {
+            LoadTiff(path);
+        }
+        else
+        {
+            // Jika path sama, cuma sync property
+            SyncWithProject();
+        }
+    }
+
+    // Integrasi dengan ProjectManager
+    void SyncWithProject()
+    {
+        // Fallback jika tidak ada project manager
+        if (projectManager == null || projectManager.GetCurrentProject() == null)
+        {
+            ShowLayersInPanel();
+            return;
+        }
+
+        // Pastikan setiap layer terdaftar dan sync kondisinya
+        var proj = projectManager.GetCurrentProject();
+        var props = proj.GetProps();
+
+        foreach (var layer in layers)
+        {
+            // Jika properti belum ada di project, tambahkan default (false)
+            // Jika sudah ada, ikuti nilai dari project
+            if (!props.ContainsKey(layer.name))
+            {
+                projectManager.AddProperty(layer.name, false); 
+            }
+            else
+            {
+                bool val = props[layer.name];
+                layer.isVisible = val;
+                
+                if (val) ShowLayerOnMap(layer);
+                else HideLayerFromMap(layer);
+            }
+        }
+    }
+
+    // Helper: Dapatkan Center Lat/Lon dari TIFF tanpa load full texture
+    public bool GetTiffCenter(string path, out double centerLat, out double centerLon)
+    {
+        centerLat = 0;
+        centerLon = 0;
+
+        if (!File.Exists(path)) return false;
+
+        using (Tiff tiff = Tiff.Open(path, "r"))
+        {
+            if (tiff == null) return false;
+            
+            // Baca dimensi
+            int w = tiff.GetField(TiffTag.IMAGEWIDTH)[0].ToInt();
+            int h = tiff.GetField(TiffTag.IMAGELENGTH)[0].ToInt();
+
+            // Set temporary variables untuk ReadGeoTiffTags
+            imageWidth = w;
+            imageHeight = h;
+
+            ReadGeoTiffTags(tiff);
+
+            if (hasGeoData)
+            {
+                centerLat = (geoMinLat + geoMaxLat) / 2.0;
+                centerLon = (geoMinLon + geoMaxLon) / 2.0;
+                return true;
+            }
+        }
+        return false;
+    }
+
+    // Hapus semua layer
+    public void ClearLayers()
+    {
+        // Hapus texture dan overlay
+        foreach (var layer in layers)
+        {
+            if (layer.texture != null)
+            {
+                Destroy(layer.texture);
+            }
+        }
+        layers.Clear();
+
+        foreach (var overlay in overlays)
+        {
+            if (overlay != null)
+            {
+                Destroy(overlay);
+            }
+        }
+        overlays.Clear();
+
+        // Clear panel
+        if (propertyPanel != null)
+        {
+            propertyPanel.ClearPanel();
+        }
+
+        hasGeoData = false;
+    }
+
+    // =========================================
+    // GEOTIFF PARSING
+    // =========================================
+
+    void ReadGeoTiffTags(Tiff tiff)
+    {
+        hasGeoData = false;
+
+        // Coba baca ModelTiepoint (tag 33922) dan ModelPixelScale (tag 33550)
+        var tiepointField = tiff.GetField((TiffTag)33922);  // TIFFTAG_GEOTIFF_MODELTIEPOINT
+        var scaleField = tiff.GetField((TiffTag)33550);     // TIFFTAG_GEOTIFF_MODELPIXELSCALE
+
+        if (tiepointField != null && scaleField != null)
+        {
+            // Parse tiepoint: [I, J, K, X, Y, Z] dimana I,J=pixel, X,Y=koordinat
+            int tiepointCount = tiepointField[0].ToInt();
+            double[] tiepoints = tiepointField[1].ToDoubleArray();
+            
+            // Parse scale: [ScaleX, ScaleY, ScaleZ]
+            int scaleCount = scaleField[0].ToInt();
+            double[] scales = scaleField[1].ToDoubleArray();
+
+            if (tiepoints != null && tiepoints.Length >= 6 && scales != null && scales.Length >= 2)
+            {
+                double originI = tiepoints[0];  // Pixel X (biasanya 0)
+                double originJ = tiepoints[1];  // Pixel Y (biasanya 0)
+                double originX = tiepoints[3];  // Longitude (atau X dalam CRS)
+                double originY = tiepoints[4];  // Latitude (atau Y dalam CRS)
+
+                double scaleX = scales[0];  // Derajat per pixel di X
+                double scaleY = scales[1];  // Derajat per pixel di Y
+
+                // Hitung bounding box
+                // Origin biasanya adalah pojok kiri atas (minLon, maxLat)
+                geoMinLon = originX - (originI * scaleX);
+                geoMaxLat = originY + (originJ * scaleY);
+                geoMaxLon = geoMinLon + (imageWidth * scaleX);
+                geoMinLat = geoMaxLat - (imageHeight * scaleY);
+
+                hasGeoData = true;
+                Debug.Log($"[TiffLayerManager] GeoTIFF Bounds: Lat [{geoMinLat} - {geoMaxLat}], Lon [{geoMinLon} - {geoMaxLon}]");
+            }
+        }
+
+        // Jika tidak ada tiepoint/scale, coba baca GeoTransform (tag 34264)
+        if (!hasGeoData)
+        {
+            var transformField = tiff.GetField((TiffTag)34264);  // TIFFTAG_GEOTIFF_MODELTRANSFORMATION
+            if (transformField != null)
+            {
+                double[] transform = transformField[1].ToDoubleArray();
+                if (transform != null && transform.Length >= 16)
+                {
+                    // Affine transform matrix 4x4
+                    // transform[0] = scaleX, transform[3] = originX
+                    // transform[5] = -scaleY (negatif), transform[7] = originY
+                    double scaleX = transform[0];
+                    double scaleY = -transform[5];  // Biasanya negatif
+                    double originX = transform[3];
+                    double originY = transform[7];
+
+                    geoMinLon = originX;
+                    geoMaxLat = originY;
+                    geoMaxLon = geoMinLon + (imageWidth * scaleX);
+                    geoMinLat = geoMaxLat - (imageHeight * System.Math.Abs(scaleY));
+
+                    hasGeoData = true;
+                    Debug.Log($"[TiffLayerManager] GeoTIFF Transform Bounds: Lat [{geoMinLat} - {geoMaxLat}], Lon [{geoMinLon} - {geoMaxLon}]");
+                }
+            }
+        }
+
+        if (!hasGeoData)
+        {
+            Debug.LogWarning("[TiffLayerManager] Tidak ditemukan data koordinat GeoTIFF. Overlay akan menutupi seluruh peta.");
+        }
+    }
+
+    // Hitung zoom level yang sesuai untuk menampilkan seluruh TIFF
+    public int CalculateFitZoom()
+    {
+        if (!hasGeoData || overlayContainer == null) return 15;
+
+        double latSpan = geoMaxLat - geoMinLat;
+        double lonSpan = geoMaxLon - geoMinLon;
+
+        // Ukuran container dalam pixel
+        float containerWidth = overlayContainer.rect.width;
+        float containerHeight = overlayContainer.rect.height;
+
+        // Hitung zoom berdasarkan span terbesar
+        // Rumus: 360 / (2^zoom) = derajat per tile
+        for (int z = 18; z >= 3; z--)
+        {
+            double degreesPerPixel = 360.0 / (256.0 * System.Math.Pow(2, z));
+            double pixelSpanX = lonSpan / degreesPerPixel;
+            double pixelSpanY = latSpan / degreesPerPixel;
+
+            if (pixelSpanX < containerWidth * 0.8 && pixelSpanY < containerHeight * 0.8)
+            {
+                return z;
+            }
+        }
+
+        return 10;
+    }
+
+    // =========================================
+    void CreateLayerManual(float[][] bandData, int width, int height, string name, int channel, float min, float max)
+    {
+        Texture2D tex = new Texture2D(width, height, TextureFormat.RGBA32, false);
+        Color[] pixels = new Color[width * height];
+        float range = max - min;
+        if (range < 0.0001f) range = 1f;
+
+        for (int y = 0; y < height; y++)
+        {
+            for (int x = 0; x < width; x++)
+            {
+                // Scanline read is Top-Down by default for most TIFFs.
+                // Unity texture is Bottom-Up. So we flip Y here.
+                int srcIdx = (height - 1 - y) * width + x;
+                int dstIdx = y * width + x;
+                
+                float val = bandData[channel][srcIdx];
+                
+                // Normalize manually using calculated range
+                float norm = Mathf.Clamp01((val - min) / range);
+
+                pixels[dstIdx] = new Color(norm, norm, norm, 1f);
+            }
+        }
+
+        tex.SetPixels(pixels);
+        tex.Apply();
+
+        layers.Add(new LayerData { name = name, texture = tex, isVisible = false });
+    }
+
+    void CreateCompositeManual(float[][] bandData, int width, int height, string name, float[] min, float[] max)
+    {
+        Texture2D tex = new Texture2D(width, height, TextureFormat.RGBA32, false);
+        Color[] pixels = new Color[width * height];
+        
+        float rRange = max[0] - min[0]; if (rRange < 0.0001f) rRange = 1f;
+        float gRange = max[1] - min[1]; if (gRange < 0.0001f) gRange = 1f;
+        float bRange = max[2] - min[2]; if (bRange < 0.0001f) bRange = 1f;
+
+        for (int y = 0; y < height; y++)
+        {
+            for (int x = 0; x < width; x++)
+            {
+                int srcIdx = (height - 1 - y) * width + x;
+                int dstIdx = y * width + x;
+
+                float r = Mathf.Clamp01((bandData[0][srcIdx] - min[0]) / rRange);
+                float g = Mathf.Clamp01((bandData[1][srcIdx] - min[1]) / gRange);
+                float b = Mathf.Clamp01((bandData[2][srcIdx] - min[2]) / bRange);
+
+                pixels[dstIdx] = new Color(r, g, b, 1f);
+            }
+        }
+
+        tex.SetPixels(pixels);
+        tex.Apply();
+
+        layers.Add(new LayerData { name = name, texture = tex, isVisible = false });
+    }
+
+    // =========================================
+    // OVERLAY DISPLAY
+    // =========================================
+
+    void ShowLayersInPanel()
+    {
+        if (propertyPanel == null) return;
+
+        Dictionary<string, bool> props = new Dictionary<string, bool>();
+        foreach (var layer in layers)
+        {
+            props[layer.name] = layer.isVisible;
+        }
+
+        propertyPanel.ShowProperties(props);
+    }
+
+    void OnPropertyToggle(string name, bool value)
+    {
+        // Update layer visibility
+        LayerData layer = layers.Find(l => l.name == name);
+        if (layer == null) return;
+
+        layer.isVisible = value;
+
+        if (value) ShowLayerOnMap(layer);
+        else HideLayerFromMap(layer);
+
+        // Update ProjectManager juga (biar tersimpan)
+        if (projectManager != null && projectManager.GetCurrentProject() != null)
+        {
+            projectManager.OnPropertyChanged(name, value);
+        }
+    }
+
+    void ShowLayerOnMap(LayerData layer)
+    {
+        if (overlayContainer == null || layer.texture == null) return;
+
+        // Cek apakah sudah ada overlay untuk layer ini
+        GameObject existing = overlays.Find(o => o != null && o.name == layer.name);
+        if (existing != null)
+        {
+            existing.SetActive(true);
+            UpdateOverlayPosition(existing);
+            return;
+        }
+
+        // Buat overlay baru
+        GameObject overlay = new GameObject(layer.name);
+        overlay.transform.SetParent(overlayContainer, false);
+
+        RawImage img = overlay.AddComponent<RawImage>();
+        img.texture = layer.texture;
+        img.color = new Color(1f, 1f, 1f, overlayOpacity);
+
+        // Posisikan berdasarkan koordinat geo
+        UpdateOverlayPosition(overlay);
+
+        overlays.Add(overlay);
+    }
+
+    void HideLayerFromMap(LayerData layer)
+    {
+        GameObject overlay = overlays.Find(o => o != null && o.name == layer.name);
+        if (overlay != null)
+        {
+            overlay.SetActive(false);
+        }
+    }
+
+    void UpdateOverlayPosition(GameObject overlay)
+    {
+        if (mapController == null || !hasGeoData) return;
+
+        RectTransform rt = overlay.GetComponent<RectTransform>();
+
+        // Konversi koordinat geo ke posisi UI
+        // Pojok kiri bawah (minLon, minLat) dan pojok kanan atas (maxLon, maxLat)
+        Vector2 posMin = mapController.LatLonToLocalPosition(geoMinLat, geoMinLon);
+        Vector2 posMax = mapController.LatLonToLocalPosition(geoMaxLat, geoMaxLon);
+
+        // Hitung center dan size
+        Vector2 center = (posMin + posMax) / 2f;
+        float width = Mathf.Abs(posMax.x - posMin.x);
+        float height = Mathf.Abs(posMax.y - posMin.y);
+
+        // Set posisi dan ukuran
+        rt.anchorMin = new Vector2(0.5f, 0.5f);
+        rt.anchorMax = new Vector2(0.5f, 0.5f);
+        rt.pivot = new Vector2(0.5f, 0.5f);
+        rt.anchoredPosition = center;
+        rt.sizeDelta = new Vector2(width, height);
+    }
+
+    void UpdateAllOverlayPositions()
+    {
+        foreach (var overlay in overlays)
+        {
+            if (overlay != null && overlay.activeSelf)
+            {
+                UpdateOverlayPosition(overlay);
+            }
+        }
+    }
+
+    void OnDestroy()
+    {
+        ClearLayers();
+    }
+}

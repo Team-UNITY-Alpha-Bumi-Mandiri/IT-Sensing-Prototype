@@ -22,9 +22,14 @@ public class SharpeningController : MonoBehaviour
     public Button btnProcess;
     public TextMeshProUGUI textStatus;
 
+    [Header("Layer Manager")]
+    public TiffLayerManager layerManager; // Referensi ke TiffLayerManager
+    public ProjectManager projectManager; // Referensi ke ProjectManager
+
     // Variabel privat penyimpan path
     private string selectedInputFolder = "";
     private string selectedOutputFolder = "";
+    private string lastOutputTiffPath = ""; // Path TIFF hasil terakhir
 
     void Start()
     {
@@ -188,6 +193,9 @@ public class SharpeningController : MonoBehaviour
             textStatus.text = "Sukses! Tersimpan.";
             textStatus.color = Color.green;
             
+            // Cari file TIFF hasil di folder output
+            LoadResultTiff(outputFolder, prefixName, algorithm);
+            
             // Buka folder output (Ganti slash balik ke backslash untuk Explorer)
             if (Directory.Exists(outputFolder)) 
                 Process.Start("explorer.exe", outputFolder.Replace("/", "\\"));
@@ -210,5 +218,62 @@ public class SharpeningController : MonoBehaviour
         if (text.Length > 35)
             return "..." + text.Substring(text.Length - 35);
         return text;
+    }
+
+    // ========================================================================
+    // 5. LOAD TIFF HASIL KE LAYER MANAGER
+    // ========================================================================
+    void LoadResultTiff(string outputFolder, string prefixName, string algorithm)
+    {
+        if (layerManager == null)
+        {
+            UnityEngine.Debug.LogWarning("[SharpeningController] LayerManager tidak terhubung");
+            return;
+        }
+
+        // Format nama file: {prefix}_{algorithm}_direct_{timestamp}.tif
+        // Contoh: LC09_116061_20250112_gramschmidt_direct_251229160920.tif
+        string algoShort = algorithm.ToLower().Contains("wavelet") ? "wavelet" : "gramschmidt";
+        string pattern = $"{prefixName}_{algoShort}_direct_*.tif";
+
+        // Cari file dengan pattern tersebut
+        string[] files = Directory.GetFiles(outputFolder.Replace("/", "\\"), pattern);
+
+        if (files.Length > 0)
+        {
+            // Ambil file terbaru (jika ada beberapa)
+            string latestFile = files[files.Length - 1];
+            lastOutputTiffPath = latestFile;
+
+            UnityEngine.Debug.Log($"[SharpeningController] Finding bounds for TIFF: {latestFile}");
+            
+            // 1. Dapatkan info center & zoom dari TIFF tanpa load full texture dulu
+            if (layerManager.GetTiffCenter(latestFile, out double lat, out double lon))
+            {
+                int zoom = layerManager.CalculateFitZoom();
+                
+                // 2. Buat Project Baru secara otomatis
+                string projectName = $"{prefixName}_{algoShort}";
+                if (projectManager != null)
+                {
+                    UnityEngine.Debug.Log($"[SharpeningController] Auto Creating Project: {projectName}");
+                    projectManager.CreateProjectAuto(projectName, lat, lon, zoom, latestFile);
+                }
+                else
+                {
+                     // Fallback jika tidak ada ProjectManager
+                     layerManager.LoadTiff(latestFile);
+                }
+            }
+            else
+            {
+                UnityEngine.Debug.LogWarning("[SharpeningController] Gagal membaca koordinat GeoTIFF. Loading manual...");
+                layerManager.LoadTiff(latestFile);
+            }
+        }
+        else
+        {
+            UnityEngine.Debug.LogWarning($"[SharpeningController] Tidak menemukan file dengan pattern: {pattern}");
+        }
     }
 }

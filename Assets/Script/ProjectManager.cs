@@ -51,6 +51,7 @@ public class ProjectManager : MonoBehaviour
         public double lat;
         public double lon;
         public int zoom;
+        public string tiffPath; // Path ke file TIFF (opsional)
         public List<Vector2> polygonCoords;
         public List<PropertyEntry> properties = new List<PropertyEntry>();
 
@@ -120,7 +121,12 @@ public class ProjectManager : MonoBehaviour
             renameProjectButton.onClick.AddListener(Rename);
         }
 
-        // Listener selesai gambar
+        // Listener Property Panel
+        if (propertyPanel != null)
+        {
+            propertyPanel.onPropertyChanged.AddListener(OnPropertyChanged);
+        }
+
         if (drawTool != null)
         {
             drawTool.onDrawComplete.AddListener(OnDrawn);
@@ -128,6 +134,12 @@ public class ProjectManager : MonoBehaviour
 
         current = null;
     }
+
+    // =========================================
+    // CUSTOM EVENT
+    // =========================================
+    // Event saat project dengan TIFF diload
+    public UnityEngine.Events.UnityEvent<string> onTiffProjectLoaded; 
 
     // =========================================
     // DROPDOWN
@@ -236,6 +248,39 @@ public class ProjectManager : MonoBehaviour
         }
     }
 
+    // Buat Project Otomatis (untuk hasil sharpening)
+    public ProjectData CreateProjectAuto(string name, double lat, double lon, int zoom, string tiffPath)
+    {
+        ProjectData proj = new ProjectData
+        {
+            id = System.Guid.NewGuid().ToString(),
+            name = name,
+            lat = lat,
+            lon = lon,
+            zoom = zoom,
+            tiffPath = tiffPath,
+            polygonCoords = new List<Vector2>()
+        };
+
+        // Simpan
+        projects.Add(proj);
+        Save();
+
+        // Update dropdown
+        SetupDropdown();
+        
+        // Select project ini
+        Select(proj);
+        if (projectDropdown != null)
+        {
+            projectDropdown.onValueChanged.RemoveListener(OnSelect);
+            projectDropdown.SelectItem(proj.name);
+            projectDropdown.onValueChanged.AddListener(OnSelect);
+        }
+
+        return proj;
+    }
+
     // Tambah property dummy acak (untuk demo)
     void AddDummyProps(ProjectData proj)
     {
@@ -290,14 +335,20 @@ public class ProjectManager : MonoBehaviour
         }
 
         // Tampilkan polygon
-        if (drawTool != null)
-        {
-            drawTool.ClearAll();
-
             if (proj.polygonCoords != null && proj.polygonCoords.Count > 0)
             {
                 drawTool.LoadPolygon(proj.polygonCoords, true);
             }
+
+        // Notify TiffLayerManager jika ada tiffPath
+        if (!string.IsNullOrEmpty(proj.tiffPath))
+        {
+            onTiffProjectLoaded?.Invoke(proj.tiffPath);
+        }
+        else
+        {
+            // Reset tiff jika tidak ada
+            onTiffProjectLoaded?.Invoke("");
         }
 
         // Tampilkan property

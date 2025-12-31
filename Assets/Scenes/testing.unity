@@ -6966,7 +6966,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!224 &174744530
 RectTransform:
   m_ObjectHideFlags: 0
@@ -7914,7 +7914,7 @@ RectTransform:
   m_AnchorMin: {x: 0, y: 1}
   m_AnchorMax: {x: 0, y: 1}
   m_AnchoredPosition: {x: 322.6, y: -24.476}
-  m_SizeDelta: {x: 37.0416, y: 52.602}
+  m_SizeDelta: {x: 24, y: 42}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &209017884
 MonoBehaviour:
@@ -7936,8 +7936,8 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Sprite: {fileID: 10913, guid: 0000000000000000f000000000000000, type: 0}
-  m_Type: 0
+  m_Sprite: {fileID: 21300000, guid: b272031560877464fae0322e7ed6b510, type: 3}
+  m_Type: 1
   m_PreserveAspect: 0
   m_FillCenter: 1
   m_FillMethod: 4
@@ -13327,8 +13327,24 @@ PrefabInstance:
     m_TransformParent: {fileID: 1179465679}
     m_Modifications:
     - target: {fileID: 1496307883333454264, guid: 783b4a1dcf2eaa742b874c759526f13b, type: 3}
+      propertyPath: m_Pivot.x
+      value: 0.5
+      objectReference: {fileID: 0}
+    - target: {fileID: 1496307883333454264, guid: 783b4a1dcf2eaa742b874c759526f13b, type: 3}
+      propertyPath: m_AnchorMax.x
+      value: 0.5
+      objectReference: {fileID: 0}
+    - target: {fileID: 1496307883333454264, guid: 783b4a1dcf2eaa742b874c759526f13b, type: 3}
+      propertyPath: m_AnchorMin.x
+      value: 0.5
+      objectReference: {fileID: 0}
+    - target: {fileID: 1496307883333454264, guid: 783b4a1dcf2eaa742b874c759526f13b, type: 3}
       propertyPath: m_SizeDelta.x
       value: 361.58
+      objectReference: {fileID: 0}
+    - target: {fileID: 1496307883333454264, guid: 783b4a1dcf2eaa742b874c759526f13b, type: 3}
+      propertyPath: m_AnchoredPosition.x
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 1496307883333454264, guid: 783b4a1dcf2eaa742b874c759526f13b, type: 3}
       propertyPath: m_AnchoredPosition.y
@@ -31528,11 +31544,11 @@ RectTransform:
   - {fileID: 1682383493}
   m_Father: {fileID: 1501811837}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 1, y: 0}
-  m_AnchorMax: {x: 1, y: 0}
-  m_AnchoredPosition: {x: -20, y: 10}
+  m_AnchorMin: {x: 0.5, y: 0}
+  m_AnchorMax: {x: 0.5, y: 0}
+  m_AnchoredPosition: {x: 0, y: 9.999985}
   m_SizeDelta: {x: 361.58, y: 35.5976}
-  m_Pivot: {x: 1, y: 0}
+  m_Pivot: {x: 0.5, y: 0}
 --- !u!114 &1020608514
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -31657,7 +31673,7 @@ RectTransform:
   m_AnchorMin: {x: 0, y: 1}
   m_AnchorMax: {x: 0, y: 1}
   m_AnchoredPosition: {x: 322.6, y: -24.476}
-  m_SizeDelta: {x: 37.0416, y: 52.602}
+  m_SizeDelta: {x: 24, y: 42}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1029382210
 MonoBehaviour:
@@ -31679,8 +31695,8 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Sprite: {fileID: 10913, guid: 0000000000000000f000000000000000, type: 0}
-  m_Type: 0
+  m_Sprite: {fileID: 21300000, guid: b272031560877464fae0322e7ed6b510, type: 3}
+  m_Type: 1
   m_PreserveAspect: 0
   m_FillCenter: 1
   m_FillMethod: 4
@@ -38176,7 +38192,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!224 &1179465679
 RectTransform:
   m_ObjectHideFlags: 0
@@ -41849,6 +41865,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::ButtonCustom
   target: {fileID: 1032384059}
+  toggleComponent: {fileID: 0}
 --- !u!1 &1274779004
 GameObject:
   m_ObjectHideFlags: 0
@@ -53187,7 +53204,7 @@ MonoBehaviour:
 
     Text go here.
 
-    Unity SDF cant fo underlines.'
+    Unity SDF can''t do underlines.'
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
   m_sharedMaterial: {fileID: 2180264, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
@@ -55707,6 +55724,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1656641198}
   - component: {fileID: 1656641199}
+  - component: {fileID: 1656641200}
   m_Layer: 5
   m_Name: Toggle
   m_TagString: Untagged
@@ -55781,8 +55799,34 @@ MonoBehaviour:
   m_Group: {fileID: 0}
   onValueChanged:
     m_PersistentCalls:
-      m_Calls: []
+      m_Calls:
+      - m_Target: {fileID: 1656641200}
+        m_TargetAssemblyTypeName: ButtonCustom, Assembly-CSharp
+        m_MethodName: ToggleColor
+        m_Mode: 1
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
   m_IsOn: 1
+--- !u!114 &1656641200
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1656641197}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8b986a1b8f2e63244965fb1ce8223afc, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::ButtonCustom
+  target: {fileID: 209017882}
+  toggleComponent: {fileID: 1656641199}
 --- !u!1 &1656738287
 GameObject:
   m_ObjectHideFlags: 0
@@ -64090,6 +64134,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1947736984}
   - component: {fileID: 1947736985}
+  - component: {fileID: 1947736986}
   m_Layer: 5
   m_Name: Toggle
   m_TagString: Untagged
@@ -64164,8 +64209,34 @@ MonoBehaviour:
   m_Group: {fileID: 0}
   onValueChanged:
     m_PersistentCalls:
-      m_Calls: []
+      m_Calls:
+      - m_Target: {fileID: 1947736986}
+        m_TargetAssemblyTypeName: ButtonCustom, Assembly-CSharp
+        m_MethodName: ToggleColor
+        m_Mode: 1
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
   m_IsOn: 1
+--- !u!114 &1947736986
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1947736983}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8b986a1b8f2e63244965fb1ce8223afc, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::ButtonCustom
+  target: {fileID: 1029382208}
+  toggleComponent: {fileID: 1947736985}
 --- !u!224 &1947780507 stripped
 RectTransform:
   m_CorrespondingSourceObject: {fileID: 5648696230068327533, guid: 21587b1268d42944396dff8fdd6c3c76, type: 3}

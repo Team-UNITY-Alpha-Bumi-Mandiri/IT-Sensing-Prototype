@@ -265,7 +265,7 @@ public class MeasureAreaTool : MonoBehaviour
         rt.anchoredPosition = startPos + (dir * 0.5f);
         rt.sizeDelta = new Vector2(distPixel, 3f);
         rt.localRotation = Quaternion.Euler(0, 0, angle);
-        line.GetComponent<Image>().color = c;
+        //line.GetComponent<Image>().color = c; //testing garis putus2
         spawnedVisuals.Add(line);
 
         // Gambar Label Jarak (Hanya jika Selesai)

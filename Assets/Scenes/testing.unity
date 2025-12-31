@@ -21200,7 +21200,7 @@ MonoBehaviour:
   infoBoxPanel: {fileID: 1218309386}
   infoBoxText: {fileID: 1571393727}
   pointPrefab: {fileID: 4020721946471017464, guid: d13dc7cabdcfdf243b0bb924c726892d, type: 3}
-  linePrefab: {fileID: 6116170278811921967, guid: 98a2bc5162e429a4fa6ae59d5d268afe, type: 3}
+  linePrefab: {fileID: 6116170278811921967, guid: 15e8873a68543e54b914233ca28fc09a, type: 3}
   tooltipPrefab: {fileID: 1058910562096904751, guid: 19a4bcae9555754459fde0c57f720283, type: 3}
   measurementLabelPrefab: {fileID: 6683561699712881294, guid: f86239611c8bd71438b2819bbb28e927, type: 3}
   centerLabelPrefab: {fileID: 6683561699712881294, guid: f86239611c8bd71438b2819bbb28e927, type: 3}
@@ -53181,10 +53181,16 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: <u>Measurement</u>
+  m_text: '<u>Measurement</u>
+
+
+
+    Text go here.
+
+    Unity SDF cant fo underlines.'
   m_isRightToLeft: 0
-  m_fontAsset: {fileID: 11400000, guid: c9adb1f542a93ae489bacfeae21e8394, type: 2}
-  m_sharedMaterial: {fileID: -8643439910342830561, guid: c9adb1f542a93ae489bacfeae21e8394, type: 2}
+  m_fontAsset: {fileID: 11400000, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
+  m_sharedMaterial: {fileID: 2180264, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
   m_fontSharedMaterials: []
   m_fontMaterial: {fileID: 0}
   m_fontMaterials: []

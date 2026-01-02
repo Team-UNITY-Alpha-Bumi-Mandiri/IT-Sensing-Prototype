@@ -9,148 +9,183 @@ using System.Collections.Generic;
 public class SharpeningController : MonoBehaviour
 {
     [Header("UI References (Panel)")]
-    public GameObject panelRoot; // Referensi ke Panel_Sharpening untuk Show/Hide
+    public GameObject panelRoot; // Panel utama untuk Show/Hide
 
-    [Header("UI Input References")]
-    public TMP_InputField inputPrefixName; // Input Nama (misal: LC09...)
-    public TMP_Dropdown dropdownAlgo;      // Pilihan Algoritma (Wavelet/Gram-Schmidt)
-
-    [Header("UI Folder References")]
-    public TextMeshProUGUI textInputPath;  // Teks path Input
-    public TextMeshProUGUI textOutputPath; // Teks path Output
+    [Header("UI Input References (Buttons)")]
+    // Kita gunakan GameObject agar Anda bisa menarik Button langsung dari Hierarchy
+    public GameObject btnMultispectral; 
+    public GameObject btnPanchromatic; 
+    
+    [Header("UI Input References (Fields)")]
+    public TMP_InputField inputOutputName; // User mengetik nama hasil di sini
+    public TMP_Dropdown dropdownMethod;    // Pilihan Algoritma (Gram-Schmidt/Wavelet)
 
     [Header("Buttons & Status")]
     public Button btnProcess;
     public TextMeshProUGUI textStatus;
 
-    [Header("Layer Manager")]
-    public TiffLayerManager layerManager; // Referensi ke TiffLayerManager
-    public ProjectManager projectManager; // Referensi ke ProjectManager
+    [Header("Layer Manager & Project")]
+    public TiffLayerManager layerManager; 
+    public ProjectManager projectManager; 
 
-    // Variabel privat penyimpan path
-    private string selectedInputFolder = "";
-    private string selectedOutputFolder = "";
-    private string lastOutputTiffPath = ""; // Path TIFF hasil terakhir
+    // --- Variabel Penyimpanan Data ---
+    // RGB disimpan dalam List karena bisa lebih dari 1 file
+    private List<string> currentRgbPaths = new List<string>(); 
+    // PAN hanya 1 file
+    private string currentPanPath = "";
+    // Lokasi output otomatis
+    private string selectedOutputFolder = ""; 
 
     void Start()
     {
-        // 1. Sembunyikan panel saat aplikasi mulai
-        if (panelRoot != null)
-            panelRoot.SetActive(false);
+        // 1. Sembunyikan panel saat start
+        if (panelRoot != null) panelRoot.SetActive(false);
 
-        // 2. Reset Status UI
+        // 2. Reset Status
         textStatus.text = "Siap.";
         btnProcess.interactable = false;
-        textInputPath.text = "Belum dipilih...";
-        textOutputPath.text = "Belum dipilih...";
 
-        // 3. Pasang pendengar jika user mengetik nama
-        inputPrefixName.onValueChanged.AddListener(delegate { CheckReadiness(); });
+        // 3. Reset Label Tombol
+        SetButtonText(btnMultispectral, "Pilih File RGB (Bisa > 1)...");
+        SetButtonText(btnPanchromatic, "Pilih File PAN...");
+
+        // 4. Set Default Output Folder (StreamingAssets/Backend/Sharpened_Results)
+        selectedOutputFolder = Path.Combine(Application.streamingAssetsPath, "Backend", "Sharpened_Results");
+        if (!Directory.Exists(selectedOutputFolder)) Directory.CreateDirectory(selectedOutputFolder);
+
+        // 5. Listener validasi saat user mengetik nama
+        inputOutputName.onValueChanged.AddListener(delegate { CheckReadiness(); });
     }
 
-    // ========================================================================
-    // 1. FITUR SHOW / HIDE PANEL
-    // ========================================================================
+    // Fitur Show/Hide Panel
     public void TogglePanel()
     {
         if (panelRoot != null)
+            panelRoot.SetActive(!panelRoot.activeSelf);
+    }
+
+    // ========================================================================
+    // 1. FUNGSI SELECT RGB (MULTI-SELECT SUPPORT)
+    // ========================================================================
+    public void OnClickSelectRGB()
+    {
+        // Menggunakan OpenFiles (Jamak) - Pastikan FileBrowserHelper sudah diupdate
+        string[] paths = FileBrowserHelper.OpenFiles("Pilih File RGB (Tahan CTRL untuk pilih banyak)", "TIFF Files\0*.tif;*.tiff\0All Files\0*.*\0\0");
+        
+        if (paths != null && paths.Length > 0)
         {
-            bool isActive = panelRoot.activeSelf;
-            panelRoot.SetActive(!isActive); // Balikkan status (Nyala <-> Mati)
+            // Simpan ke list
+            currentRgbPaths = new List<string>(paths);
+            
+            // Update Teks Tombol
+            if (currentRgbPaths.Count == 1)
+            {
+                SetButtonText(btnMultispectral, Path.GetFileName(currentRgbPaths[0]));
+            }
+            else
+            {
+                SetButtonText(btnMultispectral, $"{currentRgbPaths.Count} File Dipilih");
+            }
+            CheckReadiness();
         }
     }
 
     // ========================================================================
-    // 2. PEMILIHAN FOLDER (Input & Output)
+    // 2. FUNGSI SELECT PAN (SINGLE SELECT)
     // ========================================================================
-    
-    // Pilih Folder Input (Sumber RGB/PAN)
-    public void OnClickBrowseInput()
+    public void OnClickSelectPAN()
     {
-        // Panggil script Folder Browser yang baru
-        string path = FolderBrowserHelper.GetFolder(); 
+        // Menggunakan OpenFile (Tunggal)
+        string path = FileBrowserHelper.OpenFile("Pilih File Panchromatic (PAN)", "TIFF Files\0*.tif;*.tiff\0All Files\0*.*\0\0");
         
         if (!string.IsNullOrEmpty(path))
         {
-            selectedInputFolder = path;
-            textInputPath.text = LimitTextLength(selectedInputFolder);
+            currentPanPath = path;
+            SetButtonText(btnPanchromatic, Path.GetFileName(path));
             CheckReadiness();
         }
     }
 
-    // Pilih Folder Output (Tujuan Simpan)
-    public void OnClickBrowseOutput()
+    // Helper: Mengubah teks di dalam Button (Mencari TMP atau Text biasa)
+    void SetButtonText(GameObject btnObj, string newText)
     {
-        // Panggil script Folder Browser yang baru
-        string path = FolderBrowserHelper.GetFolder();
+        if (btnObj == null) return;
 
-        if (!string.IsNullOrEmpty(path))
+        // Cari TextMeshPro
+        TextMeshProUGUI tmp = btnObj.GetComponentInChildren<TextMeshProUGUI>();
+        if (tmp != null)
         {
-            selectedOutputFolder = path;
-            textOutputPath.text = LimitTextLength(selectedOutputFolder);
-            CheckReadiness();
+            tmp.text = newText;
+            return;
+        }
+
+        // Cari Text Biasa (Legacy)
+        Text txt = btnObj.GetComponentInChildren<Text>();
+        if (txt != null)
+        {
+            txt.text = newText;
         }
     }
 
     // ========================================================================
-    // 3. VALIDASI & EKSEKUSI
+    // 3. VALIDASI (CHECK READINESS)
     // ========================================================================
-
-    // Cek apakah semua data wajib sudah terisi?
     void CheckReadiness()
     {
-        bool isNameFilled = !string.IsNullOrEmpty(inputPrefixName.text);
-        bool isInputReady = !string.IsNullOrEmpty(selectedInputFolder);
-        bool isOutputReady = !string.IsNullOrEmpty(selectedOutputFolder);
+        // RGB harus minimal 1, PAN harus ada, Nama output harus diisi
+        bool isRgbReady = currentRgbPaths.Count > 0;
+        bool isPanReady = !string.IsNullOrEmpty(currentPanPath) && File.Exists(currentPanPath);
+        bool isNameReady = !string.IsNullOrEmpty(inputOutputName.text);
 
-        // Tombol Process hanya nyala jika semua syarat terpenuhi
-        btnProcess.interactable = isNameFilled && isInputReady && isOutputReady;
+        btnProcess.interactable = isRgbReady && isPanReady && isNameReady;
     }
 
-    // Tombol "Mulai Proses" diklik
     public void OnClickProcess()
     {
-        string prefix = inputPrefixName.text;
-        string algo = dropdownAlgo.options[dropdownAlgo.value].text; // Ambil teks dari dropdown
-
-        RunBackend(algo, prefix, selectedInputFolder, selectedOutputFolder);
+        string outName = inputOutputName.text;
+        string algo = dropdownMethod.options[dropdownMethod.value].text; 
+        
+        // Jalankan backend dengan List File RGB
+        RunBackend(algo, outName, currentRgbPaths, currentPanPath);
     }
 
     // ========================================================================
     // 4. LOGIKA BACKEND (ASYNC)
     // ========================================================================
-    async void RunBackend(string algorithm, string prefixName, string inputFolder, string outputFolder)
+    async void RunBackend(string algorithm, string outputName, List<string> rgbFiles, string panPath)
     {
+        // Kunci UI
         btnProcess.interactable = false;
-        textStatus.text = $"Memproses {algorithm}...";
+        textStatus.text = $"Processing {algorithm}...";
         textStatus.color = Color.yellow;
 
         string backendFolder = Path.Combine(Application.streamingAssetsPath, "Backend");
-        // Tentukan nama EXE sesuai pilihan
-        string exeName = algorithm.Contains("Wavelet") ? "wavelet_direct.exe" : "gram_direct.exe";
+        string exeName = algorithm.ToLower().Contains("wavelet") ? "wavelet_direct.exe" : "gram_direct.exe";
         string fullExePath = Path.Combine(backendFolder, exeName);
 
-        // --- [FIX UTAMA] SANITASI PATH ---
-        // 1. Ganti Backslash (\) jadi Slash (/) agar aman dari error escaping
-        // 2. Hapus slash di akhir string (.TrimEnd)
-        inputFolder = inputFolder.Replace("\\", "/").TrimEnd('/');
-        outputFolder = outputFolder.Replace("\\", "/").TrimEnd('/');
+        // Sanitasi Path
+        panPath = panPath.Replace("\\", "/");
+        string outputDir = selectedOutputFolder.Replace("\\", "/");
         
-        // Pastikan nama file (Prefix) tidak mengandung ekstensi .tif atau .jpg
-        // Python script Anda mengharapkan PREFIX saja (misal: LC09...), dia akan nambah _RGB.tif sendiri
-        if (prefixName.ToLower().EndsWith(".tif"))
+        // Ambil folder context dari file pertama (untuk parameter -v dummy)
+        string folderContext = Path.GetDirectoryName(rgbFiles[0]).Replace("\\", "/");
+
+        // --- MENYUSUN LIST ARGUMEN RGB ---
+        // Contoh hasil: "C:/Data/B4.tif" "C:/Data/B3.tif" "C:/Data/B2.tif"
+        string rgbArgs = "";
+        foreach(string f in rgbFiles)
         {
-            prefixName = Path.GetFileNameWithoutExtension(prefixName);
-            // Hapus suffix _RGB atau _PAN jika user tidak sengaja memasukkannya
-            prefixName = prefixName.Replace("_RGB", "").Replace("_PAN", "");
+            string cleanPath = f.Replace("\\", "/");
+            rgbArgs += $"\"{cleanPath}\" "; // Spasi penting pemisah antar file
         }
 
-        // Format Argumen sesuai dokumentasi Python Anda:
-        // -n NAMA -v FOLDER_INPUT -o FOLDER_OUTPUT
-        string args = $"-n \"{prefixName}\" -v \"{inputFolder}\" -o \"{outputFolder}\"";
+        // Format Argumen Lengkap
+        // -n [Nama] -v [FolderCtx] -o [Output] --rgb [File1] [File2]... --pan [FilePAN]
+        string args = $"-n \"{outputName}\" -v \"{folderContext}\" -o \"{outputDir}\" --rgb {rgbArgs} --pan \"{panPath}\"";
 
-        UnityEngine.Debug.Log($"Command: {fullExePath} {args}");
+        UnityEngine.Debug.Log($"Command: {exeName} {args}");
 
+        // Jalankan Process
         string resultOutput = await Task.Run(() =>
         {
             ProcessStartInfo start = new ProcessStartInfo();
@@ -158,26 +193,19 @@ public class SharpeningController : MonoBehaviour
             start.Arguments = args;
             start.UseShellExecute = false;
             start.RedirectStandardOutput = true;
-            start.RedirectStandardError = true; // Wajib baca Error
+            start.RedirectStandardError = true;
             start.CreateNoWindow = true;
             start.WorkingDirectory = backendFolder;
 
             try
             {
                 Process p = Process.Start(start);
-                
-                // Baca output dan error sekaligus
                 string output = p.StandardOutput.ReadToEnd();
                 string error = p.StandardError.ReadToEnd();
-                
                 p.WaitForExit();
 
-                // Prioritaskan pesan error jika ada isinya
-                if (!string.IsNullOrEmpty(error))
-                {
+                if (!string.IsNullOrEmpty(error) && !error.Contains("UserWarning"))
                     return "PYTHON ERROR: " + error;
-                }
-
                 return output;
             }
             catch (System.Exception e)
@@ -186,24 +214,22 @@ public class SharpeningController : MonoBehaviour
             }
         });
 
-        UnityEngine.Debug.Log("Result: " + resultOutput);
-
-        // Cek JSON Response dari Python
+        // Cek Hasil JSON
         if (resultOutput.Contains("\"status\": \"success\"") || resultOutput.Contains("successfuly"))
         {
-            textStatus.text = "Sukses! Tersimpan.";
+            textStatus.text = "Sukses!";
             textStatus.color = Color.green;
             
-            // Cari file TIFF hasil di folder output
-            LoadResultTiff(outputFolder, prefixName, algorithm);
+            // Muat hasil ke Map
+            LoadResultTiff(selectedOutputFolder, outputName, algorithm);
             
-            // Buka folder output (Ganti slash balik ke backslash untuk Explorer)
-            if (Directory.Exists(outputFolder)) 
-                Process.Start("explorer.exe", outputFolder.Replace("/", "\\"));
+            // Buka folder
+            if(Directory.Exists(selectedOutputFolder))
+                Process.Start("explorer.exe", selectedOutputFolder.Replace("/", "\\"));
         }
         else
         {
-            // Tampilkan error di UI (potong biar muat)
+            // Tampilkan error
             string msg = resultOutput.Length > 50 ? resultOutput.Substring(0, 50) + "..." : resultOutput;
             textStatus.text = "Gagal: " + msg;
             textStatus.color = Color.red;
@@ -213,83 +239,53 @@ public class SharpeningController : MonoBehaviour
         btnProcess.interactable = true;
     }
 
-    // Helper: Memendekkan teks path jika terlalu panjang di UI
-    string LimitTextLength(string text)
-    {
-        if (text.Length > 35)
-            return "..." + text.Substring(text.Length - 35);
-        return text;
-    }
-
     // ========================================================================
-    // 5. LOAD TIFF HASIL KE LAYER MANAGER
+    // 5. LOAD RESULT TO LAYER (Logic Polygon)
     // ========================================================================
-    void LoadResultTiff(string outputFolder, string prefixName, string algorithm)
+    void LoadResultTiff(string outputFolder, string outputName, string algorithm)
     {
-        if (layerManager == null)
-        {
-            UnityEngine.Debug.LogWarning("[SharpeningController] LayerManager tidak terhubung");
-            return;
-        }
+        if (layerManager == null) return;
 
-        // Format nama file: {prefix}_{algorithm}_direct_{timestamp}.tif
-        // Contoh: LC09_116061_20250112_gramschmidt_direct_251229160920.tif
         string algoShort = algorithm.ToLower().Contains("wavelet") ? "wavelet" : "gramschmidt";
-        string pattern = $"{prefixName}_{algoShort}_direct_*.tif";
-
-        // Cari file dengan pattern tersebut
-        string[] files = Directory.GetFiles(outputFolder.Replace("/", "\\"), pattern);
+        
+        // Pattern nama file output Python: {nama}_{algo}_direct_{timestamp}.tif
+        string pattern = $"{outputName}_{algoShort}_direct_*.tif";
+        string[] files = Directory.GetFiles(outputFolder, pattern);
 
         if (files.Length > 0)
         {
-            // Ambil file terbaru (jika ada beberapa)
+            // Ambil file paling baru (terakhir dibuat)
             string latestFile = files[files.Length - 1];
-            lastOutputTiffPath = latestFile;
-
-            UnityEngine.Debug.Log($"[SharpeningController] Finding bounds for TIFF: {latestFile}");
             
-            // 1. Dapatkan info BOUNDS dari TIFF (untuk polygon)
+            // Logic Geo-Location
             if (layerManager.GetTiffBounds(latestFile, out double minLat, out double maxLat, out double minLon, out double maxLon))
             {
-                // Hitung center untuk project (seperti sebelumnya)
                 double centerLat = (minLat + maxLat) / 2.0;
                 double centerLon = (minLon + maxLon) / 2.0;
-
-                // Hitung zoom fit
                 int zoom = layerManager.CalculateFitZoom();
                 
-                // Buat 4 titik suduts untuk polygon (Urutan: TL -> TR -> BR -> BL)
-                // Vector2(Lat, Lon)
                 List<Vector2> polyCoords = new List<Vector2>
                 {
-                    new Vector2((float)maxLat, (float)minLon), // Top Left
-                    new Vector2((float)maxLat, (float)maxLon), // Top Right
-                    new Vector2((float)minLat, (float)maxLon), // Bottom Right
-                    new Vector2((float)minLat, (float)minLon)  // Bottom Left
+                    new Vector2((float)maxLat, (float)minLon),
+                    new Vector2((float)maxLat, (float)maxLon),
+                    new Vector2((float)minLat, (float)maxLon),
+                    new Vector2((float)minLat, (float)minLon)
                 };
 
-                // 2. Buat Project Baru secara otomatis
-                string projectName = $"{prefixName}_{algoShort}";
-                if (projectManager != null)
+                string projectName = $"{outputName}_{algoShort}";
+                if (projectManager != null) 
                 {
-                    UnityEngine.Debug.Log($"[SharpeningController] Auto Creating Project: {projectName} with Polygon");
                     projectManager.CreateProjectAuto(projectName, centerLat, centerLon, zoom, latestFile, polyCoords);
                 }
-                else
+                else 
                 {
-                     // Fallback jika tidak ada ProjectManager
-                     layerManager.LoadTiff(latestFile);
+                    layerManager.LoadTiff(latestFile);
                 }
             }
-            else
+            else 
             {
-                UnityEngine.Debug.LogWarning("[SharpeningController] Gagal membaca koordinat GeoTIFF. Loading manual...");
                 layerManager.LoadTiff(latestFile);
             }
-        }
-        else
-        {
-            UnityEngine.Debug.LogWarning($"[SharpeningController] Tidak menemukan file dengan pattern: {pattern}");
         }
     }
 }

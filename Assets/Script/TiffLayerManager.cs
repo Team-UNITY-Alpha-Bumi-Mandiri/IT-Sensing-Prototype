@@ -1,5 +1,6 @@
 using UnityEngine;
 using UnityEngine.UI;
+using TMPro;
 using System.Collections.Generic;
 using System.IO;
 using BitMiracle.LibTiff.Classic;
@@ -13,17 +14,20 @@ public class TiffLayerManager : MonoBehaviour
 {
     [Header("References")]
     public SimpleMapController_Baru mapController;
+    public TMP_InputField namePrefixInput; // Input field untuk prefix nama
     public PropertyPanel propertyPanel;
     public ProjectManager projectManager; // Referensi ProjectManager
     public RectTransform overlayContainer;  // Tempat spawn overlay
 
     [Header("Settings")]
     public float overlayOpacity = 1f;
+    public List<string> customBandNames; // Nama band custom (di-assign via Inspector)
 
     // Data layer
     List<LayerData> layers = new List<LayerData>();
     List<GameObject> overlays = new List<GameObject>();
     string currentTiffPath = "";
+
 
     // GeoTIFF bounds (koordinat geografis)
     double geoMinLat, geoMaxLat, geoMinLon, geoMaxLon;
@@ -326,22 +330,38 @@ public class TiffLayerManager : MonoBehaviour
                 return Mathf.Clamp01((val - minVal[band]) / (maxVal[band] - minVal[band]));
             }
 
+            // Cek prefix nama (Prioritas: InputField -> Project Name)
+            string namingPrefix = "";
+            
+            if (namePrefixInput != null && !string.IsNullOrEmpty(namePrefixInput.text))
+            {
+                namingPrefix = namePrefixInput.text + " ";
+            }
+            else if (projectManager != null)
+            {
+                var proj = projectManager.GetCurrentProject();
+                if (proj != null && proj.tiffPath == currentTiffPath)
+                {
+                    namingPrefix = proj.name + " ";
+                }
+            }
+
             // Buat Layer untuk SETIAP Band yang ada
             for (int i = 0; i < samplesPerPixel; i++)
             {
-                // Beri nama yang informatif & Backward Compatible
-                string bandName = $"Band {i + 1}";
+                // Default: Kosong (sesuai request)
+                string bandName = "";
                 
-                if (samplesPerPixel == 1 && i == 0)
+                // Cek custom names dari Inspector
+                if (customBandNames != null && i < customBandNames.Count && !string.IsNullOrEmpty(customBandNames[i]))
                 {
-                     bandName = "Grayscale";
+                    bandName = customBandNames[i];
                 }
-                else if (samplesPerPixel >= 3)
+
+                // Tambahkan prefix nama project (jika ada)
+                if (!string.IsNullOrEmpty(namingPrefix))
                 {
-                    if (i == 0) bandName = "Red";
-                    else if (i == 1) bandName = "Green";
-                    else if (i == 2) bandName = "Blue";
-                    else if (i == 3) bandName = "NIR";
+                    bandName = namingPrefix + bandName;
                 }
 
                 CreateLayerManual(bandData, imageWidth, imageHeight, bandName, i, minVal[i], maxVal[i]);
@@ -350,7 +370,10 @@ public class TiffLayerManager : MonoBehaviour
             // Tambahkan Composite jika minimal 3 band
             if (samplesPerPixel >= 3)
             {
-                CreateCompositeManual(bandData, imageWidth, imageHeight, "RGB Composite", minVal, maxVal);
+                string compName = "RGB Composite";
+                if (!string.IsNullOrEmpty(namingPrefix)) compName = namingPrefix + compName;
+                
+                CreateCompositeManual(bandData, imageWidth, imageHeight, compName, minVal, maxVal);
             }
         }
 

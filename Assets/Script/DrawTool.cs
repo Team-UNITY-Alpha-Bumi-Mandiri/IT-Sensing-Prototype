@@ -748,4 +748,16 @@ public class DrawTool : MonoBehaviour
         allObjs.Clear();
         Reset();
     }
+
+    // Set visibility semua objek (tanpa hapus data)
+    public void SetAllVisibility(bool visible)
+    {
+        foreach (DrawObject obj in allObjs)
+        {
+            if (obj.rootObj != null)
+            {
+                obj.rootObj.SetActive(visible);
+            }
+        }
+    }
 }

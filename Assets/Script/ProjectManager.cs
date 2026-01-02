@@ -249,7 +249,7 @@ public class ProjectManager : MonoBehaviour
     }
 
     // Buat Project Otomatis (untuk hasil sharpening)
-    public ProjectData CreateProjectAuto(string name, double lat, double lon, int zoom, string tiffPath)
+    public ProjectData CreateProjectAuto(string name, double lat, double lon, int zoom, string tiffPath, List<Vector2> polyCoords = null)
     {
         ProjectData proj = new ProjectData
         {
@@ -259,7 +259,7 @@ public class ProjectManager : MonoBehaviour
             lon = lon,
             zoom = zoom,
             tiffPath = tiffPath,
-            polygonCoords = new List<Vector2>()
+            polygonCoords = (polyCoords != null) ? new List<Vector2>(polyCoords) : new List<Vector2>()
         };
 
         // Simpan
@@ -484,6 +484,15 @@ public class ProjectManager : MonoBehaviour
     public ProjectData GetCurrentProject()
     {
         return current;
+    }
+
+    // Set visibility polygon project
+    public void SetProjectPolygonVisibility(bool visible)
+    {
+        if (drawTool != null)
+        {
+            drawTool.SetAllVisibility(visible);
+        }
     }
 
     // =========================================

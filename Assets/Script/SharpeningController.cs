@@ -4,6 +4,7 @@ using TMPro;
 using System.IO;
 using System.Diagnostics;
 using System.Threading.Tasks;
+using System.Collections.Generic;
 
 public class SharpeningController : MonoBehaviour
 {
@@ -247,17 +248,32 @@ public class SharpeningController : MonoBehaviour
 
             UnityEngine.Debug.Log($"[SharpeningController] Finding bounds for TIFF: {latestFile}");
             
-            // 1. Dapatkan info center & zoom dari TIFF tanpa load full texture dulu
-            if (layerManager.GetTiffCenter(latestFile, out double lat, out double lon))
+            // 1. Dapatkan info BOUNDS dari TIFF (untuk polygon)
+            if (layerManager.GetTiffBounds(latestFile, out double minLat, out double maxLat, out double minLon, out double maxLon))
             {
+                // Hitung center untuk project (seperti sebelumnya)
+                double centerLat = (minLat + maxLat) / 2.0;
+                double centerLon = (minLon + maxLon) / 2.0;
+
+                // Hitung zoom fit
                 int zoom = layerManager.CalculateFitZoom();
                 
+                // Buat 4 titik suduts untuk polygon (Urutan: TL -> TR -> BR -> BL)
+                // Vector2(Lat, Lon)
+                List<Vector2> polyCoords = new List<Vector2>
+                {
+                    new Vector2((float)maxLat, (float)minLon), // Top Left
+                    new Vector2((float)maxLat, (float)maxLon), // Top Right
+                    new Vector2((float)minLat, (float)maxLon), // Bottom Right
+                    new Vector2((float)minLat, (float)minLon)  // Bottom Left
+                };
+
                 // 2. Buat Project Baru secara otomatis
                 string projectName = $"{prefixName}_{algoShort}";
                 if (projectManager != null)
                 {
-                    UnityEngine.Debug.Log($"[SharpeningController] Auto Creating Project: {projectName}");
-                    projectManager.CreateProjectAuto(projectName, lat, lon, zoom, latestFile);
+                    UnityEngine.Debug.Log($"[SharpeningController] Auto Creating Project: {projectName} with Polygon");
+                    projectManager.CreateProjectAuto(projectName, centerLat, centerLon, zoom, latestFile, polyCoords);
                 }
                 else
                 {

@@ -456,6 +456,39 @@ public class TiffLayerManager : MonoBehaviour
         return false;
     }
 
+    // Helper: Dapatkan Bounds (Min/Max Lat/Lon) dari TIFF
+    public bool GetTiffBounds(string path, out double minLat, out double maxLat, out double minLon, out double maxLon)
+    {
+        minLat = maxLat = minLon = maxLon = 0;
+
+        if (!File.Exists(path)) return false;
+
+        using (Tiff tiff = Tiff.Open(path, "r"))
+        {
+            if (tiff == null) return false;
+            
+            // Baca dimensi untuk keperluan ReadGeoTiffTags
+            int w = tiff.GetField(TiffTag.IMAGEWIDTH)[0].ToInt();
+            int h = tiff.GetField(TiffTag.IMAGELENGTH)[0].ToInt();
+
+            // Set temporary variables
+            imageWidth = w;
+            imageHeight = h;
+
+            ReadGeoTiffTags(tiff);
+
+            if (hasGeoData)
+            {
+                minLat = geoMinLat;
+                maxLat = geoMaxLat;
+                minLon = geoMinLon;
+                maxLon = geoMaxLon;
+                return true;
+            }
+        }
+        return false;
+    }
+
     // Hapus semua layer
     public void ClearLayers()
     {
@@ -688,6 +721,10 @@ public class TiffLayerManager : MonoBehaviour
         if (projectManager != null && projectManager.GetCurrentProject() != null)
         {
             projectManager.OnPropertyChanged(name, value);
+            
+            // LOGIKA BARU: Hide Polygon jika ada layer yang aktif
+            bool anyLayerActive = layers.Exists(l => l.isVisible);
+            projectManager.SetProjectPolygonVisibility(!anyLayerActive);
         }
     }
 

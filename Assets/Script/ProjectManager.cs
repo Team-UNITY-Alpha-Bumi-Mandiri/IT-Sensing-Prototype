@@ -218,8 +218,7 @@ public class ProjectManager : MonoBehaviour
             polygonCoords = new List<Vector2>(obj.coordinates)
         };
 
-        // Tambah dummy properties
-        AddDummyProps(proj);
+
 
         // Simpan
         projects.Add(proj);
@@ -281,39 +280,7 @@ public class ProjectManager : MonoBehaviour
         return proj;
     }
 
-    // Tambah property dummy acak (untuk demo)
-    void AddDummyProps(ProjectData proj)
-    {
-        string[] allProps = {
-            "Show Label",
-            "Enable Zoom",
-            "Auto Refresh",
-            "Show Grid",
-            "Night Mode",
-            "Show Coordinates",
-            "Lock View",
-            "Show Scale"
-        };
 
-        int count = Random.Range(1, 4); // 1-3 property
-        List<int> used = new List<int>();
-        Dictionary<string, bool> dict = new Dictionary<string, bool>();
-
-        for (int i = 0; i < count && i < allProps.Length; i++)
-        {
-            int idx;
-            do
-            {
-                idx = Random.Range(0, allProps.Length);
-            }
-            while (used.Contains(idx));
-
-            used.Add(idx);
-            dict[allProps[idx]] = Random.value > 0.5f;
-        }
-
-        proj.SetProps(dict);
-    }
 
     // =========================================
     // SELECT / READ (Pilih Project)

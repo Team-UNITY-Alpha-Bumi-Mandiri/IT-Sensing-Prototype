@@ -8,35 +8,35 @@ public class MeasureAreaTool : MonoBehaviour
 {
     [Header("Dependencies")]
     public SimpleMapController_Baru mapController;
-    public RectTransform container; 
+    public RectTransform container;
 
     [Header("UI References")]
     public GameObject infoBoxPanel;      // Panel Kotak Putih di kiri bawah
     public TextMeshProUGUI infoBoxText;  // Teks di dalam kotak tersebut
 
     [Header("Prefabs")]
-    public GameObject pointPrefab; 
-    public GameObject linePrefab;  
-    public GameObject tooltipPrefab; 
+    public GameObject pointPrefab;
+    public GameObject linePrefab;
+    public GameObject tooltipPrefab;
     public GameObject measurementLabelPrefab; // Label kecil di atas garis
     public GameObject centerLabelPrefab;      // (BARU) Label Area di tengah Polygon
 
     [Header("Settings")]
-    public Color drawingColor = Color.white;  
+    public Color drawingColor = Color.white;
     public Color finishedColor = new Color(1f, 0.92f, 0.016f, 0.5f); // Kuning Transparan
-    public float closeSnapDistancePixels = 30f; 
+    public float closeSnapDistancePixels = 30f;
 
     // STATE
     private bool isActive = false;
     private bool isComplete = false;
-    private List<Vector2> waypoints = new List<Vector2>(); 
-    private List<GameObject> spawnedVisuals = new List<GameObject>(); 
+    private List<Vector2> waypoints = new List<Vector2>();
+    private List<GameObject> spawnedVisuals = new List<GameObject>();
 
     // HELPER
     private GameObject ghostLineObj;
     private GameObject tooltipObj;
     private TMP_Text tooltipText;
-    private GameObject currentFillObj; 
+    private GameObject currentFillObj;
     private PolygonRenderer currentPolyRenderer;
 
     // CACHE
@@ -51,16 +51,16 @@ public class MeasureAreaTool : MonoBehaviour
             CreateGhostLine();
             CreateTooltip();
         }
-        UpdateInfoBoxUI(); 
+        UpdateInfoBoxUI();
     }
 
     void Update()
     {
         if (!isActive) return;
-        
+
         // SYNC PETA
-        bool mapChanged = (mapController.latitude != lastLat) || 
-                          (mapController.longitude != lastLon) || 
+        bool mapChanged = (mapController.latitude != lastLat) ||
+                          (mapController.longitude != lastLon) ||
                           (mapController.zoom != lastZoom);
 
         if (mapChanged)
@@ -80,40 +80,46 @@ public class MeasureAreaTool : MonoBehaviour
         }
     }
 
-    void HandleInput() 
+    void HandleInput()
     {
         if (Mouse.current == null) return;
         Vector2 mousePos = Mouse.current.position.ReadValue();
-        
+
         if (!ghostLineObj) CreateGhostLine();
         if (!tooltipObj) CreateTooltip();
-        
+
         Vector2 mouseLatLon = mapController.ScreenToLatLon(mousePos);
-        DrawAreaFill(mouseLatLon); 
+        DrawAreaFill(mouseLatLon);
 
         // Update Tooltip
-        if (tooltipObj != null) {
-             RectTransformUtility.ScreenPointToLocalPointInRectangle(container, mousePos, null, out Vector2 localMouse);
-             tooltipObj.GetComponent<RectTransform>().anchoredPosition = localMouse + new Vector2(20, -20);
-             tooltipObj.SetActive(true);
-             tooltipText.text = "Click to add point";
-             
-             if (waypoints.Count >= 3) {
-                 Vector2 startScreen = mapController.LatLonToLocalPosition(waypoints[0].x, waypoints[0].y);
-                 if (Vector2.Distance(startScreen, localMouse) < closeSnapDistancePixels) {
-                     tooltipText.text = "Click Start to Finish";
-                 }
-             }
-             tooltipObj.transform.SetAsLastSibling();
+        if (tooltipObj != null)
+        {
+            RectTransformUtility.ScreenPointToLocalPointInRectangle(container, mousePos, null, out Vector2 localMouse);
+            tooltipObj.GetComponent<RectTransform>().anchoredPosition = localMouse + new Vector2(20, -20);
+            tooltipObj.SetActive(true);
+            tooltipText.text = "Click to add point";
+
+            if (waypoints.Count >= 3)
+            {
+                Vector2 startScreen = mapController.LatLonToLocalPosition(waypoints[0].x, waypoints[0].y);
+                if (Vector2.Distance(startScreen, localMouse) < closeSnapDistancePixels)
+                {
+                    tooltipText.text = "Click Start to Finish";
+                }
+            }
+            tooltipObj.transform.SetAsLastSibling();
         }
 
-        if (Mouse.current.leftButton.wasPressedThisFrame) {
-            if (waypoints.Count >= 3) {
+        if (Mouse.current.leftButton.wasPressedThisFrame)
+        {
+            if (waypoints.Count >= 3)
+            {
                 Vector2 startScreen = mapController.LatLonToLocalPosition(waypoints[0].x, waypoints[0].y);
                 RectTransformUtility.ScreenPointToLocalPointInRectangle(container, mousePos, null, out Vector2 localM);
-                
-                if (Vector2.Distance(startScreen, localM) < closeSnapDistancePixels) {
-                    FinishShape(); 
+
+                if (Vector2.Distance(startScreen, localM) < closeSnapDistancePixels)
+                {
+                    FinishShape();
                     return;
                 }
             }
@@ -123,10 +129,11 @@ public class MeasureAreaTool : MonoBehaviour
 
     void AddPoint(Vector2 latLon) { waypoints.Add(latLon); RebuildVisuals(); }
 
-    void FinishShape() { 
-        isComplete = true; 
-        RebuildVisuals(); 
-        UpdateInfoBoxUI(); 
+    void FinishShape()
+    {
+        isComplete = true;
+        RebuildVisuals();
+        UpdateInfoBoxUI();
     }
 
     // =================================================================
@@ -135,7 +142,7 @@ public class MeasureAreaTool : MonoBehaviour
     void UpdateInfoBoxUI()
     {
         if (infoBoxPanel == null || infoBoxText == null) return;
-        
+
         infoBoxPanel.SetActive(isActive);
 
         if (!isComplete || waypoints.Count < 3)
@@ -148,10 +155,31 @@ public class MeasureAreaTool : MonoBehaviour
             float perimeter = CalculatePerimeter();
             float area = CalculateArea();
 
-            // Format Angka: "N2" artinya angka dengan koma pemisah ribuan dan 2 desimal
+            // Format Angka: "N2" artinya angka dengan koma pemisah ribuan dan 2 digit desimal
             // Contoh: 155,489,393.23
-            string sArea = $"{area:N2} m²"; 
-            string sPerim = $"{perimeter:N2} m";
+
+            //D: pemotongan ke kilometer
+            string sArea, sPerim;
+            float trArea, trPerim;
+
+            if (area > 999999)
+            {
+                trArea = area / 1_000_000f;
+                sArea = $"{trArea:N2} km²";
+            }
+            else
+                sArea = $"{area:N2} m²";
+
+            if (perimeter > 999999)
+            {
+                trPerim = perimeter / 1_000_000f;
+                sPerim = $"{trPerim:N2} km²";
+            }
+            else
+                sPerim = $"{perimeter:N2} m²";
+
+            //  string sArea = $"{area:N2} m²";
+            //  string sPerim = $"{perimeter:N2} m";
 
             // FORMAT HTML TEXT MESH PRO
             // <u> = Underline, <b> = Bold
@@ -191,18 +219,18 @@ public class MeasureAreaTool : MonoBehaviour
     {
         float x = CalculateDistanceMeters(new Vector2(origin.x, origin.y), new Vector2(origin.x, p.y));
         float y = CalculateDistanceMeters(new Vector2(origin.x, origin.y), new Vector2(p.x, origin.y));
-        if (p.y < origin.y) x = -x; 
+        if (p.y < origin.y) x = -x;
         if (p.x < origin.x) y = -y;
         return new Vector2(x, y);
     }
 
     float CalculateDistanceMeters(Vector2 p1, Vector2 p2)
     {
-        float R = 6371000f; 
+        float R = 6371000f;
         float dLat = (p2.x - p1.x) * Mathf.Deg2Rad;
         float dLon = (p2.y - p1.y) * Mathf.Deg2Rad;
-        float a = Mathf.Sin(dLat/2) * Mathf.Sin(dLat/2) + Mathf.Cos(p1.x * Mathf.Deg2Rad) * Mathf.Cos(p2.x * Mathf.Deg2Rad) * Mathf.Sin(dLon/2) * Mathf.Sin(dLon/2);
-        return R * 2 * Mathf.Atan2(Mathf.Sqrt(a), Mathf.Sqrt(1-a));
+        float a = Mathf.Sin(dLat / 2) * Mathf.Sin(dLat / 2) + Mathf.Cos(p1.x * Mathf.Deg2Rad) * Mathf.Cos(p2.x * Mathf.Deg2Rad) * Mathf.Sin(dLon / 2) * Mathf.Sin(dLon / 2);
+        return R * 2 * Mathf.Atan2(Mathf.Sqrt(a), Mathf.Sqrt(1 - a));
     }
 
     // =================================================================
@@ -224,7 +252,7 @@ public class MeasureAreaTool : MonoBehaviour
             GameObject p = Instantiate(pointPrefab, container);
             p.GetComponent<RectTransform>().anchoredPosition = currentPos;
             spawnedVisuals.Add(p);
-            
+
             centerSum += currentPos;
 
             if (i > 0) DrawSegment(waypoints[i - 1], waypoints[i], useColor);
@@ -232,7 +260,7 @@ public class MeasureAreaTool : MonoBehaviour
 
         if (isComplete)
         {
-            if(waypoints.Count > 2) DrawSegment(waypoints[waypoints.Count - 1], waypoints[0], useColor);
+            if (waypoints.Count > 2) DrawSegment(waypoints[waypoints.Count - 1], waypoints[0], useColor);
             DrawAreaFill(null);
 
             // --- BARU: LABEL AREA DI TENGAH POLYGON ---
@@ -241,17 +269,17 @@ public class MeasureAreaTool : MonoBehaviour
                 Vector2 centroid = centerSum / waypoints.Count; // Rata-rata posisi (sederhana)
                 GameObject centerLbl = Instantiate(centerLabelPrefab, container);
                 centerLbl.GetComponent<RectTransform>().anchoredPosition = centroid;
-                
+
                 float areaKm = CalculateArea() / 1000000f;
                 // Format: "155 km2"
-                centerLbl.GetComponentInChildren<TextMeshProUGUI>().text = $"{areaKm:N0} km\u00B2"; 
+                centerLbl.GetComponentInChildren<TextMeshProUGUI>().text = $"{areaKm:N0} km\u00B2";
                 spawnedVisuals.Add(centerLbl);
             }
         }
         else DrawAreaFill(null);
     }
 
-    void DrawSegment(Vector2 start, Vector2 end, Color c) 
+    void DrawSegment(Vector2 start, Vector2 end, Color c)
     {
         Vector2 startPos = mapController.LatLonToLocalPosition(start.x, start.y);
         Vector2 endPos = mapController.LatLonToLocalPosition(end.x, end.y);
@@ -274,7 +302,7 @@ public class MeasureAreaTool : MonoBehaviour
             GameObject label = Instantiate(measurementLabelPrefab, container);
             RectTransform labelRT = label.GetComponent<RectTransform>();
             labelRT.anchoredPosition = startPos + (dir * 0.5f);
-            
+
             // Rotasi label mengikuti garis (Anti terbalik)
             float textAngle = angle;
             if (textAngle > 90 || textAngle < -90) textAngle += 180;
@@ -290,23 +318,24 @@ public class MeasureAreaTool : MonoBehaviour
     {
         int totalPoints = waypoints.Count + (dynamicTip.HasValue ? 1 : 0);
         if (totalPoints < 3) { if (currentFillObj) currentFillObj.SetActive(false); return; }
-        if (!currentFillObj) {
+        if (!currentFillObj)
+        {
             currentFillObj = new GameObject("GeneratedAreaFill");
             currentFillObj.transform.SetParent(container, false);
             currentFillObj.AddComponent<CanvasRenderer>();
             currentPolyRenderer = currentFillObj.AddComponent<PolygonRenderer>();
             currentPolyRenderer.material = new Material(Shader.Find("UI/Default"));
-            currentPolyRenderer.raycastTarget = false; 
+            currentPolyRenderer.raycastTarget = false;
         }
         currentFillObj.SetActive(true);
         List<Vector2> pts = new List<Vector2>();
-        foreach(var p in waypoints) pts.Add(mapController.LatLonToLocalPosition(p.x, p.y));
-        if(dynamicTip.HasValue && !isComplete) pts.Add(mapController.LatLonToLocalPosition(dynamicTip.Value.x, dynamicTip.Value.y));
-        if(currentPolyRenderer) currentPolyRenderer.SetPoints(pts, finishedColor);
-        currentFillObj.transform.SetAsFirstSibling(); 
+        foreach (var p in waypoints) pts.Add(mapController.LatLonToLocalPosition(p.x, p.y));
+        if (dynamicTip.HasValue && !isComplete) pts.Add(mapController.LatLonToLocalPosition(dynamicTip.Value.x, dynamicTip.Value.y));
+        if (currentPolyRenderer) currentPolyRenderer.SetPoints(pts, finishedColor);
+        currentFillObj.transform.SetAsFirstSibling();
     }
 
     void CreateGhostLine() { if (!ghostLineObj) { ghostLineObj = Instantiate(linePrefab, container); ghostLineObj.GetComponent<Image>().raycastTarget = false; ghostLineObj.SetActive(false); } }
     void CreateTooltip() { if (!tooltipObj) { tooltipObj = Instantiate(tooltipPrefab, container); tooltipText = tooltipObj.GetComponentInChildren<TMP_Text>(); tooltipObj.SetActive(false); } }
-    public void ToggleAreaTool(bool status) { isActive = status; if(container) container.gameObject.SetActive(status); if (infoBoxPanel) infoBoxPanel.SetActive(status); if(status) { isComplete = false; waypoints.Clear(); UpdateInfoBoxUI(); RebuildVisuals(); CreateGhostLine(); CreateTooltip(); } }
+    public void ToggleAreaTool(bool status) { isActive = status; if (container) container.gameObject.SetActive(status); if (infoBoxPanel) infoBoxPanel.SetActive(status); if (status) { isComplete = false; waypoints.Clear(); UpdateInfoBoxUI(); RebuildVisuals(); CreateGhostLine(); CreateTooltip(); } }
 }

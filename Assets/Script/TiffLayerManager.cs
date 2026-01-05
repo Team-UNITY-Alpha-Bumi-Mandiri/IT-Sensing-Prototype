@@ -23,6 +23,9 @@ public class TiffLayerManager : MonoBehaviour
     public float overlayOpacity = 1f;
     public List<string> customBandNames; // Nama band custom (di-assign via Inspector)
 
+    [Header("Material for <i>Enhancement Tool</i>")]
+    public Material enhanceMat;
+
     // Data layer
     List<LayerData> layers = new List<LayerData>();
     List<GameObject> overlays = new List<GameObject>();
@@ -679,7 +682,7 @@ public class TiffLayerManager : MonoBehaviour
         tex.SetPixels(pixels);
         tex.Apply();
 
-        layers.Add(new LayerData { name = name, texture = tex, isVisible = false });
+                layers.Add(new LayerData { name = name, texture = tex, isVisible = false });
     }
 
     void CreateCompositeManual(float[][] bandData, int width, int height, string name, float[] min, float[] max)
@@ -771,6 +774,9 @@ public class TiffLayerManager : MonoBehaviour
         RawImage img = overlay.AddComponent<RawImage>();
         img.texture = layer.texture;
         img.color = new Color(1f, 1f, 1f, overlayOpacity);
+
+        //Den : Add Material for Enhancement Tool --- do Enhancement stuf here
+ img.material = enhanceMat;
 
         // Posisikan berdasarkan koordinat geo
         UpdateOverlayPosition(overlay);

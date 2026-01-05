@@ -91,6 +91,7 @@
     <Compile Include="Assets\TextMesh Pro\Examples &amp; Extras\Scripts\Benchmark01.cs" />
     <Compile Include="Assets\TextMesh Pro\Examples &amp; Extras\Scripts\TextMeshSpawner.cs" />
     <Compile Include="Assets\TextMesh Pro\Examples &amp; Extras\Scripts\Benchmark02.cs" />
+    <Compile Include="Assets\Script\ToolbarArranger.cs" />
     <Compile Include="Assets\UI\Script\MapController.cs" />
     <Compile Include="Assets\Script\PropertyToggleItem.cs" />
     <Compile Include="Assets\Script kedua\PopupFactory.cs" />
@@ -147,6 +148,7 @@
     <Compile Include="Assets\UI\Script\Script yang Final\MeasureAreaButton.cs" />
     <Compile Include="Assets\UI\Script\Script yang Final\MapCursorButton.cs" />
     <Compile Include="Assets\Script\ButtonCustom.cs" />
+    <Compile Include="Assets\UI\Script\EnhancementTool.cs" />
     <Compile Include="Assets\Script\FolderBrowserHelper.cs" />
     <Compile Include="Assets\UI\Script\DistanceRulerController.cs" />
     <Compile Include="Assets\Script kedua\PanAndZoom.cs" />

@@ -47,7 +47,11 @@ Prototyping 2
 
 
 ---------------------------------------------------------
-Prototyping 3
+Prototyping 3 Sampai Detik ini
 ---------------------------------------------------------
-✅ LIST DEBUGGING DAN FITUR :
-- 
+✅ List Fitur yang dibuat:
+- Menjalankan file Py dengan mengubah menjadi EXE
+- Fitur fungsi CAM2 (crop n split 2 in 1)
+- Fitur integrasi API Windows untuk pilih File
+- Fitur untuk pilih dokumen
+- Fitur Image Sharpening/Pansharpening ( Gram dan Wavelet ) dan UInya

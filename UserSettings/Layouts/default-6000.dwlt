@@ -43,8 +43,8 @@ MonoBehaviour:
     y: 621
     width: 319
     height: 312
-  m_MinSize: {x: 100, y: 100}
-  m_MaxSize: {x: 4000, y: 4000}
+  m_MinSize: {x: 101, y: 126}
+  m_MaxSize: {x: 4001, y: 4026}
   m_ActualView: {fileID: 18}
   m_Panes:
   - {fileID: 18}
@@ -323,8 +323,8 @@ MonoBehaviour:
     y: 0
     width: 612
     height: 933
-  m_MinSize: {x: 275, y: 50}
-  m_MaxSize: {x: 4000, y: 4000}
+  m_MinSize: {x: 276, y: 76}
+  m_MaxSize: {x: 4001, y: 4026}
   m_ActualView: {fileID: 19}
   m_Panes:
   - {fileID: 19}
@@ -453,7 +453,7 @@ MonoBehaviour:
   m_Pos:
     serializedVersion: 2
     x: 0
-    y: 79
+    y: 24
     width: 318
     height: 595
   m_SerializedDataModeController:
@@ -470,23 +470,23 @@ MonoBehaviour:
   m_SceneHierarchy:
     m_TreeViewState:
       scrollPos: {x: 0, y: 0}
-      m_SelectedIDs: c6c3ffff
-      m_LastClickedID: -15418
+      m_SelectedIDs: 
+      m_LastClickedID: 0
       m_ExpandedIDs: a4e0ffffbce0ffffbee0ffffc6e0ffffcae0ffffcce0fffff0e0ffffcae8ffffb2efffffe2f8ffff069f000002ac000090b7000042c00000bec1000000c50000f4c8000090cc00005cce000066d200000ed500006cd600009ad6000084d8000024d900008cd9000018da000018db0000
       m_RenameOverlay:
         m_UserAcceptedRename: 0
-        m_Name: RasterButton (1)
-        m_OriginalName: RasterButton (1)
+        m_Name: 
+        m_OriginalName: 
         m_EditFieldRect:
           serializedVersion: 2
           x: 0
           y: 0
           width: 0
           height: 0
-        m_UserData: -6410
+        m_UserData: 0
         m_IsWaitingForDelay: 0
         m_IsRenaming: 0
-        m_OriginalEventType: 0
+        m_OriginalEventType: 11
         m_IsRenamingFilename: 0
         m_TrimLeadingAndTrailingWhitespace: 0
         m_ClientGUIView: {fileID: 11}
@@ -518,8 +518,8 @@ MonoBehaviour:
     m_TextWithWhitespace: "Scene\u200B"
   m_Pos:
     serializedVersion: 2
-    x: 319
-    y: 79
+    x: 1
+    y: 24
     width: 987
     height: 642
   m_SerializedDataModeController:
@@ -1087,8 +1087,8 @@ MonoBehaviour:
     m_TextWithWhitespace: "Project\u200B"
   m_Pos:
     serializedVersion: 2
-    x: 319
-    y: 747
+    x: 1
+    y: 692
     width: 987
     height: 239
   m_SerializedDataModeController:
@@ -1132,7 +1132,7 @@ MonoBehaviour:
     scrollPos: {x: 0, y: 33}
     m_SelectedIDs: 36b20000
     m_LastClickedID: 45622
-    m_ExpandedIDs: 00000000c6b10000c8b10000cab10000ccb10000ceb10000
+    m_ExpandedIDs: 0000000094b0000096b0000098b000009ab000009cb00000
     m_RenameOverlay:
       m_UserAcceptedRename: 0
       m_Name: 
@@ -1161,7 +1161,7 @@ MonoBehaviour:
     scrollPos: {x: 0, y: 0}
     m_SelectedIDs: 
     m_LastClickedID: 0
-    m_ExpandedIDs: 00000000c6b10000c8b10000cab10000ccb10000ceb10000
+    m_ExpandedIDs: 0000000094b0000096b0000098b000009ab000009cb00000
     m_RenameOverlay:
       m_UserAcceptedRename: 0
       m_Name: 
@@ -1241,7 +1241,7 @@ MonoBehaviour:
   m_Pos:
     serializedVersion: 2
     x: 0
-    y: 700
+    y: 645
     width: 318
     height: 286
   m_SerializedDataModeController:
@@ -1276,8 +1276,8 @@ MonoBehaviour:
     m_TextWithWhitespace: "Inspector\u200B"
   m_Pos:
     serializedVersion: 2
-    x: 1308
-    y: 79
+    x: 1309
+    y: 24
     width: 611
     height: 907
   m_SerializedDataModeController:

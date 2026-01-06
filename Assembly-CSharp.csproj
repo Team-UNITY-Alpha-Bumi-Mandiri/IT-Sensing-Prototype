@@ -102,6 +102,7 @@
     <Compile Include="Assets\UI\Script\DropdownFilterTMP.cs" />
     <Compile Include="Assets\UI\Script\SlippyMapController_noproxy1.cs" />
     <Compile Include="Assets\TextMesh Pro\Examples &amp; Extras\Scripts\Benchmark03.cs" />
+    <Compile Include="Assets\Script\LayerInputController.cs" />
     <Compile Include="Assets\Script\DrawTool.cs" />
     <Compile Include="Assets\UI\Script\SlippyMapController_noproxy.cs" />
     <Compile Include="Assets\UI\Script\DistanceMeasureTool.cs" />

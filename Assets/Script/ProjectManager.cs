@@ -42,6 +42,17 @@ public class ProjectManager : MonoBehaviour
         }
     }
 
+    // Objek gambar yang diserialisasi
+    [System.Serializable]
+    public class SerializedDrawObject
+    {
+        public string id; // Simpan ID agar bisa dihapus dengan akurat
+        public DrawTool.DrawMode type;
+        public string layerName;
+        public List<Vector2> coordinates;
+        public bool useTexture;
+    }
+
     // Data project
     [System.Serializable]
     public class ProjectData
@@ -54,6 +65,7 @@ public class ProjectManager : MonoBehaviour
         public string tiffPath; // Path ke file TIFF (opsional)
         public List<Vector2> polygonCoords;
         public List<PropertyEntry> properties = new List<PropertyEntry>();
+        public List<SerializedDrawObject> drawings = new List<SerializedDrawObject>(); // Daftar gambar
 
         // Convert list ke dictionary
         public Dictionary<string, bool> GetProps()
@@ -130,6 +142,7 @@ public class ProjectManager : MonoBehaviour
         if (drawTool != null)
         {
             drawTool.onDrawComplete.AddListener(OnDrawn);
+            drawTool.onObjectDeleted.AddListener(OnObjectDeleted); // Subscribe delete
         }
 
         current = null;
@@ -196,7 +209,22 @@ public class ProjectManager : MonoBehaviour
     // Callback selesai gambar
     void OnDrawn(DrawTool.DrawObject obj)
     {
-        // Validasi
+        // KASUS A: Tambah gambar ke project yang sedang aktif (Layer Drawing)
+        if (current != null && !string.IsNullOrEmpty(obj.layerName))
+        {
+            current.drawings.Add(new SerializedDrawObject
+            {
+                id = obj.id,
+                type = obj.type,
+                layerName = obj.layerName,
+                coordinates = new List<Vector2>(obj.coordinates),
+                useTexture = obj.useTexture
+            });
+            Save();
+            return; // Selesai
+        }
+
+        // KASUS B: Buat project baru (ROI Drawing)
         if (newProjectNameInput == null || string.IsNullOrEmpty(newProjectNameInput.text))
         {
             return;
@@ -217,6 +245,19 @@ public class ProjectManager : MonoBehaviour
             zoom = (mapController != null) ? mapController.zoom : 15,
             polygonCoords = new List<Vector2>(obj.coordinates)
         };
+
+        // Jika gambar diawali dari layer tertentu (selain auto-project)
+        if (!string.IsNullOrEmpty(drawTool.currentDrawingLayer))
+        {
+            proj.drawings.Add(new SerializedDrawObject
+            {
+                id = obj.id,
+                type = obj.type,
+                layerName = obj.layerName,
+                coordinates = new List<Vector2>(obj.coordinates),
+                useTexture = obj.useTexture
+            });
+        }
 
 
 
@@ -289,6 +330,17 @@ public class ProjectManager : MonoBehaviour
     {
         current = proj;
 
+        // Reset semua toggle ke OFF saat project dipilih (sesuai request)
+        if (current.properties != null)
+        {
+            foreach (var p in current.properties)
+            {
+                p.value = false;
+            }
+            // Save perubahan state ini agar konsisten
+            Save();
+        }
+
         // Set nama di input rename
         if (renameProjectInput != null)
         {
@@ -301,11 +353,27 @@ public class ProjectManager : MonoBehaviour
             mapController.GoToLocation(proj.lat, proj.lon, proj.zoom);
         }
 
-        // Tampilkan polygon
-            if (proj.polygonCoords != null && proj.polygonCoords.Count > 0)
+        // Tampilkan polygon profil (ROI)
+        if (proj.polygonCoords != null && proj.polygonCoords.Count > 0)
+        {
+            drawTool.LoadPolygon(proj.polygonCoords, true);
+        }
+
+        // Tampilkan gambar-gambar layer
+        if (proj.drawings != null)
+        {
+            foreach (var d in proj.drawings)
             {
-                drawTool.LoadPolygon(proj.polygonCoords, true);
+                drawTool.CreateObj(d.type, d.coordinates, d.layerName, d.useTexture, d.id);
             }
+        }
+
+        // Matikan gambar yang layernya OFF
+        Dictionary<string, bool> props = proj.GetProps();
+        foreach (var kv in props)
+        {
+            drawTool.SetLayerVisibility(kv.Key, kv.Value);
+        }
 
         // Notify TiffLayerManager jika ada tiffPath
         if (!string.IsNullOrEmpty(proj.tiffPath))
@@ -445,6 +513,27 @@ public class ProjectManager : MonoBehaviour
         dict[name] = value;
         current.SetProps(dict);
         Save();
+
+        // Update visibilitas gambar di DrawTool
+        if (drawTool != null)
+        {
+            drawTool.SetLayerVisibility(name, value);
+        }
+    }
+
+    // Callback saat objek gambar dihapus dari peta
+    void OnObjectDeleted(DrawTool.DrawObject obj)
+    {
+        if (current == null || current.drawings == null) return;
+
+        // Cari berdasarkan ID
+        int idx = current.drawings.FindIndex(x => x.id == obj.id);
+        if (idx != -1)
+        {
+            current.drawings.RemoveAt(idx);
+            Save();
+            Debug.Log($"[ProjectManager] Deleted drawing {obj.id} from project data.");
+        }
     }
 
     // Getter project saat ini

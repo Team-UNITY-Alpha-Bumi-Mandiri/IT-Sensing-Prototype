@@ -24,6 +24,7 @@ public class TiffLayerManager : MonoBehaviour
     public List<string> customBandNames; // Nama band custom (di-assign via Inspector)
 
     [Header("Material for <i>Enhancement Tool</i>")]
+public    EnhancementTool enhanceTool;
     public Material enhanceMat;
 
     // Data layer

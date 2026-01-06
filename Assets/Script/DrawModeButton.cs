@@ -1,5 +1,6 @@
 using UnityEngine;
 using UnityEngine.UI;
+using TMPro; // Moved here
 
 // =========================================
 // Tombol untuk pilih mode gambar
@@ -12,65 +13,97 @@ public class DrawModeButton : MonoBehaviour
     
     // Referensi ke DrawTool
     public DrawTool drawTool;
-    
-    // Warna saat aktif (hijau)
-    public Color onColor = new Color(0.1f, 0.55f, 0.28f);
-    
-    // Warna saat tidak aktif (putih)
-    public Color offColor = Color.white;
 
-    // Komponen internal
-    Image img;
+    // (Color logic removed as requested)
+    
+    [Header("Validation")]
+    public TextMeshProUGUI layerInfoText;
+    public ProjectManager projectManager;
+    
+    Button btn;
 
     void Start()
     {
-        // Ambil komponen Image
-        img = GetComponent<Image>();
-
         // Tambah listener ke tombol
-        if (TryGetComponent(out Button btn))
+        if (TryGetComponent(out btn))
         {
             btn.onClick.AddListener(OnClick);
         }
+        
+        // Auto-find ProjectManager if missing
+        if (projectManager == null)
+        {
+            projectManager = FindObjectOfType<ProjectManager>();
+        }
+    }
 
-        // Set warna awal
-        UpdateColor();
+    void Update()
+    {
+        if (btn == null) return;
+        
+        // Default not interactable unless valid
+        bool isValid = false;
+
+        if (layerInfoText != null && projectManager != null)
+        {
+            var proj = projectManager.GetCurrentProject();
+            if (proj != null)
+            {
+                // Parse "Layer : Name"
+                string txt = layerInfoText.text;
+                if (!string.IsNullOrEmpty(txt) && txt.StartsWith("Layer : "))
+                {
+                    // Parse "Layer : Name" -> "Name"
+                    string layerName = txt.Substring("Layer : ".Length).Trim();
+                    
+                    // Check if property exists and is active
+                    var props = proj.GetProps();
+
+                    if (props.ContainsKey(layerName) && props[layerName] == true)
+                    {
+                        // Check if ALL OTHER toggles are OFF
+                        bool othersOff = true;
+                        foreach (var kv in props)
+                        {
+                            if (kv.Key != layerName && kv.Value == true)
+                            {
+                                othersOff = false;
+                                break;
+                            }
+                        }
+
+                        if (othersOff)
+                        {
+                            isValid = true;
+                        }
+                    }
+                }
+            }
+        }
+        
+        btn.interactable = isValid;
     }
 
     // Saat diklik: aktifkan mode jika belum aktif, matikan jika sudah
     void OnClick()
     {
+        // Double check validation (optional, as interactable handles it)
+        if (!btn.interactable) return;
+        
         if (!drawTool.IsModeActive(mode))
         {
+            // Set layer name ke DrawTool agar objek yang dibuat tahu dia punya siapa
+            if (layerInfoText != null && layerInfoText.text.StartsWith("Layer : "))
+            {
+                drawTool.currentDrawingLayer = layerInfoText.text.Substring("Layer : ".Length).Trim();
+            }
+
             drawTool.ActivateMode(mode);
         }
         else
         {
             drawTool.DeactivateMode(mode);
-        }
-
-        UpdateColor();
-    }
-
-    // Update warna tombol sesuai status
-    void UpdateColor()
-    {
-        if (drawTool.IsModeActive(mode))
-        {
-            img.color = onColor;
-        }
-        else
-        {
-            img.color = offColor;
-        }
-    }
-
-    // Cek terus tiap frame untuk sync warna (jika diubah dari luar)
-    void Update()
-    {
-        if (drawTool != null && img != null)
-        {
-            UpdateColor();
+            drawTool.currentDrawingLayer = ""; // Reset
         }
     }
 }

@@ -18,8 +18,8 @@ public class EnhancementTool : MonoBehaviour
         con = mat.GetFloat("_Contrast");
         bri = mat.GetFloat("_Brightness");
         sat = mat.GetFloat("_Saturation");
-        */
-        statusTxt.text = "Image loaded - Ready for enhacement";
+        
+        statusTxt.text = "Image loaded - Ready for enhacement";*/
     }
 
     public void Change_Contrast()

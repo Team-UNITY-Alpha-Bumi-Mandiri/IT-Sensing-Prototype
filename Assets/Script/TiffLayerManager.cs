@@ -744,6 +744,7 @@ public    EnhancementTool enhanceTool;
         if (value) ShowLayerOnMap(layer);
         else HideLayerFromMap(layer);
 
+
         // Update ProjectManager juga (biar tersimpan)
         if (projectManager != null && projectManager.GetCurrentProject() != null)
         {
@@ -776,8 +777,13 @@ public    EnhancementTool enhanceTool;
         img.texture = layer.texture;
         img.color = new Color(1f, 1f, 1f, overlayOpacity);
 
-        //Den : Add Material for Enhancement Tool --- do Enhancement stuf here
- img.material = enhanceMat;
+        //Den : Add custom Material
+        if (img.material != null)
+        {
+            img.material = enhanceMat;
+           // Debug.Log("mat ADDED!");
+        }
+        enhanceTool.AssignValues(overlay, layer.name);
 
         // Posisikan berdasarkan koordinat geo
         UpdateOverlayPosition(overlay);

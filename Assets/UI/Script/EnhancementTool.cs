@@ -5,21 +5,25 @@ using NUnit.Compatibility;
 
 public class EnhancementTool : MonoBehaviour
 {
-    public Image img;
-    Material mat;
+    public Material mat;
     public Slider[] enhancementSliders;
-    public TMP_Text conTxt, briTxt, satTxt,statusTxt;
+    public TMP_Text layerName,conTxt, briTxt, satTxt, statusTxt;
     float con, bri, sat;
 
-    // Start is called once before the first execution of Update after the MonoBehaviour is created
-    void Start()
-    {/*
-        mat = img.material;
+    public void AssignValues(GameObject layer,string layerNm)
+    {
+        if (layer != null)
+        {
+            RawImage layerImage;
+            layerImage = layer.GetComponent<RawImage>();
+            mat = layerImage.material;
+        }
+
+        layerName.text =new string("Layer : "+ layerNm);
         con = mat.GetFloat("_Contrast");
         bri = mat.GetFloat("_Brightness");
         sat = mat.GetFloat("_Saturation");
-        
-        statusTxt.text = "Image loaded - Ready for enhacement";*/
+        statusTxt.text = "Image loaded - Ready for enhacement";
     }
 
     public void Change_Contrast()

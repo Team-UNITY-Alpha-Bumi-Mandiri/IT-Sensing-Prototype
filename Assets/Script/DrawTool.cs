@@ -32,6 +32,7 @@ public class DrawTool : MonoBehaviour
 
     // Event selesai gambar (untuk didengarkan script lain)
     public UnityEvent<DrawObject> onDrawComplete;
+    public UnityEvent<DrawObject> onObjectDeleted; // Event saat objek dihapus
 
     [Header("Warna")]
     Color colPoint = Color.blue;
@@ -47,6 +48,8 @@ public class DrawTool : MonoBehaviour
     bool isActive = false;
     DrawMode mode = DrawMode.Point;
     int drawId = 0;
+    
+    public string currentDrawingLayer = ""; // Layer saat ini (dari UI)
     
     // Cache posisi peta
     double lastLat, lastLon;
@@ -70,6 +73,7 @@ public class DrawTool : MonoBehaviour
         public string id = System.Guid.NewGuid().ToString();
         public DrawMode type;
         public bool useTexture;
+        public string layerName; // Nama layer penampung
         public List<Vector2> coordinates = new List<Vector2>(); // Lat, Lon
         public List<GameObject> visuals = new List<GameObject>();  // UI objects
         public GameObject rootObj;
@@ -226,6 +230,7 @@ public class DrawTool : MonoBehaviour
         {
             type = mode,
             useTexture = forceTextureOnNext,
+            layerName = currentDrawingLayer, // Simpan layer asal
             rootObj = CreateRoot($"Draw_{drawId}_{mode}")
         };
     }
@@ -452,6 +457,8 @@ public class DrawTool : MonoBehaviour
         {
             if (HitTest(allObjs[i], mousePos))
             {
+                onObjectDeleted?.Invoke(allObjs[i]);
+
                 if (allObjs[i].rootObj != null)
                 {
                     Destroy(allObjs[i].rootObj);
@@ -704,6 +711,35 @@ public class DrawTool : MonoBehaviour
 
         Rebuild(obj);
         allObjs.Add(obj);
+    }
+
+    // Buat objek baru dengan Layer
+    public void CreateObj(DrawMode type, List<Vector2> coords, string layer, bool tex = false, string id = null)
+    {
+        DrawObject obj = new DrawObject
+        {
+            id = string.IsNullOrEmpty(id) ? System.Guid.NewGuid().ToString() : id,
+            type = type,
+            layerName = layer,
+            useTexture = tex,
+            coordinates = new List<Vector2>(coords),
+            rootObj = CreateRoot("Loaded_" + layer)
+        };
+
+        Rebuild(obj);
+        allObjs.Add(obj);
+    }
+
+    // Set visibilitas layer tertentu
+    public void SetLayerVisibility(string layer, bool visible)
+    {
+        foreach (var obj in allObjs)
+        {
+            if (obj.layerName == layer && obj.rootObj != null)
+            {
+                obj.rootObj.SetActive(visible);
+            }
+        }
     }
 
     // Undo: hapus titik terakhir atau objek terakhir

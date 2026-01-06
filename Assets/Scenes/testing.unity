@@ -10505,8 +10505,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::DrawModeButton
   mode: 0
   drawTool: {fileID: 1971986123}
-  onColor: {r: 0.1, g: 0.55, b: 0.28, a: 1}
-  offColor: {r: 1, g: 1, b: 1, a: 1}
+  layerInfoText: {fileID: 0}
+  projectManager: {fileID: 0}
 --- !u!1 &308284080
 GameObject:
   m_ObjectHideFlags: 0
@@ -16427,6 +16427,81 @@ PrefabInstance:
     m_AddedGameObjects: []
     m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 3c1c31b90a56acc47b612e9ceb34d166, type: 3}
+--- !u!1 &497603029
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 497603030}
+  - component: {fileID: 497603032}
+  - component: {fileID: 497603031}
+  m_Layer: 5
+  m_Name: Image
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!224 &497603030
+RectTransform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 497603029}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 1273279213}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+  m_AnchorMin: {x: 0.5, y: 0.34931815}
+  m_AnchorMax: {x: 0.5, y: 0.5}
+  m_AnchoredPosition: {x: 0.00000047684, y: 3}
+  m_SizeDelta: {x: 31.8687, y: 26.235}
+  m_Pivot: {x: 0.5, y: 0.5}
+--- !u!114 &497603031
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 497603029}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: fe87c0e1cc204ed48ad3b37840f39efc, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Image
+  m_Material: {fileID: 0}
+  m_Color: {r: 1, g: 1, b: 1, a: 1}
+  m_RaycastTarget: 1
+  m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
+  m_Maskable: 1
+  m_OnCullStateChanged:
+    m_PersistentCalls:
+      m_Calls: []
+  m_Sprite: {fileID: 21300000, guid: 0dedf339b472f6b44a686dafdb2c3308, type: 3}
+  m_Type: 0
+  m_PreserveAspect: 0
+  m_FillCenter: 1
+  m_FillMethod: 4
+  m_FillAmount: 1
+  m_FillClockwise: 1
+  m_FillOrigin: 0
+  m_UseSpriteMesh: 0
+  m_PixelsPerUnitMultiplier: 1
+--- !u!222 &497603032
+CanvasRenderer:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 497603029}
+  m_CullTransparentMesh: 1
 --- !u!1 &505874001
 GameObject:
   m_ObjectHideFlags: 0
@@ -18701,30 +18776,58 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 3683547884663849430, guid: 783b4a1dcf2eaa742b874c759526f13b, type: 3}
       propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.size
-      value: 0
+      value: 2
       objectReference: {fileID: 0}
     - target: {fileID: 3683547884663849430, guid: 783b4a1dcf2eaa742b874c759526f13b, type: 3}
       propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.data[0].m_Mode
-      value: 1
+      value: 6
+      objectReference: {fileID: 0}
+    - target: {fileID: 3683547884663849430, guid: 783b4a1dcf2eaa742b874c759526f13b, type: 3}
+      propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.data[1].m_Mode
+      value: 6
       objectReference: {fileID: 0}
     - target: {fileID: 3683547884663849430, guid: 783b4a1dcf2eaa742b874c759526f13b, type: 3}
       propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.data[0].m_Target
       value: 
-      objectReference: {fileID: 0}
+      objectReference: {fileID: 1189881803}
+    - target: {fileID: 3683547884663849430, guid: 783b4a1dcf2eaa742b874c759526f13b, type: 3}
+      propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.data[1].m_Target
+      value: 
+      objectReference: {fileID: 658685377}
     - target: {fileID: 3683547884663849430, guid: 783b4a1dcf2eaa742b874c759526f13b, type: 3}
       propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.data[0].m_CallState
       value: 2
       objectReference: {fileID: 0}
     - target: {fileID: 3683547884663849430, guid: 783b4a1dcf2eaa742b874c759526f13b, type: 3}
+      propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.data[1].m_CallState
+      value: 2
+      objectReference: {fileID: 0}
+    - target: {fileID: 3683547884663849430, guid: 783b4a1dcf2eaa742b874c759526f13b, type: 3}
       propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.data[0].m_MethodName
-      value: drawPolygonButton
+      value: SetActive
+      objectReference: {fileID: 0}
+    - target: {fileID: 3683547884663849430, guid: 783b4a1dcf2eaa742b874c759526f13b, type: 3}
+      propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.data[1].m_MethodName
+      value: SetActive
       objectReference: {fileID: 0}
     - target: {fileID: 3683547884663849430, guid: 783b4a1dcf2eaa742b874c759526f13b, type: 3}
       propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.data[0].m_TargetAssemblyTypeName
-      value: DistanceButton, Assembly-CSharp
+      value: UnityEngine.GameObject, UnityEngine
+      objectReference: {fileID: 0}
+    - target: {fileID: 3683547884663849430, guid: 783b4a1dcf2eaa742b874c759526f13b, type: 3}
+      propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.data[1].m_TargetAssemblyTypeName
+      value: UnityEngine.GameObject, UnityEngine
+      objectReference: {fileID: 0}
+    - target: {fileID: 3683547884663849430, guid: 783b4a1dcf2eaa742b874c759526f13b, type: 3}
+      propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.data[1].m_Arguments.m_BoolArgument
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 3683547884663849430, guid: 783b4a1dcf2eaa742b874c759526f13b, type: 3}
       propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.data[0].m_Arguments.m_ObjectArgumentAssemblyTypeName
+      value: UnityEngine.Object, UnityEngine
+      objectReference: {fileID: 0}
+    - target: {fileID: 3683547884663849430, guid: 783b4a1dcf2eaa742b874c759526f13b, type: 3}
+      propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.data[1].m_Arguments.m_ObjectArgumentAssemblyTypeName
       value: UnityEngine.Object, UnityEngine
       objectReference: {fileID: 0}
     - target: {fileID: 5447676499577470316, guid: 783b4a1dcf2eaa742b874c759526f13b, type: 3}
@@ -18833,7 +18936,7 @@ PrefabInstance:
     m_AddedComponents:
     - targetCorrespondingSourceObject: {fileID: 2055070364418848888, guid: 783b4a1dcf2eaa742b874c759526f13b, type: 3}
       insertIndex: -1
-      addedObject: {fileID: 828265721}
+      addedObject: {fileID: 828265716}
   m_SourcePrefab: {fileID: 100100000, guid: 783b4a1dcf2eaa742b874c759526f13b, type: 3}
 --- !u!224 &578046272 stripped
 RectTransform:
@@ -21693,7 +21796,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!224 &658685378
 RectTransform:
   m_ObjectHideFlags: 0
@@ -26671,7 +26774,7 @@ GameObject:
   m_CorrespondingSourceObject: {fileID: 2055070364418848888, guid: 783b4a1dcf2eaa742b874c759526f13b, type: 3}
   m_PrefabInstance: {fileID: 576121535}
   m_PrefabAsset: {fileID: 0}
---- !u!114 &828265721
+--- !u!114 &828265716
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -26680,13 +26783,14 @@ MonoBehaviour:
   m_GameObject: {fileID: 828265714}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 3dce2cf1ed6e2344bab8268973b160b3, type: 3}
+  m_Script: {fileID: 11500000, guid: 330cc554fc5f91848be3c5f778ec668e, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::LineDrawButton
-  mode: 2
-  drawTool: {fileID: 1971986123}
-  onColor: {r: 0.1, g: 0.55, b: 0.28, a: 1}
-  offColor: {r: 1, g: 1, b: 1, a: 1}
+  m_EditorClassIdentifier: Assembly-CSharp::LayerInputController
+  projectManager: {fileID: 1285994912}
+  modeDropdown: {fileID: 2048404197}
+  layerNameInput: {fileID: 510471916}
+  targetLayerLabel: {fileID: 957010010}
+  newOptionName: New
 --- !u!1 &836765600
 GameObject:
   m_ObjectHideFlags: 0
@@ -28695,6 +28799,11 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   m_Padding: {x: -8, y: -5, z: -8, w: -5}
   m_Softness: {x: 0, y: 0}
+--- !u!1 &903288813 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 4802526497360693480, guid: 21587b1268d42944396dff8fdd6c3c76, type: 3}
+  m_PrefabInstance: {fileID: 1399748167}
+  m_PrefabAsset: {fileID: 0}
 --- !u!1 &905803222
 GameObject:
   m_ObjectHideFlags: 0
@@ -42820,6 +42929,7 @@ RectTransform:
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 1032384060}
+  - {fileID: 497603030}
   m_Father: {fileID: 752218491}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
@@ -42873,7 +42983,7 @@ MonoBehaviour:
       m_Calls:
       - m_Target: {fileID: 1273279217}
         m_TargetAssemblyTypeName: ButtonCustom, Assembly-CSharp
-        m_MethodName: Toggle
+        m_MethodName: ToggleVisibility
         m_Mode: 1
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
@@ -42897,7 +43007,7 @@ MonoBehaviour:
         m_CallState: 2
       - m_Target: {fileID: 0}
         m_TargetAssemblyTypeName: UnityEngine.GameObject, UnityEngine
-        m_MethodName: SetActive
+        m_MethodName: 
         m_Mode: 6
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
@@ -44913,7 +45023,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 1, y: 1}
-  m_AnchoredPosition: {x: -29, y: -3.4000854}
+  m_AnchoredPosition: {x: -29, y: -3.400093}
   m_SizeDelta: {x: -191.73999, y: 3.599998}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1335333229
@@ -45413,8 +45523,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::DrawModeButton
   mode: 3
   drawTool: {fileID: 1971986123}
-  onColor: {r: 0.1, g: 0.55, b: 0.28, a: 1}
-  offColor: {r: 1, g: 1, b: 1, a: 1}
+  layerInfoText: {fileID: 0}
+  projectManager: {fileID: 0}
 --- !u!114 &1343921823
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -48004,13 +48114,32 @@ PrefabInstance:
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
-    m_AddedComponents: []
+    m_AddedComponents:
+    - targetCorrespondingSourceObject: {fileID: 4802526497360693480, guid: 21587b1268d42944396dff8fdd6c3c76, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 1399748169}
   m_SourcePrefab: {fileID: 100100000, guid: 21587b1268d42944396dff8fdd6c3c76, type: 3}
 --- !u!224 &1399748168 stripped
 RectTransform:
   m_CorrespondingSourceObject: {fileID: 5648696230068327533, guid: 21587b1268d42944396dff8fdd6c3c76, type: 3}
   m_PrefabInstance: {fileID: 1399748167}
   m_PrefabAsset: {fileID: 0}
+--- !u!114 &1399748169
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 903288813}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3dce2cf1ed6e2344bab8268973b160b3, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::DrawModeButton
+  mode: 2
+  drawTool: {fileID: 1971986123}
+  layerInfoText: {fileID: 957010010}
+  projectManager: {fileID: 1285994912}
 --- !u!224 &1403431277 stripped
 RectTransform:
   m_CorrespondingSourceObject: {fileID: 6966334111194969842, guid: eb7391e74888e0e47bd12d055072d317, type: 3}
@@ -53501,7 +53630,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 1, y: 1}
-  m_AnchoredPosition: {x: 61, y: -5}
+  m_AnchoredPosition: {x: 61, y: -5.0000076}
   m_SizeDelta: {x: -103.5802, y: -17}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1544118448
@@ -54066,7 +54195,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 8899202526959060073, guid: 21587b1268d42944396dff8fdd6c3c76, type: 3}
       propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.size
-      value: 0
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 8899202526959060073, guid: 21587b1268d42944396dff8fdd6c3c76, type: 3}
+      propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.data[0].m_Mode
+      value: 6
       objectReference: {fileID: 0}
     - target: {fileID: 8899202526959060073, guid: 21587b1268d42944396dff8fdd6c3c76, type: 3}
       propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.data[9].m_Mode
@@ -54087,7 +54220,7 @@ PrefabInstance:
     - target: {fileID: 8899202526959060073, guid: 21587b1268d42944396dff8fdd6c3c76, type: 3}
       propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.data[0].m_Target
       value: 
-      objectReference: {fileID: 1631608806}
+      objectReference: {fileID: 658685377}
     - target: {fileID: 8899202526959060073, guid: 21587b1268d42944396dff8fdd6c3c76, type: 3}
       propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.data[1].m_Target
       value: 
@@ -54161,6 +54294,10 @@ PrefabInstance:
       value: 
       objectReference: {fileID: 594506936}
     - target: {fileID: 8899202526959060073, guid: 21587b1268d42944396dff8fdd6c3c76, type: 3}
+      propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.data[0].m_MethodName
+      value: SetActive
+      objectReference: {fileID: 0}
+    - target: {fileID: 8899202526959060073, guid: 21587b1268d42944396dff8fdd6c3c76, type: 3}
       propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.data[9].m_MethodName
       value: 
       objectReference: {fileID: 0}
@@ -54175,6 +54312,10 @@ PrefabInstance:
     - target: {fileID: 8899202526959060073, guid: 21587b1268d42944396dff8fdd6c3c76, type: 3}
       propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.data[15].m_MethodName
       value: SetActive
+      objectReference: {fileID: 0}
+    - target: {fileID: 8899202526959060073, guid: 21587b1268d42944396dff8fdd6c3c76, type: 3}
+      propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.data[0].m_TargetAssemblyTypeName
+      value: UnityEngine.GameObject, UnityEngine
       objectReference: {fileID: 0}
     - target: {fileID: 8899202526959060073, guid: 21587b1268d42944396dff8fdd6c3c76, type: 3}
       propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.data[0].m_Arguments.m_BoolArgument
@@ -54195,6 +54336,10 @@ PrefabInstance:
     - target: {fileID: 8899202526959060073, guid: 21587b1268d42944396dff8fdd6c3c76, type: 3}
       propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.data[6].m_Arguments.m_BoolArgument
       value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 8899202526959060073, guid: 21587b1268d42944396dff8fdd6c3c76, type: 3}
+      propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.data[0].m_Arguments.m_ObjectArgumentAssemblyTypeName
+      value: UnityEngine.Object, UnityEngine
       objectReference: {fileID: 0}
     - target: {fileID: 8899202526959060073, guid: 21587b1268d42944396dff8fdd6c3c76, type: 3}
       propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.data[9].m_Arguments.m_ObjectArgumentAssemblyTypeName
@@ -62059,7 +62204,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 1, y: 1}
-  m_AnchoredPosition: {x: 0, y: -5.86145}
+  m_AnchoredPosition: {x: 0, y: -5.8614197}
   m_SizeDelta: {x: 0, y: -136.7666}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1793761683
@@ -67666,8 +67811,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::LineDrawButton
   mode: 1
   drawTool: {fileID: 1971986123}
-  onColor: {r: 0.1, g: 0.55, b: 0.28, a: 1}
-  offColor: {r: 1, g: 1, b: 1, a: 1}
+  layerInfoText: {fileID: 0}
+  projectManager: {fileID: 0}
 --- !u!1 &1971986121
 GameObject:
   m_ObjectHideFlags: 0
@@ -67728,7 +67873,11 @@ MonoBehaviour:
   onDrawComplete:
     m_PersistentCalls:
       m_Calls: []
+  onObjectDeleted:
+    m_PersistentCalls:
+      m_Calls: []
   texturePath: Assets/Image Map/mapa del mundo pixel art.jpg
+  currentDrawingLayer: 
 --- !u!1 &1972673873
 GameObject:
   m_ObjectHideFlags: 0

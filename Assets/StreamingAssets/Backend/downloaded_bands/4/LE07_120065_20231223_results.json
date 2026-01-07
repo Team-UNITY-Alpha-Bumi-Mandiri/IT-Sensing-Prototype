@@ -1,0 +1,38 @@
+{
+  "name": "4",
+  "scene_name": "LE07_120065_20231223",
+  "scene_id": "LE07_120065_20231223",
+  "imagery": "landsat7",
+  "correction": "Surface Reflectance",
+  "date": "2023-01-01",
+  "cloud_percentage": 22,
+  "downloaded_files": [
+    "LE07_120065_20231223.SR_B2.tif",
+    "LE07_120065_20231223.B8.tif"
+  ],
+  "thumb_path": "downloaded_bands\\4/LE07_120065_20231223_thumb.png",
+  "total_bands": 2,
+  "available_bands": [
+    "SR_B1",
+    "SR_B2",
+    "SR_B3",
+    "SR_B4",
+    "SR_B5",
+    "SR_B7",
+    "SR_ATMOS_OPACITY",
+    "SR_CLOUD_QA",
+    "ST_B6",
+    "ST_ATRAN",
+    "ST_CDIST",
+    "ST_DRAD",
+    "ST_EMIS",
+    "ST_EMSD",
+    "ST_QA",
+    "ST_TRAD",
+    "ST_URAD",
+    "QA_PIXEL",
+    "QA_RADSAT"
+  ],
+  "status": "success",
+  "message": "Successfully downloaded 2 bands"
+}

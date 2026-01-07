@@ -562,7 +562,7 @@ public class ProjectManager : MonoBehaviour
     }
 
     // Simpan ke file
-    void Save()
+    public void Save()
     {
         try
         {

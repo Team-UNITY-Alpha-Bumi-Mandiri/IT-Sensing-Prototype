@@ -9393,6 +9393,17 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 238000055}
   m_CullTransparentMesh: 1
+--- !u!114 &241741011 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 3683547884663849430, guid: 783b4a1dcf2eaa742b874c759526f13b, type: 3}
+  m_PrefabInstance: {fileID: 1332350650}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4e29b1a8efbd4b44bb3f3716e73f07ff, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!1 &251283613
 GameObject:
   m_ObjectHideFlags: 0
@@ -27555,13 +27566,14 @@ GameObject:
   - component: {fileID: 863118539}
   - component: {fileID: 863118541}
   - component: {fileID: 863118540}
+  - component: {fileID: 863118542}
   m_Layer: 5
   m_Name: Create View
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!224 &863118539
 RectTransform:
   m_ObjectHideFlags: 0
@@ -27621,6 +27633,28 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 863118538}
   m_CullTransparentMesh: 1
+--- !u!114 &863118542
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 863118538}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 16b2fb47abe089246843f3dd9462298d, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::GeeDownloadController
+  panelRoot: {fileID: 1757203841}
+  dropdownImagery: {fileID: 698289246}
+  dropdownCorrection: {fileID: 2132828008}
+  inputCloud: {fileID: 1877262763}
+  inputStartDate: {fileID: 0}
+  inputEndDate: {fileID: 0}
+  btnDownload: {fileID: 241741011}
+  tiffLayerManager: {fileID: 375825893}
+  projectManager: {fileID: 1285994912}
+  drawTool: {fileID: 1971986123}
 --- !u!1 &864047810
 GameObject:
   m_ObjectHideFlags: 0
@@ -47817,7 +47851,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!224 &1396622051
 RectTransform:
   m_ObjectHideFlags: 0
@@ -51855,7 +51889,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!224 &1501624833
 RectTransform:
   m_ObjectHideFlags: 0

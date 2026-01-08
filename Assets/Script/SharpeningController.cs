@@ -5,6 +5,7 @@ using System.IO;
 using System.Diagnostics;
 using System.Threading.Tasks;
 using System.Collections.Generic;
+using System.Linq;
 
 public class SharpeningController : MonoBehaviour
 {
@@ -23,6 +24,14 @@ public class SharpeningController : MonoBehaviour
     [Header("Buttons & Status")]
     public Button btnProcess;
     public TextMeshProUGUI textStatus;
+
+    [Header("PCA Panel (Optional)")]
+    public GameObject pcaPanelRoot;
+    public Button pcaSubmitButton;
+    public TMP_InputField pcaOutputInput;
+    public GameObject pcaRgbButton;
+    [Header("Pansharpening Panel")]
+    public GameObject panPanelRoot;
 
     [Header("Layer Manager & Project")]
     public TiffLayerManager layerManager; 
@@ -55,6 +64,21 @@ public class SharpeningController : MonoBehaviour
 
         // 5. Listener validasi saat user mengetik nama
         inputOutputName.onValueChanged.AddListener(delegate { CheckReadiness(); });
+        if (dropdownMethod != null)
+        {
+            bool hasPca = dropdownMethod.options.Any(o => o.text.ToLower().Contains("pca"));
+            if (!hasPca)
+            {
+                dropdownMethod.options.Add(new TMP_Dropdown.OptionData("PCA"));
+                dropdownMethod.RefreshShownValue();
+            }
+            dropdownMethod.onValueChanged.AddListener(delegate { UpdateModeUI(); CheckReadiness(); });
+        }
+        if (pcaSubmitButton != null)
+        {
+            pcaSubmitButton.onClick.AddListener(OnClickProcess);
+        }
+        UpdateModeUI();
     }
 
     // Fitur Show/Hide Panel
@@ -132,17 +156,18 @@ public class SharpeningController : MonoBehaviour
     // ========================================================================
     void CheckReadiness()
     {
-        // RGB harus minimal 1, PAN harus ada, Nama output harus diisi
+        bool isPca = IsPCASelected();
         bool isRgbReady = currentRgbPaths.Count > 0;
         bool isPanReady = !string.IsNullOrEmpty(currentPanPath) && File.Exists(currentPanPath);
-        bool isNameReady = !string.IsNullOrEmpty(inputOutputName.text);
+        string nameText = isPca && pcaOutputInput != null ? pcaOutputInput.text : inputOutputName.text;
+        bool isNameReady = !string.IsNullOrEmpty(nameText);
 
-        btnProcess.interactable = isRgbReady && isPanReady && isNameReady;
+        btnProcess.interactable = isPca ? (isRgbReady && isNameReady) : (isRgbReady && isPanReady && isNameReady);
     }
 
     public void OnClickProcess()
     {
-        string outName = inputOutputName.text;
+        string outName = IsPCASelected() && pcaOutputInput != null ? pcaOutputInput.text : inputOutputName.text;
         string algo = dropdownMethod.options[dropdownMethod.value].text; 
         
         // Jalankan backend dengan List File RGB
@@ -160,7 +185,8 @@ public class SharpeningController : MonoBehaviour
         textStatus.color = Color.yellow;
 
         string backendFolder = Path.Combine(Application.streamingAssetsPath, "Backend");
-        string exeName = algorithm.ToLower().Contains("wavelet") ? "wavelet_direct.exe" : "gram_direct.exe";
+        string lowerAlgo = algorithm.ToLower();
+        string exeName = lowerAlgo.Contains("wavelet") ? "wavelet_direct.exe" : (lowerAlgo.Contains("pca") ? "pca.exe" : "gram_direct.exe");
         string fullExePath = Path.Combine(backendFolder, exeName);
 
         // Sanitasi Path
@@ -179,13 +205,69 @@ public class SharpeningController : MonoBehaviour
             rgbArgs += $"\"{cleanPath}\" "; // Spasi penting pemisah antar file
         }
 
-        // Format Argumen Lengkap
-        // -n [Nama] -v [FolderCtx] -o [Output] --rgb [File1] [File2]... --pan [FilePAN]
-        string args = $"-n \"{outputName}\" -v \"{folderContext}\" -o \"{outputDir}\" --rgb {rgbArgs} --pan \"{panPath}\"";
+        string args;
+        bool isPca = lowerAlgo.Contains("pca");
+        if (isPca)
+        {
+            args = $"-n \"{outputName}\" --rgb {rgbArgs}";
+        }
+        else
+        {
+            args = $"-n \"{outputName}\" -v \"{folderContext}\" -o \"{outputDir}\" --rgb {rgbArgs} --pan \"{panPath}\"";
+        }
 
         UnityEngine.Debug.Log($"Command: {exeName} {args}");
 
         // Jalankan Process
+        if (!System.IO.File.Exists(fullExePath))
+        {
+            if (isPca)
+            {
+                string pyPath = Path.Combine(backendFolder, "pca.py");
+                if (!File.Exists(pyPath))
+                {
+                    textStatus.text = "Gagal: backend tidak ditemukan (pca_direct.exe/pca.py)";
+                    textStatus.color = Color.red;
+                    btnProcess.interactable = true;
+                    return;
+                }
+                string resultOutputPy = await Task.Run(() =>
+                {
+                    ProcessStartInfo start = new ProcessStartInfo();
+                    start.FileName = "python";
+                    start.Arguments = $"\"{pyPath}\" {args}";
+                    start.UseShellExecute = false;
+                    start.RedirectStandardOutput = true;
+                    start.RedirectStandardError = true;
+                    start.CreateNoWindow = true;
+                    start.WorkingDirectory = backendFolder;
+                    try
+                    {
+                        Process p = Process.Start(start);
+                        string output = p.StandardOutput.ReadToEnd();
+                        string error = p.StandardError.ReadToEnd();
+                        p.WaitForExit();
+                        if (!string.IsNullOrEmpty(error) && !error.Contains("UserWarning"))
+                            return "PYTHON ERROR: " + error;
+                        return output;
+                    }
+                    catch (System.Exception e)
+                    {
+                        return "SYSTEM ERROR: " + e.Message;
+                    }
+                });
+                await HandleResultOutput(resultOutputPy, outputName, algorithm);
+                btnProcess.interactable = true;
+                return;
+            }
+            else
+            {
+                textStatus.text = "Gagal: backend tidak ditemukan (" + exeName + ")";
+                textStatus.color = Color.red;
+                btnProcess.interactable = true;
+                return;
+            }
+        }
         string resultOutput = await Task.Run(() =>
         {
             ProcessStartInfo start = new ProcessStartInfo();
@@ -214,27 +296,7 @@ public class SharpeningController : MonoBehaviour
             }
         });
 
-        // Cek Hasil JSON
-        if (resultOutput.Contains("\"status\": \"success\"") || resultOutput.Contains("successfuly"))
-        {
-            textStatus.text = "Sukses!";
-            textStatus.color = Color.green;
-            
-            // Muat hasil ke Map
-            LoadResultTiff(selectedOutputFolder, outputName, algorithm);
-            
-            // Buka folder
-            if(Directory.Exists(selectedOutputFolder))
-                Process.Start("explorer.exe", selectedOutputFolder.Replace("/", "\\"));
-        }
-        else
-        {
-            // Tampilkan error
-            string msg = resultOutput.Length > 50 ? resultOutput.Substring(0, 50) + "..." : resultOutput;
-            textStatus.text = "Gagal: " + msg;
-            textStatus.color = Color.red;
-            UnityEngine.Debug.LogError("FULL ERROR: " + resultOutput);
-        }
+        await HandleResultOutput(resultOutput, outputName, algorithm);
 
         btnProcess.interactable = true;
     }
@@ -246,7 +308,8 @@ public class SharpeningController : MonoBehaviour
     {
         if (layerManager == null) return;
 
-        string algoShort = algorithm.ToLower().Contains("wavelet") ? "wavelet" : "gramschmidt";
+        string lower = algorithm.ToLower();
+        string algoShort = lower.Contains("wavelet") ? "wavelet" : (lower.Contains("pca") ? "pca" : "gramschmidt");
         
         // Pattern nama file output Python: {nama}_{algo}_direct_{timestamp}.tif
         string pattern = $"{outputName}_{algoShort}_direct_*.tif";
@@ -288,4 +351,113 @@ public class SharpeningController : MonoBehaviour
             }
         }
     }
+
+    bool IsPCASelected()
+    {
+        if (dropdownMethod == null) return false;
+        string algo = dropdownMethod.options[dropdownMethod.value].text.ToLower();
+        return algo.Contains("pca");
+    }
+
+    void UpdateModeUI()
+    {
+        bool isPca = IsPCASelected();
+        SetActiveSafe(pcaPanelRoot, isPca);
+        SetActiveSafe(panPanelRoot, !isPca);
+        SetActiveSafe(btnPanchromatic, !isPca);
+        if (btnProcess != null) SetActiveSafe(btnProcess.gameObject, !isPca);
+        if (isPca)
+        {
+            GameObject rgbBtn = pcaRgbButton != null ? pcaRgbButton : btnMultispectral;
+            SetButtonText(rgbBtn, "Pilih File RGB (1 file atau 3+ band)...");
+            SetButtonText(btnPanchromatic, "Tidak diperlukan untuk PCA");
+        }
+        else
+        {
+            SetButtonText(btnMultispectral, "Pilih File RGB (Bisa > 1)...");
+            SetButtonText(btnPanchromatic, "Pilih File PAN...");
+        }
+    }
+
+    void SetActiveSafe(GameObject go, bool active)
+    {
+        if (go != null) go.SetActive(active);
+    }
+
+    async Task HandleResultOutput(string resultOutput, string outputName, string algorithm)
+    {
+        if (resultOutput.Contains("\"status\": \"success\"") || resultOutput.Contains("successfuly"))
+        {
+            textStatus.text = "Sukses!";
+            textStatus.color = Color.green;
+            if (algorithm.ToLower().Contains("pca"))
+            {
+                try
+                {
+                    int s = resultOutput.IndexOf('{');
+                    int e = resultOutput.LastIndexOf('}');
+                    string json = (s >= 0 && e > s) ? resultOutput.Substring(s, e - s + 1) : resultOutput;
+                    PCAResponse res = JsonUtility.FromJson<PCAResponse>(json);
+                    if (res != null && res.status != null && res.status.ToLower().Contains("success") && !string.IsNullOrEmpty(res.path) && File.Exists(res.path))
+                    {
+                        LoadResultTiffFromPath(res.path, outputName, algorithm);
+                        string outDir = Path.GetDirectoryName(res.path);
+                        if (!string.IsNullOrEmpty(outDir) && Directory.Exists(outDir))
+                            Process.Start("explorer.exe", outDir.Replace("/", "\\"));
+                        return;
+                    }
+                }
+                catch { }
+            }
+            LoadResultTiff(selectedOutputFolder, outputName, algorithm);
+            if(Directory.Exists(selectedOutputFolder))
+                Process.Start("explorer.exe", selectedOutputFolder.Replace("/", "\\"));
+        }
+        else
+        {
+            string msg = resultOutput.Length > 50 ? resultOutput.Substring(0, 50) + "..." : resultOutput;
+            textStatus.text = "Gagal: " + msg;
+            textStatus.color = Color.red;
+            UnityEngine.Debug.LogError("FULL ERROR: " + resultOutput);
+        }
+    }
+
+    void LoadResultTiffFromPath(string tiffPath, string outputName, string algorithm)
+    {
+        if (layerManager == null || string.IsNullOrEmpty(tiffPath)) return;
+        string lower = algorithm.ToLower();
+        string algoShort = lower.Contains("pca") ? "pca" : (lower.Contains("wavelet") ? "wavelet" : "gramschmidt");
+        if (File.Exists(tiffPath))
+        {
+            if (layerManager.GetTiffBounds(tiffPath, out double minLat, out double maxLat, out double minLon, out double maxLon))
+            {
+                double centerLat = (minLat + maxLat) / 2.0;
+                double centerLon = (minLon + maxLon) / 2.0;
+                int zoom = layerManager.CalculateFitZoom();
+                List<Vector2> polyCoords = new List<Vector2>
+                {
+                    new Vector2((float)maxLat, (float)minLon),
+                    new Vector2((float)maxLat, (float)maxLon),
+                    new Vector2((float)minLat, (float)maxLon),
+                    new Vector2((float)minLat, (float)minLon)
+                };
+                string projectName = $"{outputName}_{algoShort}";
+                if (projectManager != null) 
+                {
+                    projectManager.CreateProjectAuto(projectName, centerLat, centerLon, zoom, tiffPath, polyCoords);
+                }
+                else 
+                {
+                    layerManager.LoadTiff(tiffPath);
+                }
+            }
+            else
+            {
+                layerManager.LoadTiff(tiffPath);
+            }
+        }
+    }
+
+    [System.Serializable] class PCAResponseBounds { public double north; public double south; public double west; public double east; }
+    [System.Serializable] class PCAResponse { public string status; public string filename; public string path; public string preview_png; public PCAResponseBounds bounds; public string algo; }
 }

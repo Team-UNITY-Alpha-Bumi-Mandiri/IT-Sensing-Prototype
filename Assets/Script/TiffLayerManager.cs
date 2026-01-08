@@ -97,6 +97,85 @@ public class TiffLayerManager : MonoBehaviour
     // PUBLIC API
     // =========================================
 
+    // Method Baru: Load PNG Overlay dengan Bounds Manual
+    public void LoadPngOverlay(string pngPath, double north, double south, double west, double east)
+    {
+        if (!File.Exists(pngPath))
+        {
+            Debug.LogError($"[TiffLayerManager] PNG tidak ditemukan: {pngPath}");
+            return;
+        }
+
+        // Clear layer lama
+        ClearLayers();
+        currentTiffPath = pngPath; // Simpan path PNG sebagai referensi
+
+        Debug.Log($"[TiffLayerManager] Loading PNG: {pngPath}");
+
+        // Load PNG Texture dengan parameter aman
+        byte[] fileData = File.ReadAllBytes(pngPath);
+        
+        // Buat tekstur baru tanpa MipMap (penting untuk UI/2D) dan Linear Color Space
+        Texture2D tex = new Texture2D(2, 2, TextureFormat.RGBA32, false);
+        
+        if (tex.LoadImage(fileData)) // Auto-resize texture dimensions
+        {
+            // Set Texture Settings
+            tex.wrapMode = TextureWrapMode.Clamp; // Cegah bleeding
+            tex.filterMode = FilterMode.Bilinear; // Halus
+
+            // DEBUG: Cek sampel pixel untuk memastikan data masuk
+            if (tex.width > 0 && tex.height > 0)
+            {
+                // Cek pixel tengah
+                Color centerPixel = tex.GetPixel(tex.width / 2, tex.height / 2);
+                
+                // Cek pixel di posisi lain (misal 1/4)
+                Color qPixel = tex.GetPixel(tex.width / 4, tex.height / 4);
+
+                Debug.Log($"[TiffLayerManager] Texture Size: {tex.width}x{tex.height}");
+                Debug.Log($"[TiffLayerManager] Center Pixel: {centerPixel}");
+                Debug.Log($"[TiffLayerManager] Quarter Pixel: {qPixel}");
+
+                // JIKA SEMUA HITAM PEKAT (0,0,0,0) atau (0,0,0,1), coba paksa warna test
+                // Ini untuk membuktikan apakah masalah di rendering atau data.
+                if (centerPixel.a == 0 && qPixel.a == 0)
+                {
+                    Debug.LogWarning("[TiffLayerManager] WARNING: Texture appears fully transparent/empty!");
+                }
+            }
+
+            tex.Apply(); // Apply perubahan setting
+
+            // Set Geo Bounds dari parameter
+            geoMaxLat = north;
+            geoMinLat = south;
+            geoMinLon = west;
+            geoMaxLon = east;
+            
+            imageWidth = tex.width;
+            imageHeight = tex.height;
+            hasGeoData = true;
+
+            Debug.Log($"[TiffLayerManager] Loaded PNG Overlay: {tex.width}x{tex.height}, Format: {tex.format}. Bounds: Lat [{south} - {north}], Lon [{west} - {east}]");
+
+            // Buat Layer
+            string layerName = Path.GetFileNameWithoutExtension(pngPath);
+            layers.Add(new LayerData { name = layerName, texture = tex, isVisible = false });
+
+            // Tampilkan di Panel & Map
+            SyncWithProject();
+            
+            if (mapController != null)
+            {
+                double centerLat = (geoMinLat + geoMaxLat) / 2.0;
+                double centerLon = (geoMinLon + geoMaxLon) / 2.0;
+                int suggestedZoom = CalculateFitZoom();
+                mapController.GoToLocation(centerLat, centerLon, suggestedZoom);
+            }
+        }
+    }
+
     // Load file GeoTIFF dan extract semua band
     public void LoadTiff(string path)
     {
@@ -855,6 +934,21 @@ public class TiffLayerManager : MonoBehaviour
         RawImage img = overlay.AddComponent<RawImage>();
         img.texture = layer.texture;
         img.color = new Color(1f, 1f, 1f, overlayOpacity);
+
+        // FIX: Pastikan tidak terpengaruh oleh default material yang mungkin gelap
+        // Gunakan UI/Default shader jika memungkinkan
+        Shader uiShader = Shader.Find("UI/Default");
+        if (uiShader != null)
+        {
+            // Gunakan Sprites/Default karena lebih aman untuk menampilkan tekstur raw tanpa lighting
+            // UI/Default kadang bermasalah dengan tint color jika tidak diset benar
+            img.material = new Material(Shader.Find("Sprites/Default"));
+        }
+        else
+        {
+            // Fallback ke Sprites/Default jika UI/Default tidak ada (jarang terjadi)
+            img.material = new Material(Shader.Find("Sprites/Default"));
+        }
 
         // Posisikan berdasarkan koordinat geo
         UpdateOverlayPosition(overlay);

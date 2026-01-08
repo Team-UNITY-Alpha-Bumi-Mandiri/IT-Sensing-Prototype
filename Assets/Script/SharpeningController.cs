@@ -36,6 +36,7 @@ public class SharpeningController : MonoBehaviour
     [Header("Layer Manager & Project")]
     public TiffLayerManager layerManager; 
     public ProjectManager projectManager; 
+    public OverlayToggleController overlayToggleController;
 
     // --- Variabel Penyimpanan Data ---
     // RGB disimpan dalam List karena bisa lebih dari 1 file
@@ -167,8 +168,13 @@ public class SharpeningController : MonoBehaviour
 
     public void OnClickProcess()
     {
-        string outName = IsPCASelected() && pcaOutputInput != null ? pcaOutputInput.text : inputOutputName.text;
+        string rawName = IsPCASelected() && pcaOutputInput != null ? pcaOutputInput.text : inputOutputName.text;
         string algo = dropdownMethod.options[dropdownMethod.value].text; 
+
+        // Append timestamp untuk memastikan nama unik
+        // Format: Name_yyyyMMdd_HHmmss
+        string timestamp = System.DateTime.Now.ToString("yyyyMMdd_HHmmss");
+        string outName = $"{rawName}_{timestamp}";
         
         // Jalankan backend dengan List File RGB
         RunBackend(algo, outName, currentRgbPaths, currentPanPath);
@@ -315,10 +321,13 @@ public class SharpeningController : MonoBehaviour
         string pattern = $"{outputName}_{algoShort}_direct_*.tif";
         string[] files = Directory.GetFiles(outputFolder, pattern);
 
+        UnityEngine.Debug.Log($"[Sharpening] Searching for pattern: {pattern} in {outputFolder}. Found {files.Length} files.");
+
         if (files.Length > 0)
         {
             // Ambil file paling baru (terakhir dibuat)
             string latestFile = files[files.Length - 1];
+            UnityEngine.Debug.Log($"[Sharpening] Loading latest result: {latestFile}");
             
             // Logic Geo-Location
             if (layerManager.GetTiffBounds(latestFile, out double minLat, out double maxLat, out double minLon, out double maxLon))
@@ -339,6 +348,7 @@ public class SharpeningController : MonoBehaviour
                 if (projectManager != null) 
                 {
                     projectManager.CreateProjectAuto(projectName, centerLat, centerLon, zoom, latestFile, polyCoords);
+                    // Toggle tetap OFF, user harus nyalakan manual
                 }
                 else 
                 {
@@ -429,6 +439,7 @@ public class SharpeningController : MonoBehaviour
         string algoShort = lower.Contains("pca") ? "pca" : (lower.Contains("wavelet") ? "wavelet" : "gramschmidt");
         if (File.Exists(tiffPath))
         {
+            UnityEngine.Debug.Log($"[Sharpening-PCA] Loading PCA result from path: {tiffPath}");
             if (layerManager.GetTiffBounds(tiffPath, out double minLat, out double maxLat, out double minLon, out double maxLon))
             {
                 double centerLat = (minLat + maxLat) / 2.0;
@@ -445,6 +456,7 @@ public class SharpeningController : MonoBehaviour
                 if (projectManager != null) 
                 {
                     projectManager.CreateProjectAuto(projectName, centerLat, centerLon, zoom, tiffPath, polyCoords);
+                    // Toggle tetap OFF, user harus nyalakan manual
                 }
                 else 
                 {

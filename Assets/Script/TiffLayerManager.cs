@@ -23,8 +23,13 @@ public class TiffLayerManager : MonoBehaviour
     public float overlayOpacity = 1f;
     public List<string> customBandNames; // Nama band custom (di-assign via Inspector)
 
-    // Data layer
-    List<LayerData> layers = new List<LayerData>();
+    // List Layer yang sedang aktif
+    public List<LayerData> layers = new List<LayerData>();
+    
+    // Cache untuk menyimpan layer TIFF yang pernah diload
+    // Key: Path file TIFF, Value: List LayerData
+    private Dictionary<string, List<LayerData>> layerCache = new Dictionary<string, List<LayerData>>();
+
     List<GameObject> overlays = new List<GameObject>();
     string currentTiffPath = "";
 
@@ -39,7 +44,9 @@ public class TiffLayerManager : MonoBehaviour
     int lastMapZoom;
 
     // Struct untuk menyimpan data layer
-    class LayerData
+    // Struct untuk menyimpan data layer
+    [System.Serializable]
+    public class LayerData
     {
         public string name;
         public Texture2D texture;
@@ -58,6 +65,12 @@ public class TiffLayerManager : MonoBehaviour
         if (projectManager != null)
         {
             projectManager.onTiffProjectLoaded.AddListener(OnTiffProjectLoaded);
+        }
+
+        // Pastikan overlayContainer selalu ON
+        if (overlayContainer != null)
+        {
+            overlayContainer.gameObject.SetActive(true);
         }
     }
 
@@ -93,10 +106,32 @@ public class TiffLayerManager : MonoBehaviour
             return;
         }
 
-        // Clear layer lama
+        // Clear layer lama (sembunyikan visualnya)
         ClearLayers();
         currentTiffPath = path;
 
+        // Cek Cache
+        if (layerCache.ContainsKey(path))
+        {
+            Debug.Log($"[TiffLayerManager] Loading from CACHE: {path}");
+            layers = layerCache[path];
+            
+            // Tampilkan kembali
+            foreach (var layer in layers)
+            {
+                if (layer.isVisible) ShowLayerOnMap(layer);
+            }
+            
+            hasGeoData = true; // Asumsi data geo tersimpan
+            
+            // Re-sync properties jika perlu
+            SyncWithProject();
+            return;
+        }
+
+        // Jika tidak ada di cache, load baru
+        Debug.Log($"[TiffLayerManager] Loading from DISK: {path}");
+        
         // Baca TIFF menggunakan LibTiff.Net
         using (Tiff tiff = Tiff.Open(path, "r"))
         {
@@ -375,6 +410,18 @@ public class TiffLayerManager : MonoBehaviour
                 
                 CreateCompositeManual(bandData, imageWidth, imageHeight, compName, minVal, maxVal);
             }
+
+            // Clear bandData untuk membebaskan memori
+            for (int b = 0; b < samplesPerPixel; b++)
+            {
+                bandData[b] = null;
+            }
+
+            // Simpan ke Cache
+            if (!layerCache.ContainsKey(path))
+            {
+                layerCache.Add(path, new List<LayerData>(layers));
+            }
         }
 
         // Tampilkan di Panel (via ProjectManager jika ada)
@@ -434,6 +481,7 @@ public class TiffLayerManager : MonoBehaviour
             // Jika sudah ada, ikuti nilai dari project
             if (!props.ContainsKey(layer.name))
             {
+                // Default OFF saat load project biasa
                 projectManager.AddProperty(layer.name, false); 
             }
             else
@@ -512,36 +560,45 @@ public class TiffLayerManager : MonoBehaviour
         return false;
     }
 
-    // Hapus semua layer
+    // Hapus semua layer (hanya sembunyikan visual, data tetap di cache)
     public void ClearLayers()
     {
-        // Hapus texture dan overlay
-        foreach (var layer in layers)
-        {
-            if (layer.texture != null)
-            {
-                Destroy(layer.texture);
-            }
-        }
-        layers.Clear();
-
+        // Sembunyikan semua overlay visual
         foreach (var overlay in overlays)
         {
             if (overlay != null)
             {
-                Destroy(overlay);
+                overlay.SetActive(false);
             }
         }
+        // Kita tidak mendestroy overlay agar bisa direuse jika logic reuse diimplementasikan
+        // Tapi saat ini kita destroy overlay object karena sulit manajemen pool-nya
+        // Untuk "Hide", kita set active false. 
+        
+        // TAPI, layerCache menyimpan referensi ke Texture2D. 
+        // Logic LoadTiff (CACHE) akan membuat Overlay object baru dari Texture2D yang ada.
+        
+        // Jadi di sini kita destroy GAME OBJECT overlay saja, texture aman di memory.
+        foreach (var overlay in overlays)
+        {
+            if (overlay != null) Destroy(overlay);
+        }
         overlays.Clear();
+        
+        // Kita juga clear list `layers` aktif agar tidak tertukar
+        // Tapi ingat, list ini sudah disimpan di cache sebelum dicari user.
+        layers = new List<LayerData>(); // Ganti referensi ke list kosong
 
-        // Clear panel
+        // Clear panel UI
         if (propertyPanel != null)
         {
             propertyPanel.ClearPanel();
         }
-
+        
         hasGeoData = false;
+        currentTiffPath = null; // Reset path agar reload berikutnya dipaksa jalan
     }
+
 
     // =========================================
     // GEOTIFF PARSING
@@ -737,7 +794,11 @@ public class TiffLayerManager : MonoBehaviour
 
         layer.isVisible = value;
 
-        if (value) ShowLayerOnMap(layer);
+        if (value) 
+        {
+            if (overlayContainer != null) overlayContainer.gameObject.SetActive(true);
+            ShowLayerOnMap(layer);
+        }
         else HideLayerFromMap(layer);
 
         // Update ProjectManager juga (biar tersimpan)
@@ -747,6 +808,29 @@ public class TiffLayerManager : MonoBehaviour
             
             // LOGIKA BARU: Hide Polygon jika ada layer yang aktif
             bool anyLayerActive = layers.Exists(l => l.isVisible);
+            projectManager.SetProjectPolygonVisibility(!anyLayerActive);
+        }
+    }
+
+    // Dipanggil dari luar (OverlayToggleController) untuk mengubah visibility layer
+    public void OnPropertyToggleExternal(string name, bool value)
+    {
+        LayerData layer = layers.Find(l => l.name == name);
+        if (layer == null) return;
+
+        layer.isVisible = value;
+
+        if (value) 
+        {
+            if (overlayContainer != null) overlayContainer.gameObject.SetActive(true);
+            ShowLayerOnMap(layer);
+        }
+        else HideLayerFromMap(layer);
+
+        // Jangan update ProjectManager di sini karena sudah di-update oleh OverlayToggleController
+        bool anyLayerActive = layers.Exists(l => l.isVisible);
+        if (projectManager != null)
+        {
             projectManager.SetProjectPolygonVisibility(!anyLayerActive);
         }
     }

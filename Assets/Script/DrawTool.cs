@@ -693,9 +693,9 @@ public class DrawTool : MonoBehaviour
     }
 
     // Load polygon dari luar
-    public void LoadPolygon(List<Vector2> coords, bool useTexture)
+    public void LoadPolygon(List<Vector2> coords, bool useTexture, string layerName = "Loaded", string id = null)
     {
-        CreateObj(DrawMode.Polygon, coords, useTexture);
+        CreateObj(DrawMode.Polygon, coords, layerName, useTexture, id);
     }
 
     // Buat objek baru
@@ -794,6 +794,36 @@ public class DrawTool : MonoBehaviour
             {
                 obj.rootObj.SetActive(visible);
             }
+        }
+    }
+
+    // Cek apakah drawing dengan ID tertentu ada
+    public bool HasDrawing(string id)
+    {
+        return allObjs.Exists(x => x.id == id);
+    }
+
+    // Paksa sembunyikan semua visual di container (Brute Force)
+    public void ForceHideAllVisuals()
+    {
+        if (container == null) return;
+
+        foreach (Transform child in container)
+        {
+            if (ghost != null && child.gameObject == ghost) continue;
+            if (tooltip != null && child.gameObject == tooltip) continue;
+
+            child.gameObject.SetActive(false);
+        }
+    }
+
+    // Set visibility drawing berdasarkan ID
+    public void ShowDrawing(string id, bool visible)
+    {
+        DrawObject obj = allObjs.Find(x => x.id == id);
+        if (obj != null && obj.rootObj != null)
+        {
+            obj.rootObj.SetActive(visible);
         }
     }
 }

@@ -330,16 +330,9 @@ public class ProjectManager : MonoBehaviour
     {
         current = proj;
 
-        // Reset semua toggle ke OFF saat project dipilih (sesuai request)
-        if (current.properties != null)
-        {
-            foreach (var p in current.properties)
-            {
-                p.value = false;
-            }
-            // Save perubahan state ini agar konsisten
-            Save();
-        }
+        // CATATAN: Tidak ada reset property di sini.
+        // Toggle diatur via OverlayToggleController.
+
 
         // Set nama di input rename
         if (renameProjectInput != null)
@@ -353,18 +346,44 @@ public class ProjectManager : MonoBehaviour
             mapController.GoToLocation(proj.lat, proj.lon, proj.zoom);
         }
 
+        if (drawTool != null) 
+        { 
+            // Jangan hapus, tapi sembunyikan semua dulu (Brute Force Cleanup)
+            drawTool.ForceHideAllVisuals(); 
+        }
+
         // Tampilkan polygon profil (ROI)
         if (proj.polygonCoords != null && proj.polygonCoords.Count > 0)
         {
-            drawTool.LoadPolygon(proj.polygonCoords, true);
+            string roiId = proj.id + "_ROI";
+            if (drawTool.HasDrawing(roiId))
+            {
+                drawTool.ShowDrawing(roiId, true);
+            }
+            else
+            {
+                // Load baru dengan ID spesifik agar ter-link ke project ini
+                // Gunakan LayerName unik agar tidak bisa di-toggle massal oleh script lain
+                drawTool.LoadPolygon(proj.polygonCoords, true, "Loaded_" + roiId, roiId);
+            }
         }
 
-        // Tampilkan gambar-gambar layer
-        if (proj.drawings != null)
+        // Load project ini
+        if (proj.drawings != null && drawTool != null)
         {
             foreach (var d in proj.drawings)
             {
-                drawTool.CreateObj(d.type, d.coordinates, d.layerName, d.useTexture, d.id);
+                // Cek apakah drawing sudah ada di memori?
+                if (drawTool.HasDrawing(d.id))
+                {
+                    // Tampilkan kembali
+                    drawTool.ShowDrawing(d.id, true);
+                }
+                else
+                {
+                    // Load baru
+                    drawTool.CreateObj(d.type, d.coordinates, d.layerName, d.useTexture, d.id);
+                }
             }
         }
 

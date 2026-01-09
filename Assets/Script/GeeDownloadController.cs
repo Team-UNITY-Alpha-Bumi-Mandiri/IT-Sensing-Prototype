@@ -37,6 +37,28 @@ public class GeeDownloadController : MonoBehaviour
     
     // Simpan band yang dipilih
     private List<string> selectedBands = new List<string>();
+    
+    // Simpan scene yang dipilih
+    private string selectedSceneId = "";
+    
+    // Cache texture preview agar tidak leak memory
+    private List<Texture2D> generatedTextures = new List<Texture2D>();
+
+    [System.Serializable]
+    public class SceneData
+    {
+        public string id;
+        public string date;
+        public float cloud;
+        public string thumb;
+        public string thumb_filename;
+    }
+
+    [System.Serializable]
+    private class SceneListWrapper
+    {
+        public List<SceneData> scenes;
+    }
 
     void Start()
     {
@@ -134,14 +156,21 @@ public class GeeDownloadController : MonoBehaviour
         {
             args += " --action list";
         }
-        else if (selectedBands.Count > 0)
-        {
-            string bandsArg = string.Join(",", selectedBands);
-            args += $" --action download --bands \"{bandsArg}\"";
-        }
-        else
+        else 
         {
             args += " --action download";
+            
+            // Tambahkan scene selection jika ada
+            if (!string.IsNullOrEmpty(selectedSceneId))
+            {
+                args += $" --scene-id \"{selectedSceneId}\"";
+            }
+
+            if (selectedBands.Count > 0)
+            {
+                string bandsArg = string.Join(",", selectedBands);
+                args += $" --bands \"{bandsArg}\"";
+            }
         }
         
         if (textStatus != null) 
@@ -206,63 +235,164 @@ public class GeeDownloadController : MonoBehaviour
 
     private void ProcessSearchOutput(string output, string imagery, string correction)
     {
-        // Output dari Python: ['B1', 'B2', ...]
-        UnityEngine.Debug.Log("Search Output: " + output);
+        UnityEngine.Debug.Log("Search Output (Raw): " + output);
         
-        List<string> bands = new List<string>();
-        
-        // Parsing sederhana manual (cari bagian di dalam [ ])
-        int startIdx = output.IndexOf('[');
-        int endIdx = output.LastIndexOf(']');
-        
-        if (startIdx >= 0 && endIdx > startIdx)
+        List<SceneData> scenes = new List<SceneData>();
+
+        if (string.IsNullOrEmpty(output))
         {
-            string clean = output.Substring(startIdx + 1, endIdx - startIdx - 1);
-            string[] items = clean.Replace("'", "").Replace("\"", "").Split(',');
-            foreach (var item in items)
+            UnityEngine.Debug.LogError("GEE Search returned empty output.");
+            if (textStatus != null) textStatus.text = "No response from search backend.";
+            return;
+        }
+
+        try 
+        {
+            // Mencari awal JSON Array yang sebenarnya. 
+            // Kita cari '[' yang diikuti oleh '{' (biasanya ada spasi atau enter di antaranya)
+            int startIdx = -1;
+            int searchPos = 0;
+            
+            while (searchPos < output.Length)
             {
-                string b = item.Trim();
-                if (!string.IsNullOrEmpty(b)) bands.Add(b);
+                int found = output.IndexOf('[', searchPos);
+                if (found == -1) break;
+                
+                // Cek apakah setelah '[' ada '{' (untuk memastikan ini awal JSON)
+                // Kita abaikan spasi/newline
+                bool isJsonStart = false;
+                for (int i = found + 1; i < output.Length && i < found + 50; i++)
+                {
+                    char c = output[i];
+                    if (char.IsWhiteSpace(c)) continue;
+                    if (c == '{') { isJsonStart = true; break; }
+                    break; // Karakter lain ditemukan, berarti bukan JSON
+                }
+
+                if (isJsonStart)
+                {
+                    startIdx = found;
+                    break;
+                }
+                searchPos = found + 1;
+            }
+
+            int endIdx = output.LastIndexOf(']');
+            
+            if (startIdx >= 0 && endIdx > startIdx)
+            {
+                string jsonArrayPart = output.Substring(startIdx, endIdx - startIdx + 1);
+                string wrappedJson = "{ \"scenes\": " + jsonArrayPart + " }";
+                
+                SceneListWrapper wrapper = JsonUtility.FromJson<SceneListWrapper>(wrappedJson);
+                
+                if (wrapper != null && wrapper.scenes != null)
+                {
+                    scenes = wrapper.scenes;
+                }
+            }
+            else
+            {
+                UnityEngine.Debug.LogWarning("Valid JSON array not found in output.");
             }
         }
-        
-        // Jika gagal parsing atau output kosong, pakai fallback statis seperti sebelumnya
-        if (bands.Count == 0)
+        catch (System.Exception e)
         {
-            UnityEngine.Debug.LogWarning("Failed to parse bands from output, using fallback list.");
-            bands = GetBandsFor(imagery, correction);
+            UnityEngine.Debug.LogError("Failed to parse JSON Scenes: " + e.Message + "\nOutput: " + output);
         }
 
-        if (textStatus != null) textStatus.text = $"Found {bands.Count} available bands.";
-        PopulateBandUI(bands);
+        if (textStatus != null) 
+            textStatus.text = (scenes.Count > 0) ? $"Found {scenes.Count} available scenes." : "No scenes found.";
+
+        PopulateSceneUI(scenes);
     }
 
-    private void PopulateBandUI(List<string> bands)
+    private void PopulateSceneUI(List<SceneData> scenes)
     {
         if (bandContainer == null || bandPrefab == null) return;
 
-        // Bersihkan list lama
+        // Bersihkan list & texture lama
         foreach (Transform child in bandContainer) Destroy(child.gameObject);
-        selectedBands.Clear();
+        foreach (var tex in generatedTextures) if (tex != null) Destroy(tex);
+        generatedTextures.Clear();
+        
+        selectedSceneId = "";
 
-        foreach (var b in bands)
+        foreach (var s in scenes)
         {
             GameObject obj = Instantiate(bandPrefab, bandContainer);
-            obj.name = "Band_" + b;
+            obj.name = "Scene_" + s.date;
             
-            Toggle t = obj.GetComponentInChildren<Toggle>();
-            TMP_Text txt = obj.GetComponentInChildren<TMP_Text>();
+            // Coba cari script GeeSceneItem (jika sudah dipasangi)
+            // Jika tidak ada, pakai fallback logic yang lama
+            GeeSceneItem item = obj.GetComponent<GeeSceneItem>();
             
-            if (txt != null) txt.text = b;
-            if (t != null)
+            // Load Texture dari path absolut yang dikirim Python
+            Texture2D thumbTex = LoadTexture(s.thumb);
+            if (thumbTex != null) generatedTextures.Add(thumbTex);
+
+            if (item != null)
             {
-                t.isOn = false;
-                t.onValueChanged.AddListener((val) => {
-                    if (val) { if (!selectedBands.Contains(b)) selectedBands.Add(b); }
-                    else { selectedBands.Remove(b); }
+                item.Setup(s.id, s.date, s.cloud, thumbTex, (id, selectedItem) => {
+                    selectedSceneId = id;
+                    // Radio button behavior
+                    foreach (Transform child in bandContainer)
+                    {
+                        var scItem = child.GetComponent<GeeSceneItem>();
+                        if (scItem != null) scItem.SetSelected(scItem == selectedItem);
+                    }
+                    UnityEngine.Debug.Log("Selected: " + selectedSceneId);
                 });
             }
+            else
+            {
+                // FALLBACK: Jika user masih pakai prefab lama (hanya teks)
+                Toggle t = obj.GetComponentInChildren<Toggle>();
+                TMP_Text txt = obj.GetComponentInChildren<TMP_Text>();
+                RawImage rawImg = obj.GetComponentInChildren<RawImage>();
+
+                if (txt != null) txt.text = s.date;
+                if (rawImg != null && thumbTex != null) rawImg.texture = thumbTex;
+
+                if (t != null)
+                {
+                    t.onValueChanged.AddListener((val) => {
+                        if (val) {
+                            selectedSceneId = s.id;
+                            foreach (Transform child in bandContainer) {
+                                Toggle otherT = child.GetComponentInChildren<Toggle>();
+                                if (otherT != null && otherT != t) otherT.SetIsOnWithoutNotify(false);
+                            }
+                        }
+                    });
+                }
+            }
         }
+    }
+
+    private Texture2D LoadTexture(string path)
+    {
+        if (string.IsNullOrEmpty(path) || !File.Exists(path)) return null;
+
+        try 
+        {
+            byte[] data = File.ReadAllBytes(path);
+            Texture2D tex = new Texture2D(2, 2);
+            if (tex.LoadImage(data)) return tex;
+        }
+        catch (System.Exception e) {
+            UnityEngine.Debug.LogWarning("Failed to load thumbnail: " + e.Message);
+        }
+        return null;
+    }
+
+    // Fungsi tambahan untuk memunculkan pilihan band setelah scene dipilih
+    private void PopulateBandSelection(List<string> bands)
+    {
+        // Untuk saat ini kita simpan saja di logic, 
+        // jika ingin UI terpisah bisa ditambahkan container baru.
+        // Di sini kita default-kan semua band terpilih atau biarkan user pilih manual.
+        UnityEngine.Debug.Log("Available bands for this satellite: " + string.Join(", ", bands));
     }
 
     private void AddResultAsLayer(string projName)

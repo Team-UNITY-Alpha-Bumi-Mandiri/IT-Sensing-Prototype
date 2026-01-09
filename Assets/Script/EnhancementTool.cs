@@ -5,12 +5,12 @@ using NUnit.Compatibility;
 
 public class EnhancementTool : MonoBehaviour
 {
-    public Material mat;
     public Slider[] enhancementSliders;
-    public TMP_Text layerName,conTxt, briTxt, satTxt, statusTxt;
+    public TMP_Text layerName, conTxt, briTxt, satTxt, statusTxt;
+    Material mat;
     float con, bri, sat;
 
-    public void AssignValues(GameObject layer,string layerNm)
+    public void AssignValues(GameObject layer, string layerNm)
     {
         if (layer != null)
         {
@@ -19,7 +19,7 @@ public class EnhancementTool : MonoBehaviour
             mat = layerImage.material;
         }
 
-        layerName.text =new string("Layer : "+ layerNm);
+        layerName.text = new string("Layer : " + layerNm);
         con = mat.GetFloat("_Contrast");
         bri = mat.GetFloat("_Brightness");
         sat = mat.GetFloat("_Saturation");

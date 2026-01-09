@@ -64,10 +64,12 @@
     <Compile Include="Assets\TextMesh Pro\Examples &amp; Extras\Scripts\TMP_TextEventHandler.cs" />
     <Compile Include="Assets\UI\Script\ButtonTooltip.cs" />
     <Compile Include="Assets\Script\DrawModeButton.cs" />
+    <Compile Include="Assets\Script\GeeDownloadController.cs" />
     <Compile Include="Assets\TextMesh Pro\Examples &amp; Extras\Scripts\VertexShakeA.cs" />
     <Compile Include="Assets\Script kedua\SlippyMap.cs" />
     <Compile Include="Assets\UI\Script\NewProjectModal.cs" />
     <Compile Include="Assets\Script\SearchableDropdownItem.cs" />
+    <Compile Include="Assets\Script\EnhancementTool.cs" />
     <Compile Include="Assets\UI\Script\MeasureTool.cs" />
     <Compile Include="Assets\TextMesh Pro\Examples &amp; Extras\Scripts\EnvMapAnimator.cs" />
     <Compile Include="Assets\Script\SimpleProcessor.cs" />
@@ -149,7 +151,7 @@
     <Compile Include="Assets\UI\Script\Script yang Final\MeasureAreaButton.cs" />
     <Compile Include="Assets\UI\Script\Script yang Final\MapCursorButton.cs" />
     <Compile Include="Assets\Script\ButtonCustom.cs" />
-    <Compile Include="Assets\UI\Script\EnhancementTool.cs" />
+    <Compile Include="Assets\Script\AutoplayTool.cs" />
     <Compile Include="Assets\Script\FolderBrowserHelper.cs" />
     <Compile Include="Assets\UI\Script\DistanceRulerController.cs" />
     <Compile Include="Assets\Script kedua\PanAndZoom.cs" />

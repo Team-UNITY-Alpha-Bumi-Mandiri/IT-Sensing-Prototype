@@ -177,13 +177,14 @@ public class SharpeningController : MonoBehaviour
         string outName = $"{rawName}_{timestamp}";
         
         // Jalankan backend dengan List File RGB
-        RunBackend(algo, outName, currentRgbPaths, currentPanPath);
+        // Kita juga kirim rawName untuk dijadikan nama project yang lebih bersih (tanpa timestamp)
+        RunBackend(algo, outName, currentRgbPaths, currentPanPath, rawName);
     }
 
     // ========================================================================
     // 4. LOGIKA BACKEND (ASYNC)
     // ========================================================================
-    async void RunBackend(string algorithm, string outputName, List<string> rgbFiles, string panPath)
+    async void RunBackend(string algorithm, string outputName, List<string> rgbFiles, string panPath, string rawProjectName)
     {
         // Kunci UI
         btnProcess.interactable = false;
@@ -237,6 +238,7 @@ public class SharpeningController : MonoBehaviour
                     btnProcess.interactable = true;
                     return;
                 }
+
                 string resultOutputPy = await Task.Run(() =>
                 {
                     ProcessStartInfo start = new ProcessStartInfo();
@@ -262,7 +264,7 @@ public class SharpeningController : MonoBehaviour
                         return "SYSTEM ERROR: " + e.Message;
                     }
                 });
-                await HandleResultOutput(resultOutputPy, outputName, algorithm);
+                await HandleResultOutput(resultOutputPy, outputName, algorithm, rawProjectName);
                 btnProcess.interactable = true;
                 return;
             }
@@ -274,6 +276,7 @@ public class SharpeningController : MonoBehaviour
                 return;
             }
         }
+
         string resultOutput = await Task.Run(() =>
         {
             ProcessStartInfo start = new ProcessStartInfo();
@@ -302,7 +305,7 @@ public class SharpeningController : MonoBehaviour
             }
         });
 
-        await HandleResultOutput(resultOutput, outputName, algorithm);
+        await HandleResultOutput(resultOutput, outputName, algorithm, rawProjectName);
 
         btnProcess.interactable = true;
     }
@@ -310,7 +313,10 @@ public class SharpeningController : MonoBehaviour
     // ========================================================================
     // 5. LOAD RESULT TO LAYER (Logic Polygon)
     // ========================================================================
-    void LoadResultTiff(string outputFolder, string outputName, string algorithm)
+    // ========================================================================
+    // 5. LOAD RESULT TO LAYER (Logic Polygon)
+    // ========================================================================
+    void LoadResultTiff(string outputFolder, string outputName, string algorithm, string rawProjectName)
     {
         if (layerManager == null) return;
 
@@ -318,6 +324,7 @@ public class SharpeningController : MonoBehaviour
         string algoShort = lower.Contains("wavelet") ? "wavelet" : (lower.Contains("pca") ? "pca" : "gramschmidt");
         
         // Pattern nama file output Python: {nama}_{algo}_direct_{timestamp}.tif
+        // Gunakan outputName (yang ada timestamp-nya) untuk mencari file di disk
         string pattern = $"{outputName}_{algoShort}_direct_*.tif";
         string[] files = Directory.GetFiles(outputFolder, pattern);
 
@@ -344,7 +351,8 @@ public class SharpeningController : MonoBehaviour
                     new Vector2((float)minLat, (float)minLon)
                 };
 
-                string projectName = $"{outputName}_{algoShort}";
+                // Gunakan rawProjectName (short) untuk nama project
+                string projectName = $"{rawProjectName}_{algoShort}";
                 if (projectManager != null) 
                 {
                     projectManager.CreateProjectAuto(projectName, centerLat, centerLon, zoom, latestFile, polyCoords);
@@ -394,7 +402,7 @@ public class SharpeningController : MonoBehaviour
         if (go != null) go.SetActive(active);
     }
 
-    async Task HandleResultOutput(string resultOutput, string outputName, string algorithm)
+    async Task HandleResultOutput(string resultOutput, string outputName, string algorithm, string rawProjectName)
     {
         if (resultOutput.Contains("\"status\": \"success\"") || resultOutput.Contains("successfuly"))
         {
@@ -410,7 +418,7 @@ public class SharpeningController : MonoBehaviour
                     PCAResponse res = JsonUtility.FromJson<PCAResponse>(json);
                     if (res != null && res.status != null && res.status.ToLower().Contains("success") && !string.IsNullOrEmpty(res.path) && File.Exists(res.path))
                     {
-                        LoadResultTiffFromPath(res.path, outputName, algorithm);
+                        LoadResultTiffFromPath(res.path, rawProjectName, algorithm);
                         string outDir = Path.GetDirectoryName(res.path);
                         if (!string.IsNullOrEmpty(outDir) && Directory.Exists(outDir))
                             Process.Start("explorer.exe", outDir.Replace("/", "\\"));
@@ -419,7 +427,9 @@ public class SharpeningController : MonoBehaviour
                 }
                 catch { }
             }
-            LoadResultTiff(selectedOutputFolder, outputName, algorithm);
+            // outputName (with timestamp) dipakai untuk mencari file
+            // rawProjectName (short) dipakai untuk nama project
+            LoadResultTiff(selectedOutputFolder, outputName, algorithm, rawProjectName);
             if(Directory.Exists(selectedOutputFolder))
                 Process.Start("explorer.exe", selectedOutputFolder.Replace("/", "\\"));
         }

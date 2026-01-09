@@ -444,20 +444,30 @@ public class TiffLayerManager : MonoBehaviour
                 return Mathf.Clamp01((val - minVal[band]) / (maxVal[band] - minVal[band]));
             }
 
-            // Cek prefix nama (Prioritas: InputField -> Project Name)
+            // Cek prefix nama (Prioritas: Project Name -> InputField)
             string namingPrefix = "";
+            bool usedProjectPrefix = false;
             
-            if (namePrefixInput != null && !string.IsNullOrEmpty(namePrefixInput.text))
-            {
-                namingPrefix = namePrefixInput.text + " ";
-            }
-            else if (projectManager != null)
+            if (projectManager != null)
             {
                 var proj = projectManager.GetCurrentProject();
-                if (proj != null && proj.tiffPath == currentTiffPath)
+                if (proj != null && !string.IsNullOrEmpty(proj.tiffPath))
                 {
-                    namingPrefix = proj.name + " ";
+                    // Gunakan Path.GetFullPath untuk normalisasi string path (slash, backslash, case)
+                    string p1 = Path.GetFullPath(proj.tiffPath).ToLower();
+                    string p2 = Path.GetFullPath(currentTiffPath).ToLower();
+                    
+                    if (p1 == p2)
+                    {
+                        namingPrefix = proj.name + " ";
+                        usedProjectPrefix = true;
+                    }
                 }
+            }
+
+            if (!usedProjectPrefix && namePrefixInput != null && !string.IsNullOrEmpty(namePrefixInput.text))
+            {
+                namingPrefix = namePrefixInput.text + " ";
             }
 
             // Buat Layer untuk SETIAP Band yang ada
@@ -637,6 +647,22 @@ public class TiffLayerManager : MonoBehaviour
             }
         }
         return false;
+    }
+
+    // Hapus spesifik path dari cache (dipanggil saat delete project)
+    public void UnloadFromCache(string path)
+    {
+        if (layerCache.ContainsKey(path))
+        {
+            List<LayerData> cachedLayers = layerCache[path];
+            // Opsional: Destroy texture jika ingin membebaskan memory
+            foreach(var l in cachedLayers)
+            {
+                if (l.texture != null) Destroy(l.texture);
+            }
+            layerCache.Remove(path);
+            Debug.Log($"[TiffLayerManager] Unloaded from Cache: {path}");
+        }
     }
 
     // Hapus semua layer (hanya sembunyikan visual, data tetap di cache)

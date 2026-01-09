@@ -14,6 +14,7 @@ public class ProjectManager : MonoBehaviour
     public SearchableDropdown projectDropdown;     // Dropdown pilih project
     public DrawTool drawTool;                      // Tool gambar
     public PropertyPanel propertyPanel;            // Panel property
+    public TiffLayerManager tiffLayerManager;      // Manager layer TIFF
 
     [Header("Form UI")]
     public TMP_InputField newProjectNameInput; // Input nama project baru
@@ -448,6 +449,38 @@ public class ProjectManager : MonoBehaviour
     {
         if (current == null) return;
 
+        if (!string.IsNullOrEmpty(current.tiffPath) && System.IO.File.Exists(current.tiffPath))
+        {
+            try
+            {
+                System.IO.File.Delete(current.tiffPath);
+                
+                // Hapus juga file .meta agar Unity Editor tidak error "Asset version error"
+                string metaPath = current.tiffPath + ".meta";
+                if (System.IO.File.Exists(metaPath))
+                {
+                    System.IO.File.Delete(metaPath);
+                }
+
+                // Hapus dari cache memory
+                if (tiffLayerManager != null)
+                {
+                    tiffLayerManager.UnloadFromCache(current.tiffPath);
+                }
+
+                Debug.Log($"[ProjectManager] Deleted associated TIFF file: {current.tiffPath}");
+                
+#if UNITY_EDITOR
+                // Paksa Unity Editor untuk refresh database agar file hilang dari Project View
+                UnityEditor.AssetDatabase.Refresh();
+#endif
+            }
+            catch (System.Exception e)
+            {
+                Debug.LogWarning($"[ProjectManager] Failed to delete TIFF file: {e.Message}");
+            }
+        }
+
         // Hapus dari list
         projects.Remove(current);
         Save();
@@ -564,9 +597,46 @@ public class ProjectManager : MonoBehaviour
     // Set visibility polygon project
     public void SetProjectPolygonVisibility(bool visible)
     {
-        if (drawTool != null)
+        if (drawTool == null || current == null) return;
+
+        // 1. Toggle ROI Polygon (ID: projectID + "_ROI")
+        string roiId = current.id + "_ROI";
+        if (drawTool.HasDrawing(roiId))
         {
-            drawTool.SetAllVisibility(visible);
+            drawTool.ShowDrawing(roiId, visible);
+        }
+
+        // 2. Toggle Drawings milik project
+        if (current.drawings != null)
+        {
+            Dictionary<string, bool> props = current.GetProps();
+
+            foreach (var d in current.drawings)
+            {
+                // Jika visible=TRUE (ingin menampilkan):
+                // Kita harus menghormati toggle layer individu.
+                // Jika layer drawing itu OFF, maka jangan di-show.
+                // Jika visible=FALSE (ingin menyembunyikan):
+                // Force hide tidak peduli status layernya.
+                
+                if (visible)
+                {
+                    bool isLayerActive = true;
+                    if (!string.IsNullOrEmpty(d.layerName) && props.ContainsKey(d.layerName))
+                    {
+                        isLayerActive = props[d.layerName];
+                    }
+
+                    if (isLayerActive)
+                    {
+                        drawTool.ShowDrawing(d.id, true);
+                    }
+                }
+                else
+                {
+                    drawTool.ShowDrawing(d.id, false);
+                }
+            }
         }
     }
 

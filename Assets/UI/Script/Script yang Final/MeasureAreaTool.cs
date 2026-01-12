@@ -47,7 +47,8 @@ public class MeasureAreaTool : MonoBehaviour
     {
         if (container != null)
         {
-            container.gameObject.SetActive(false);
+            container.gameObject.SetActive(true); // Pastikan container siap
+            container.gameObject.SetActive(false); // Lalu sembunyikan
             CreateGhostLine();
             CreateTooltip();
         }

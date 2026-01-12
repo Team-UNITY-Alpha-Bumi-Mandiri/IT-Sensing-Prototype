@@ -98,7 +98,7 @@ public class TiffLayerManager : MonoBehaviour
     // =========================================
 
     // Method Baru: Load PNG Overlay dengan Bounds Manual
-    public void LoadPngOverlay(string pngPath, double north, double south, double west, double east)
+    public void LoadPngOverlay(string pngPath, double north, double south, double west, double east, bool isPreview = false)
     {
         if (!File.Exists(pngPath))
         {
@@ -160,11 +160,23 @@ public class TiffLayerManager : MonoBehaviour
             Debug.Log($"[TiffLayerManager] Loaded PNG Overlay: {tex.width}x{tex.height}, Format: {tex.format}. Bounds: Lat [{south} - {north}], Lon [{west} - {east}]");
 
             // Buat Layer
-            string layerName = Path.GetFileNameWithoutExtension(pngPath);
-            layers.Add(new LayerData { name = layerName, texture = tex, isVisible = false });
+            // Jika preview, beri nama khusus agar tidak tertukar dengan band asli
+            string layerName = isPreview ? "PREVIEW_SATELIT" : Path.GetFileNameWithoutExtension(pngPath);
+            var newLayer = new LayerData { name = layerName, texture = tex, isVisible = true };
+            layers.Add(newLayer);
 
             // Tampilkan di Panel & Map
-            SyncWithProject();
+            if (isPreview)
+            {
+                // JIKA PREVIEW: Langsung tampilkan di peta tanpa sinkronisasi ke Project Properties
+                // Ini mencegah munculnya toggle di UI panel secara permanen
+                ShowLayerOnMap(newLayer);
+            }
+            else
+            {
+                // JIKA BUKAN PREVIEW: Jalankan flow standar (sinkron ke Project Manager)
+                SyncWithProject();
+            }
             
             if (mapController != null)
             {
@@ -943,6 +955,10 @@ public class TiffLayerManager : MonoBehaviour
     void ShowLayerOnMap(LayerData layer)
     {
         if (overlayContainer == null || layer.texture == null) return;
+        
+        // Pastikan container ON
+        if (!overlayContainer.gameObject.activeSelf) 
+            overlayContainer.gameObject.SetActive(true);
 
         // Cek apakah sudah ada overlay untuk layer ini
         GameObject existing = overlays.Find(o => o != null && o.name == layer.name);

@@ -48027,7 +48027,7 @@ MonoBehaviour:
   projectDropdown: {fileID: 1094671145}
   drawTool: {fileID: 1971986123}
   propertyPanel: {fileID: 1793761683}
-  tiffLayerManager: {fileID: 0}
+  tiffLayerManager: {fileID: 375825893}
   newProjectNameInput: {fileID: 65160011}
   createProjectButton: {fileID: 2129007983}
   deleteProjectButton: {fileID: 1667078034}

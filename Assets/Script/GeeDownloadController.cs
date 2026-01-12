@@ -41,6 +41,9 @@ public class GeeDownloadController : MonoBehaviour
     // Simpan scene yang dipilih
     private string selectedSceneId = "";
     
+    // Bounds pencarian saat ini (untuk preview di peta)
+    private double curNorth, curSouth, curWest, curEast;
+    
     // Cache texture preview agar tidak leak memory
     private List<Texture2D> generatedTextures = new List<Texture2D>();
 
@@ -123,7 +126,34 @@ public class GeeDownloadController : MonoBehaviour
         string boundary = GetBoundaryString();
         if (string.IsNullOrEmpty(boundary)) return;
 
+        // Hitung Bounds untuk preview di peta
+        CalculateCurrentBounds(currentProj.polygonCoords);
+
         RunGeeExe(projName, imagery, correction, cloud, start, end, boundary, isSearch);
+    }
+
+    private void CalculateCurrentBounds(List<Vector2> coords)
+    {
+        if (coords == null || coords.Count == 0) return;
+        
+        double n = double.MinValue, s = double.MaxValue;
+        double w = double.MaxValue, e = double.MinValue;
+
+        foreach (var c in coords)
+        {
+            // Berdasarkan GetBoundaryString: c.x = Lat, c.y = Lon
+            if (c.x > n) n = c.x;
+            if (c.x < s) s = c.x;
+            if (c.y < w) w = c.y;
+            if (c.y > e) e = c.y;
+        }
+
+        curNorth = n;
+        curSouth = s;
+        curWest = w;
+        curEast = e;
+        
+        UnityEngine.Debug.Log($"[GEE] Current Search Bounds: N:{curNorth}, S:{curSouth}, W:{curWest}, E:{curEast}");
     }
 
     private string GetBoundaryString()
@@ -342,6 +372,12 @@ public class GeeDownloadController : MonoBehaviour
                         if (scItem != null) scItem.SetSelected(scItem == selectedItem);
                     }
                     UnityEngine.Debug.Log("Selected: " + selectedSceneId);
+
+                    // --- TAMPILKAN PREVIEW DI PETA ---
+                    if (tiffLayerManager != null && !string.IsNullOrEmpty(s.thumb))
+                    {
+                        tiffLayerManager.LoadPngOverlay(s.thumb, curNorth, curSouth, curWest, curEast, true);
+                    }
                 });
             }
             else
@@ -362,6 +398,12 @@ public class GeeDownloadController : MonoBehaviour
                             foreach (Transform child in bandContainer) {
                                 Toggle otherT = child.GetComponentInChildren<Toggle>();
                                 if (otherT != null && otherT != t) otherT.SetIsOnWithoutNotify(false);
+                            }
+
+                            // --- TAMPILKAN PREVIEW DI PETA (FALLBACK) ---
+                            if (tiffLayerManager != null && !string.IsNullOrEmpty(s.thumb))
+                            {
+                                tiffLayerManager.LoadPngOverlay(s.thumb, curNorth, curSouth, curWest, curEast, true);
                             }
                         }
                     });

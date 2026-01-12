@@ -43,7 +43,7 @@ public class MeasureTool2 : MonoBehaviour
         if (container != null) 
         {
             CreateGhostObjects();
-            container.gameObject.SetActive(false); 
+            container.gameObject.SetActive(false); // Sembunyikan saat awal
         }
     }
 

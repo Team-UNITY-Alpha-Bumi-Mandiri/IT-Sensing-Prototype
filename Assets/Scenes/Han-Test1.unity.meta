@@ -1,5 +1,9 @@
 fileFormatVersion: 2
+<<<<<<<< HEAD:Assets/Scenes/Han-Test1.unity.meta
 guid: 52bb03739492a9a41b4d9cf5e3ea37c7
+========
+guid: d4f4fccf3db7743408499176cea385e5
+>>>>>>>> 87c64b631cbefed90542281dc813371f9c98fcf6:Assets/StreamingAssets/Backend/downloaded_bands/j/LC08_120065_20231213.B8.tif.meta
 DefaultImporter:
   externalObjects: {}
   userData: 

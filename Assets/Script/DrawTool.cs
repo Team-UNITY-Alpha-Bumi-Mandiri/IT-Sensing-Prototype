@@ -808,13 +808,18 @@ public class DrawTool : MonoBehaviour
     {
         if (container == null) return;
 
-        foreach (Transform child in container)
+        // Hanya sembunyikan objek yang terdaftar di DrawTool
+        foreach (DrawObject obj in allObjs)
         {
-            if (ghost != null && child.gameObject == ghost) continue;
-            if (tooltip != null && child.gameObject == tooltip) continue;
-
-            child.gameObject.SetActive(false);
+            if (obj.rootObj != null)
+            {
+                obj.rootObj.SetActive(false);
+            }
         }
+
+        // Sembunyikan helper
+        if (ghost != null) ghost.SetActive(false);
+        if (tooltip != null) tooltip.SetActive(false);
     }
 
     // Set visibility drawing berdasarkan ID

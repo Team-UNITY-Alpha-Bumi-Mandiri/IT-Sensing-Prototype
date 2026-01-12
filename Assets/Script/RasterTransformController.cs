@@ -126,17 +126,36 @@ public class RasterTransformController : MonoBehaviour
             textStatus.color = Color.yellow;
         }
 
-        string fullExePath = Path.Combine(backendFolder, exeName);
         string cleanInput = inputPath.Replace("\\", "/");
-        
-        // Format: python rasterTransform.py -n <NamaOutput> --algo <Algoritma> --input <FileTiff>
-        // Note: Script python akan otomatis menyimpan ke folder output defaultnya (biasanya relatif terhadap script)
-        // Kita asumsikan script menyimpan di folder yang sama atau kita biarkan script menangani output pathnya.
-        // Berdasarkan README, argumennya hanya nama output (-n), bukan path full.
-        
-        string args = $"-n \"{outputName}\" --algo {algo} --input \"{cleanInput}\"";
+        string fullExePath;
+        string args;
 
-        UnityEngine.Debug.Log($"[RasterTransform] Running: {exeName} {args}");
+#if UNITY_EDITOR
+        // MODE DEBUG (EDITOR): Jalankan script Python langsung
+        // Asumsi: Python sudah terinstall di PATH environment variable
+        // Script path: Assets/StreamingAssets/Backend/rasterTransform.py (atau sesuaikan)
+        
+        string scriptPath = Path.Combine(backendFolder, "rasterTransform.py");
+        // Fallback jika tidak ada di StreamingAssets, cari di source folder (Assets/Python file/)
+        if (!File.Exists(scriptPath))
+        {
+            string sourcePath = Path.Combine(Application.dataPath, "Python file", "rasterTransform.py");
+            if (File.Exists(sourcePath)) scriptPath = sourcePath;
+        }
+
+        fullExePath = "python";
+        args = $"\"{scriptPath}\" -n \"{outputName}\" --algo {algo} --input \"{cleanInput}\"";
+        
+        UnityEngine.Debug.Log($"[RasterTransform] Mode: EDITOR (Running .py)");
+#else
+        // MODE BUILD: Jalankan EXE
+        fullExePath = Path.Combine(backendFolder, exeName);
+        args = $"-n \"{outputName}\" --algo {algo} --input \"{cleanInput}\"";
+        
+        UnityEngine.Debug.Log($"[RasterTransform] Mode: BUILD (Running .exe)");
+#endif
+
+        UnityEngine.Debug.Log($"[RasterTransform] Running: {fullExePath} {args}");
 
         string result = await Task.Run(() =>
         {

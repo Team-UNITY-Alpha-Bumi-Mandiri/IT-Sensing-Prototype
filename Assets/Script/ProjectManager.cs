@@ -588,6 +588,67 @@ public class ProjectManager : MonoBehaviour
         }
     }
 
+    // Callback saat property dihapus (Layer/Drawing layer)
+    public void OnPropertyDeleted(string name)
+    {
+        if (current == null) return;
+
+        // 1. Hapus dari Project Props
+        Dictionary<string, bool> dict = current.GetProps();
+        if (dict.ContainsKey(name))
+        {
+            dict.Remove(name);
+            current.SetProps(dict);
+            Save();
+        }
+
+        // 2. Hubungi TiffLayerManager untuk hapus layer & file
+        if (tiffLayerManager != null)
+        {
+            tiffLayerManager.RemoveLayer(name, true);
+        }
+
+        // 3. Hubungi DrawTool jika itu adalah layer gambar
+        if (drawTool != null)
+        {
+            drawTool.DeleteLayer(name); 
+        }
+
+        Debug.Log($"[ProjectManager] Property deleted: {name}");
+    }
+
+    // Callback saat property di-rename
+    public void OnPropertyRenamed(string oldName, string newName)
+    {
+        if (current == null) return;
+        if (oldName == newName) return;
+
+        // 1. Update Project Props
+        Dictionary<string, bool> dict = current.GetProps();
+        if (dict.ContainsKey(oldName))
+        {
+            bool val = dict[oldName];
+            dict.Remove(oldName);
+            dict[newName] = val;
+            current.SetProps(dict);
+            Save();
+        }
+
+        // 2. Update di TiffLayerManager (Rename File + Memory)
+        if (tiffLayerManager != null)
+        {
+            tiffLayerManager.RenameLayer(oldName, newName);
+        }
+
+        // 3. Update di DrawTool
+        if (drawTool != null)
+        {
+            drawTool.RenameLayer(oldName, newName);
+        }
+
+        Debug.Log($"[ProjectManager] Property renamed from {oldName} to {newName}");
+    }
+
     // Getter project saat ini
     public ProjectData GetCurrentProject()
     {

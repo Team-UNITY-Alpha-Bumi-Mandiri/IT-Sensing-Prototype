@@ -51,6 +51,7 @@ public class TiffLayerManager : MonoBehaviour
         public string name;
         public Texture2D texture;
         public bool isVisible;
+        public string path; // Path file fisik (untuk rename/delete)
     }
 
     void Start()
@@ -175,7 +176,7 @@ public class TiffLayerManager : MonoBehaviour
             Debug.Log($"[TiffLayerManager] Loaded PNG Overlay: {tex.width}x{tex.height}, Format: {tex.format}. Bounds: Lat [{south} - {north}], Lon [{west} - {east}]");
 
             // Buat Layer
-            var newLayer = new LayerData { name = layerName, texture = tex, isVisible = true };
+            var newLayer = new LayerData { name = layerName, texture = tex, isVisible = true, path = pngPath };
             layers.Add(newLayer);
 
             // Tampilkan di Panel & Map
@@ -626,6 +627,10 @@ public class TiffLayerManager : MonoBehaviour
             Debug.Log($"[TiffLayerManager] Auto-loading extra layer: {layerName}");
             // clearExisting: false agar tidak menghapus layer yang sudah diload sebelumnya dlm perulangan ini
             LoadPngOverlay(pngPath, n, s, w, e, false, false);
+            
+            // Simpan path-nya (LoadPngOverlay sebenarnya sudah simpan, tapi kita pastikan di sini)
+            var loaded = layers.Find(l => l.name == layerName);
+            if (loaded != null) loaded.path = pngPath;
         }
 
         // 4. Sync visibility dengan Project Properties
@@ -633,12 +638,31 @@ public class TiffLayerManager : MonoBehaviour
     }
 
     // Fungsi untuk menghapus layer tertentu secara permanen dari memory dan peta
-    public void RemoveLayer(string name)
+    public void RemoveLayer(string name, bool deleteFile = false)
     {
         // 1. Cari LayerData
         LayerData layer = layers.Find(l => l.name == name);
         if (layer != null)
         {
+            // Hapus file fisik jika diminta
+            if (deleteFile && !string.IsNullOrEmpty(layer.path) && File.Exists(layer.path))
+            {
+                try 
+                {
+                    // Cari semua file dengan nama yang sama (misal .png, .tif, .tif.meta)
+                    string dir = Path.GetDirectoryName(layer.path);
+                    string baseName = Path.GetFileNameWithoutExtension(layer.path);
+                    string[] relatedFiles = Directory.GetFiles(dir, baseName + ".*");
+
+                    foreach (string f in relatedFiles)
+                    {
+                        File.Delete(f);
+                        Debug.Log($"[TiffLayerManager] Deleted related file: {f}");
+                    }
+                }
+                catch (System.Exception e) { Debug.LogError($"[TiffLayerManager] Failed to delete files: {e.Message}"); }
+            }
+
             if (layer.texture != null) Destroy(layer.texture);
             layers.Remove(layer);
         }
@@ -652,6 +676,53 @@ public class TiffLayerManager : MonoBehaviour
         }
 
         Debug.Log($"[TiffLayerManager] Removed layer: {name}");
+    }
+
+    // Fungsi untuk me-rename layer (UI dan File)
+    public void RenameLayer(string oldName, string newName)
+    {
+        LayerData layer = layers.Find(l => l.name == oldName);
+        if (layer == null) return;
+
+        // 1. Rename File Fisik
+        if (!string.IsNullOrEmpty(layer.path) && File.Exists(layer.path))
+        {
+            try
+            {
+                string dir = Path.GetDirectoryName(layer.path);
+                string baseName = Path.GetFileNameWithoutExtension(layer.path);
+                
+                // Cari semua file terkait (png, tif, meta, dll)
+                string[] relatedFiles = Directory.GetFiles(dir, baseName + ".*");
+
+                foreach (string oldPath in relatedFiles)
+                {
+                    string ext = Path.GetExtension(oldPath);
+                    string newPath = Path.Combine(dir, newName + ext);
+                    
+                    if (!File.Exists(newPath))
+                    {
+                        File.Move(oldPath, newPath);
+                        // Jika ini file utama yang diload, update path di memory
+                        if (oldPath == layer.path) layer.path = newPath;
+                        Debug.Log($"[TiffLayerManager] Renamed related file: {oldPath} -> {newPath}");
+                    }
+                }
+            }
+            catch (System.Exception e)
+            {
+                Debug.LogError($"[TiffLayerManager] Failed to rename files: {e.Message}");
+            }
+        }
+
+        // 2. Update Nama di Memory
+        layer.name = newName;
+
+        // 3. Update Nama di GameObject
+        GameObject overlay = overlays.Find(o => o != null && o.name == oldName);
+        if (overlay != null) overlay.name = newName;
+
+        Debug.Log($"[TiffLayerManager] Renamed layer {oldName} to {newName}");
     }
 
     // Integrasi dengan ProjectManager

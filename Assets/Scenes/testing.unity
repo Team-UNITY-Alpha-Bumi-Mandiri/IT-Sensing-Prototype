@@ -24562,7 +24562,7 @@ MonoBehaviour:
   m_Placeholder: {fileID: 0}
   m_ItemText: {fileID: 1811186852}
   m_ItemImage: {fileID: 0}
-  m_Value: 0
+  m_Value: 1
   m_MultiSelect: 0
   m_Options:
     m_Options:
@@ -41413,7 +41413,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 1, y: 0}
   m_AnchorMax: {x: 1, y: 0}
-  m_AnchoredPosition: {x: 0, y: 0}
+  m_AnchoredPosition: {x: -153, y: 0}
   m_SizeDelta: {x: 20, y: 0}
   m_Pivot: {x: 1, y: 1}
 --- !u!114 &1138153679
@@ -41619,8 +41619,8 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: -0.00068474, y: 0.000061035}
-  m_SizeDelta: {x: 254.15, y: 700.75}
+  m_AnchoredPosition: {x: 80.16593, y: 0.000061035}
+  m_SizeDelta: {x: 414.4832, y: 700.75}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1140729708
 MonoBehaviour:
@@ -41665,7 +41665,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Image
   m_Material: {fileID: 0}
-  m_Color: {r: 1, g: 1, b: 1, a: 0.392}
+  m_Color: {r: 1, g: 1, b: 1, a: 0}
   m_RaycastTarget: 1
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1
@@ -65458,7 +65458,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: Lansat 7
+  m_text: Lansat 8
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
   m_sharedMaterial: {fileID: 2180264, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
@@ -67267,9 +67267,15 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::PropertyPanel
   panel: {fileID: 1793761681}
   content: {fileID: 2013346535}
-  togglePrefab: {fileID: 8332102175782670510, guid: 4a11701e18ca96f4f99891badb086706, type: 3}
+  togglePrefab: {fileID: 4743199226711281839, guid: 4a11701e18ca96f4f99891badb086706, type: 3}
   scrollRect: {fileID: 1140729708}
   onPropertyChanged:
+    m_PersistentCalls:
+      m_Calls: []
+  onPropertyRenamed:
+    m_PersistentCalls:
+      m_Calls: []
+  onPropertyDeleted:
     m_PersistentCalls:
       m_Calls: []
 --- !u!114 &1793761684
@@ -67285,7 +67291,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Image
   m_Material: {fileID: 0}
-  m_Color: {r: 1, g: 1, b: 1, a: 0.392}
+  m_Color: {r: 1, g: 1, b: 1, a: 0.39215687}
   m_RaycastTarget: 1
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1

@@ -18,6 +18,8 @@ public class PropertyPanel : MonoBehaviour
 
     // Event saat toggle berubah (nama property, nilai baru)
     public UnityEvent<string, bool> onPropertyChanged;
+    public UnityEvent<string, string> onPropertyRenamed;
+    public UnityEvent<string> onPropertyDeleted;
 
     // Variabel internal
     Dictionary<string, bool> props = new Dictionary<string, bool>();
@@ -74,13 +76,35 @@ public class PropertyPanel : MonoBehaviour
 
             if (item != null)
             {
-                item.Setup(kv.Key, kv.Value, OnToggle);
+                item.Setup(kv.Key, kv.Value, OnToggle, OnRename, OnDelete);
                 items.Add(item);
             }
         }
 
         // Rebuild layout
         StartCoroutine(RebuildLayout());
+    }
+
+    void OnRename(string oldName, string newName)
+    {
+        if (props.ContainsKey(oldName))
+        {
+            bool val = props[oldName];
+            props.Remove(oldName);
+            props[newName] = val;
+            onPropertyRenamed?.Invoke(oldName, newName);
+            RefreshList();
+        }
+    }
+
+    void OnDelete(string name)
+    {
+        if (props.ContainsKey(name))
+        {
+            props.Remove(name);
+            onPropertyDeleted?.Invoke(name);
+            RefreshList();
+        }
     }
 
     // Hapus semua item yang di-spawn

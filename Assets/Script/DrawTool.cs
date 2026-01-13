@@ -831,4 +831,29 @@ public class DrawTool : MonoBehaviour
             obj.rootObj.SetActive(visible);
         }
     }
+
+    // Fungsi baru untuk me-rename layer pada objek gambar
+    public void RenameLayer(string oldName, string newName)
+    {
+        foreach (var obj in allObjs)
+        {
+            if (obj.layerName == oldName)
+            {
+                obj.layerName = newName;
+            }
+        }
+        Debug.Log($"[DrawTool] Renamed layer {oldName} to {newName} in drawings.");
+    }
+
+    // Fungsi baru untuk menghapus satu layer gambar beserta objeknya
+    public void DeleteLayer(string layerName)
+    {
+        List<DrawObject> toRemove = allObjs.FindAll(x => x.layerName == layerName);
+        foreach (var obj in toRemove)
+        {
+            if (obj.rootObj != null) Destroy(obj.rootObj);
+            allObjs.Remove(obj);
+        }
+        Debug.Log($"[DrawTool] Deleted layer {layerName} and its {toRemove.Count} objects.");
+    }
 }

@@ -348,6 +348,9 @@ public class GeeDownloadController : MonoBehaviour
         
         selectedSceneId = "";
 
+        // Pastikan panel muncul lagi jika ada hasil (setelah sebelumnya di-reset oleh Get File)
+        if (bandsPanelRoot != null) bandsPanelRoot.SetActive(scenes.Count > 0);
+
         foreach (var s in scenes)
         {
             GameObject obj = Instantiate(bandPrefab, bandContainer);
@@ -442,29 +445,62 @@ public class GeeDownloadController : MonoBehaviour
         string targetDir = Path.Combine(outputBaseFolder, projName);
         if (!Directory.Exists(targetDir)) return;
 
-        // Ambil semua file TIF di folder tersebut
-        string[] files = Directory.GetFiles(targetDir, "*.tif", SearchOption.AllDirectories);
+        // Ambil semua file PNG di folder tersebut (sesuai request: format png doang)
+        string[] files = Directory.GetFiles(targetDir, "*.png", SearchOption.AllDirectories);
         if (files.Length == 0) return;
 
-        foreach (string tiffPath in files)
+        foreach (string pngPath in files)
         {
-            // Abaikan thumb atau file sementara
-            if (tiffPath.Contains("thumb") || tiffPath.Contains("temp")) continue;
+            // Abaikan file sementara, tapi izinkan thumb jika itu format yang diinginkan
+            if (pngPath.Contains("temp")) continue;
 
-            // 1. Load TIFF ke Map
+            // 1. Load PNG ke Map menggunakan bounds yang sudah dihitung sebelumnya
             if (tiffLayerManager != null)
-                tiffLayerManager.LoadTiff(tiffPath);
+            {
+                // clearExisting: false agar layer baru ditambahkan tanpa menghapus yang sudah ada
+                tiffLayerManager.LoadPngOverlay(pngPath, curNorth, curSouth, curWest, curEast, false, false);
+            }
 
-            // 2. Daftarkan sebagai property project
-            string layerName = Path.GetFileNameWithoutExtension(tiffPath);
+            // 2. Daftarkan sebagai property project agar muncul toggle ON/OFF
+            string layerName = Path.GetFileNameWithoutExtension(pngPath);
             if (projectManager != null)
             {
                 projectManager.AddProperty(layerName, true);
                 projectManager.Save();
             }
             
-            UnityEngine.Debug.Log($"[GEE] Added new layer: {layerName} to project {projName}");
+            UnityEngine.Debug.Log($"[GEE] Added new PNG layer: {layerName} to project {projName}");
         }
+
+        // Hapus preview satelit karena download sudah selesai dan file asli sudah muncul
+        if (tiffLayerManager != null)
+        {
+            tiffLayerManager.RemoveLayer("PREVIEW_SATELIT");
+        }
+
+        // Reset UI Bands
+        ResetBandsUI();
+    }
+
+    private void ResetBandsUI()
+    {
+        if (bandsPanelRoot != null) bandsPanelRoot.SetActive(false);
+        
+        if (bandContainer != null)
+        {
+            foreach (Transform child in bandContainer) Destroy(child.gameObject);
+        }
+
+        foreach (var tex in generatedTextures)
+        {
+            if (tex != null) Destroy(tex);
+        }
+        generatedTextures.Clear();
+
+        selectedSceneId = "";
+        selectedBands.Clear();
+        
+        UnityEngine.Debug.Log("[GEE] Bands UI Reset.");
     }
 
     // ==========================================

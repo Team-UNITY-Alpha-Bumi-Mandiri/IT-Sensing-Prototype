@@ -98,7 +98,7 @@ public class TiffLayerManager : MonoBehaviour
     // =========================================
 
     // Method Baru: Load PNG Overlay dengan Bounds Manual
-    public void LoadPngOverlay(string pngPath, double north, double south, double west, double east, bool isPreview = false)
+    public void LoadPngOverlay(string pngPath, double north, double south, double west, double east, bool isPreview = false, bool clearExisting = true)
     {
         if (!File.Exists(pngPath))
         {
@@ -106,8 +106,23 @@ public class TiffLayerManager : MonoBehaviour
             return;
         }
 
-        // Clear layer lama
-        ClearLayers();
+        // Cek duplikasi
+        string layerName = isPreview ? "PREVIEW_SATELIT" : Path.GetFileNameWithoutExtension(pngPath);
+        
+        // KHUSUS PREVIEW: Jika sudah ada, hapus yang lama agar bisa diganti yang baru
+        if (layerName == "PREVIEW_SATELIT")
+        {
+            RemoveLayer("PREVIEW_SATELIT");
+        }
+        else if (layers.Exists(l => l.name == layerName)) 
+        {
+            Debug.Log($"[TiffLayerManager] Layer {layerName} sudah ada, skip load.");
+            return;
+        }
+
+        // Clear layer lama jika diminta (biasanya saat pindah project)
+        if (clearExisting) ClearLayers();
+        
         currentTiffPath = pngPath; // Simpan path PNG sebagai referensi
 
         Debug.Log($"[TiffLayerManager] Loading PNG: {pngPath}");
@@ -160,8 +175,6 @@ public class TiffLayerManager : MonoBehaviour
             Debug.Log($"[TiffLayerManager] Loaded PNG Overlay: {tex.width}x{tex.height}, Format: {tex.format}. Bounds: Lat [{south} - {north}], Lon [{west} - {east}]");
 
             // Buat Layer
-            // Jika preview, beri nama khusus agar tidak tertukar dengan band asli
-            string layerName = isPreview ? "PREVIEW_SATELIT" : Path.GetFileNameWithoutExtension(pngPath);
             var newLayer = new LayerData { name = layerName, texture = tex, isVisible = true };
             layers.Add(newLayer);
 
@@ -189,7 +202,7 @@ public class TiffLayerManager : MonoBehaviour
     }
 
     // Load file GeoTIFF dan extract semua band
-    public void LoadTiff(string path)
+    public void LoadTiff(string path, bool clearExisting = true)
     {
         if (!File.Exists(path))
         {
@@ -197,8 +210,9 @@ public class TiffLayerManager : MonoBehaviour
             return;
         }
 
-        // Clear layer lama (sembunyikan visualnya)
-        ClearLayers();
+        // Clear layer lama jika diminta
+        if (clearExisting) ClearLayers();
+
         currentTiffPath = path;
 
         // Cek Cache
@@ -544,14 +558,21 @@ public class TiffLayerManager : MonoBehaviour
     // Callback dari ProjectManager
     void OnTiffProjectLoaded(string path)
     {
+        var proj = projectManager != null ? projectManager.GetCurrentProject() : null;
+
         if (string.IsNullOrEmpty(path))
         {
             ClearLayers();
+            
+            // Walau tiff kosong, mungkin ada PNG extra di folder project
+            if (proj != null)
+                ScanAndLoadExtraLayers(proj.name, proj.polygonCoords);
+                
             return;
         }
 
         // Jangan reload jika path sama (kecuali dipaksa)
-        if (currentTiffPath != path || layers.Count == 0)
+        if (currentTiffPath != path || layers.Count == 0 || overlays.Count == 0)
         {
             LoadTiff(path);
         }
@@ -560,6 +581,77 @@ public class TiffLayerManager : MonoBehaviour
             // Jika path sama, cuma sync property
             SyncWithProject();
         }
+
+        // SCAN EXTRA PNG LAYERS (Persistensi GEE Download)
+        if (proj != null)
+        {
+            ScanAndLoadExtraLayers(proj.name, proj.polygonCoords);
+        }
+    }
+
+    // Fungsi untuk menscan dan meload PNG tambahan yang ada di folder project (Hasil GEE)
+    public void ScanAndLoadExtraLayers(string projectName, List<Vector2> coords)
+    {
+        if (string.IsNullOrEmpty(projectName) || coords == null || coords.Count == 0) return;
+
+        // 1. Hitung Bounding Box dari polygon project
+        double n = double.MinValue, s = double.MaxValue;
+        double w = double.MaxValue, e = double.MinValue;
+
+        foreach (var c in coords)
+        {
+            if (c.x > n) n = c.x;
+            if (c.x < s) s = c.x;
+            if (c.y < w) w = c.y;
+            if (c.y > e) e = c.y;
+        }
+
+        // 2. Tentukan folder target
+        string backendFolder = Path.Combine(Application.streamingAssetsPath, "Backend");
+        string downloadFolder = Path.Combine(backendFolder, "downloaded_bands");
+        string targetDir = Path.Combine(downloadFolder, projectName);
+
+        if (!Directory.Exists(targetDir)) return;
+
+        // 3. Scan PNG
+        string[] pngFiles = Directory.GetFiles(targetDir, "*.png", SearchOption.AllDirectories);
+        foreach (string pngPath in pngFiles)
+        {
+            if (pngPath.Contains("temp")) continue;
+
+            // Cek apakah layer ini sudah diload (agar tidak duplikat)
+            string layerName = Path.GetFileNameWithoutExtension(pngPath);
+            if (layers.Exists(l => l.name == layerName)) continue;
+
+            Debug.Log($"[TiffLayerManager] Auto-loading extra layer: {layerName}");
+            // clearExisting: false agar tidak menghapus layer yang sudah diload sebelumnya dlm perulangan ini
+            LoadPngOverlay(pngPath, n, s, w, e, false, false);
+        }
+
+        // 4. Sync visibility dengan Project Properties
+        SyncWithProject();
+    }
+
+    // Fungsi untuk menghapus layer tertentu secara permanen dari memory dan peta
+    public void RemoveLayer(string name)
+    {
+        // 1. Cari LayerData
+        LayerData layer = layers.Find(l => l.name == name);
+        if (layer != null)
+        {
+            if (layer.texture != null) Destroy(layer.texture);
+            layers.Remove(layer);
+        }
+
+        // 2. Cari dan hapus GameObject Overlay
+        GameObject overlay = overlays.Find(o => o != null && o.name == name);
+        if (overlay != null)
+        {
+            overlays.Remove(overlay);
+            Destroy(overlay);
+        }
+
+        Debug.Log($"[TiffLayerManager] Removed layer: {name}");
     }
 
     // Integrasi dengan ProjectManager
@@ -578,6 +670,9 @@ public class TiffLayerManager : MonoBehaviour
 
         foreach (var layer in layers)
         {
+            // JANGAN SYNC PREVIEW (Preview hanya visual sementara, jangan jadi property project)
+            if (layer.name == "PREVIEW_SATELIT") continue;
+
             // Jika properti belum ada di project, tambahkan default (false)
             // Jika sudah ada, ikuti nilai dari project
             if (!props.ContainsKey(layer.name))

@@ -87,6 +87,7 @@ GameObject:
   - component: {fileID: 9158079307743972632}
   - component: {fileID: 3854733172938098011}
   - component: {fileID: 8899202526959060073}
+  - component: {fileID: 7049830198881330601}
   m_Layer: 5
   m_Name: RasterButton
   m_TagString: Untagged
@@ -472,3 +473,18 @@ MonoBehaviour:
           m_StringArgument: 
           m_BoolArgument: 0
         m_CallState: 2
+--- !u!114 &7049830198881330601
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4802526497360693480}
+  m_Enabled: 0
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e19747de3f5aca642ab2be37e372fb86, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Outline
+  m_EffectColor: {r: 0.04705883, g: 0.56078434, b: 0.08235294, a: 1}
+  m_EffectDistance: {x: 1, y: -1}
+  m_UseGraphicAlpha: 1

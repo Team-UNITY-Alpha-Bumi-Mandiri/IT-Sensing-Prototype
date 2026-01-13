@@ -1,3 +1,4 @@
+using NUnit.Framework;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -12,8 +13,10 @@ public class MapCursorButton : MonoBehaviour
     public Color activeColor = new Color(0.1f, 0.55f, 0.28f); // Hijau (Default)
     public Color inactiveColor = Color.white; // Putih (Saat non-aktif)
 
-    [Header("Disable on Enhancement tool Pop-Up")]
-    public GameObject enhancementPopUp;
+    [Header("Disable on Pop-Up activations")]
+     GameObject popUpContainer;
+    public GameObject[] selectedPopUp;
+
     bool isActive;
 
     void Start()
@@ -27,19 +30,45 @@ public class MapCursorButton : MonoBehaviour
 
         // 3. Pasang listener klik
         myButton.onClick.AddListener(OnButtonClicked);
+
+        OnButtonClicked();
     }
 
     void Update()
     {
         if (isActive)
-        {
-            if (enhancementPopUp.activeSelf)
-                mapController.isInputEnabled = false;
-            else
-                mapController.isInputEnabled = true;
-        }
+            mapController.isInputEnabled = AllowedToDragMapToo() ? true : false;
     }
 
+    bool AllowedToDragMap()
+    {
+        foreach (Transform t in popUpContainer.transform)
+        {
+            if (t.gameObject.activeSelf == true)
+            {
+                foreach (Transform c in t)
+                {
+                    if (c.gameObject.activeSelf == true)
+                    {
+                        return false;
+                    }
+                }
+            }
+        }
+        return true;
+    }
+
+    bool AllowedToDragMapToo()
+    {
+        foreach (GameObject t in selectedPopUp)
+        {
+            if (t.activeSelf == true)
+            {
+                return false;
+            }
+        }
+        return true;
+    }
     void OnButtonClicked()
     {
         isActive = !isActive;

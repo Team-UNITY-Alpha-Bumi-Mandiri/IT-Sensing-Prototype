@@ -2,6 +2,7 @@ using System;
 using System.Collections;
 using System.Runtime.InteropServices;
 using TMPro;
+using TMPro.Examples;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -9,8 +10,13 @@ public class AutoplayTool : MonoBehaviour
 {
     [Header("Autoplay Settings")]
     public GameObject[] chosenLayers;
+    GameObject[] selectedLayers;
     public TMP_InputField intervalInput;
     public Toggle loopToggle, reverseToggle;
+
+    [Header("Token Input Field")]
+    public TMP_InputField chipInputField;
+    public GameObject contentBox, chipPrefab;
 
     [Header("Seek Bar Resources")]
     public GameObject seekBar;
@@ -22,6 +28,29 @@ public class AutoplayTool : MonoBehaviour
 
     void Start()
     {
+        PrepareSlideShow();
+    }
+
+    public void AddChip()
+    {
+        GameObject newChip = Instantiate(chipPrefab, contentBox.transform);
+        TMP_Text chipText = newChip.GetComponentInChildren<TMP_Text>();
+        chipText.text = chipInputField.text;
+
+        // buat list daftar layer - dari TiffLayerManager?
+        // dijadikan Dropdown yang muncul saat ngetik di InputField
+        // klik item dalam Dropdown >>> jadi Token chip
+        // submit >>> chip yang dipilih masuk array Autoplay.
+        // StartSlideShow()
+
+        chipInputField.transform.SetAsLastSibling();
+        chipInputField.text = "";
+        chipInputField.ActivateInputField();
+    }
+
+    void PrepareSlideShow()
+    {
+                // After layers are selected
         RectTransform rt = seekBar.GetComponent<RectTransform>();
         seekBarLeftEdge = -(rt.sizeDelta.x / 2);
         seekBarSegment = rt.sizeDelta.x / (chosenLayers.Length - 1);
@@ -34,8 +63,7 @@ public class AutoplayTool : MonoBehaviour
 
     public void StartSlideShow()
     {
-
-        interval = Convert.ToInt32(intervalInput);
+                interval = Convert.ToInt32(intervalInput);
         loopPlay = loopToggle.isOn;
         reversePlay = reverseToggle.isOn;
         if (r != null)
@@ -79,7 +107,6 @@ public class AutoplayTool : MonoBehaviour
             else
                 g.SetActive(false);
         }
-
         seekMarker.transform.localPosition = new Vector2(seekBarLeftEdge + index * seekBarSegment, 0);
     }
 }

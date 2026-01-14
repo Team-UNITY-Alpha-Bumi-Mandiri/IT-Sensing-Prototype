@@ -26,25 +26,25 @@ public class SimpleMapController_Baru : MonoBehaviour
 
     [Header("Smoothness Settings")]
     [Tooltip("Durasi animasi fade-in dalam detik")]
-    public float fadeDuration = 0.3f; 
+    public float fadeDuration = 0.3f;
     [Tooltip("Maksimal download berjalan bersamaan")]
-    public int maxConcurrentDownloads = 6; 
+    public int maxConcurrentDownloads = 6;
     [Tooltip("Maksimal tekstur yang diproses per frame")]
-    public int maxDecodesPerFrame = 2; 
+    public int maxDecodesPerFrame = 2;
 
     public enum MapStyle { OSM, Roadmap, Terrain, Satellite, Hybrid }
 
     const int TILE_SIZE = 256;
-    const int GRID_SIZE = 9; 
+    const int GRID_SIZE = 9;
 
     private Vector2Int centerTile;
     private Dictionary<Vector2Int, RawImage> tiles = new Dictionary<Vector2Int, RawImage>();
     private Dictionary<string, Texture2D> tileCache = new Dictionary<string, Texture2D>();
-    
+
     // Antrian Download
     private Queue<TileRequest> downloadQueue = new Queue<TileRequest>();
     private int activeDownloads = 0;
-    
+
     // Drag Logic
     private bool isDragging = false;
     private Vector2 lastMousePos;
@@ -77,14 +77,14 @@ public class SimpleMapController_Baru : MonoBehaviour
     void HandleInput()
     {
         if (Mouse.current == null) return;
-        
+
         if (isInputEnabled && !wasInputEnabled)
         {
             lastMousePos = Mouse.current.position.ReadValue();
         }
         wasInputEnabled = isInputEnabled;
-        
-        if (!isInputEnabled) 
+
+        if (!isInputEnabled)
         {
             isDragging = false;
             return;
@@ -132,18 +132,18 @@ public class SimpleMapController_Baru : MonoBehaviour
         double cosLat = Math.Cos(latRad);
 
         longitude -= deltaPixel.x / pixelsPerLon;
-        latitude -= (deltaPixel.y / pixelsPerLon) * cosLat; 
-        
+        latitude -= (deltaPixel.y / pixelsPerLon) * cosLat;
+
         latitude = Math.Clamp(latitude, -85.0, 85.0);
 
         Vector2Int newCenter = LatLonToTile(latitude, longitude, zoom);
-        
+
         UpdateTilePositions();
 
         if (newCenter != centerTile)
         {
             centerTile = newCenter;
-            RefreshMap(false); 
+            RefreshMap(false);
         }
     }
 
@@ -153,7 +153,7 @@ public class SimpleMapController_Baru : MonoBehaviour
         if (newZoom != zoom)
         {
             zoom = newZoom;
-            RefreshMap(true); 
+            RefreshMap(true);
         }
         if (measureToolRef != null) measureToolRef.RebuildAllVisuals();
     }
@@ -173,7 +173,7 @@ public class SimpleMapController_Baru : MonoBehaviour
             {
                 GameObject obj = new GameObject($"Tile_{x}_{y}", typeof(RawImage));
                 obj.transform.SetParent(tileContainer, false);
-                
+
                 RawImage img = obj.GetComponent<RawImage>();
                 img.rectTransform.sizeDelta = new Vector2(TILE_SIZE, TILE_SIZE);
                 img.color = Color.clear;
@@ -185,10 +185,10 @@ public class SimpleMapController_Baru : MonoBehaviour
 
     public void RefreshMap(bool clearVisuals = true)
     {
-        globalUpdateID++; 
-        downloadQueue.Clear(); 
+        globalUpdateID++;
+        downloadQueue.Clear();
         activeDownloads = 0;
-        
+
         centerTile = LatLonToTile(latitude, longitude, zoom);
         UpdateTilePositions();
 
@@ -202,7 +202,7 @@ public class SimpleMapController_Baru : MonoBehaviour
             int ty = centerTile.y + gridPos.y;
 
             int finalX = (tx % n + n) % n;
-            
+
             if (ty < 0 || ty >= n)
             {
                 img.color = Color.clear;
@@ -221,7 +221,7 @@ public class SimpleMapController_Baru : MonoBehaviour
             }
             else
             {
-                if (clearVisuals) img.color = Color.clear; 
+                if (clearVisuals) img.color = Color.clear;
                 downloadQueue.Enqueue(new TileRequest { gridPos = gridPos, url = url, id = globalUpdateID });
             }
         }
@@ -234,7 +234,7 @@ public class SimpleMapController_Baru : MonoBehaviour
         {
             float posX = (kvp.Key.x * TILE_SIZE) - offset.x + (TILE_SIZE * 0.5f);
             float posY = -(kvp.Key.y * TILE_SIZE) + offset.y - (TILE_SIZE * 0.5f);
-            
+
             kvp.Value.rectTransform.anchoredPosition = new Vector2(posX, posY);
         }
     }
@@ -270,7 +270,7 @@ public class SimpleMapController_Baru : MonoBehaviour
                 {
                     Texture2D tex = DownloadHandlerTexture.GetContent(www);
                     tex.wrapMode = TextureWrapMode.Clamp;
-                    
+
                     if (!tileCache.ContainsKey(req.url))
                         tileCache.Add(req.url, tex);
 
@@ -284,8 +284,8 @@ public class SimpleMapController_Baru : MonoBehaviour
     IEnumerator FadeIn(RawImage img)
     {
         float t = 0;
-        img.color = new Color(1, 1, 1, 0); 
-        
+        img.color = new Color(1, 1, 1, 0);
+
         while (t < fadeDuration)
         {
             t += Time.deltaTime;
@@ -322,7 +322,7 @@ public class SimpleMapController_Baru : MonoBehaviour
     // ========================================================================
     // 5. FUNGSI UNTUK BUTTON (CHANGE STYLE)
     // ========================================================================
-    
+
     // Panggil ini di tombol Inspector dengan mengetik nama style (String)
     public void SetMapStyle(string styleName)
     {
@@ -381,12 +381,12 @@ public class SimpleMapController_Baru : MonoBehaviour
         double n = Math.Pow(2, zoom);
         double x_pos = ((lon + 180.0) / 360.0 * n);
         double y_pos = (1.0 - Math.Log(Math.Tan(lat * Mathf.Deg2Rad) + 1.0 / Math.Cos(lat * Mathf.Deg2Rad)) / Math.PI) / 2.0 * n;
-        
+
         double centerX = ((longitude + 180.0) / 360.0 * n);
         double centerY = (1.0 - Math.Log(Math.Tan(latitude * Mathf.Deg2Rad) + 1.0 / Math.Cos(latitude * Mathf.Deg2Rad)) / Math.PI) / 2.0 * n;
 
         float finalX = (float)((x_pos - centerX) * TILE_SIZE);
-        float finalY = (float)-((y_pos - centerY) * TILE_SIZE); 
+        float finalY = (float)-((y_pos - centerY) * TILE_SIZE);
 
         return new Vector2(finalX, finalY);
     }
@@ -400,7 +400,7 @@ public class SimpleMapController_Baru : MonoBehaviour
         double centerY = (1.0 - Math.Log(Math.Tan(latitude * Mathf.Deg2Rad) + 1.0 / Math.Cos(latitude * Mathf.Deg2Rad)) / Math.PI) / 2.0 * n;
 
         double targetTileX = centerX + (localPos.x / TILE_SIZE);
-        double targetTileY = centerY - (localPos.y / TILE_SIZE); 
+        double targetTileY = centerY - (localPos.y / TILE_SIZE);
 
         double finalLon = (targetTileX / n) * 360.0 - 180.0;
         double latRad = Math.Atan(Math.Sinh(Math.PI * (1 - 2 * targetTileY / n)));

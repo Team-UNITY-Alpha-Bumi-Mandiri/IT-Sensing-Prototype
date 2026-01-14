@@ -23,6 +23,10 @@ public class TiffLayerManager : MonoBehaviour
     public float overlayOpacity = 1f;
     public List<string> customBandNames; // Nama band custom (di-assign via Inspector)
 
+    [Header("Material for <i>Enhancement Tool</i>")]
+    public EnhancementTool enhanceTool;
+    public Material enhanceMat;
+
     // List Layer yang sedang aktif
     public List<LayerData> layers = new List<LayerData>();
     
@@ -33,7 +37,6 @@ public class TiffLayerManager : MonoBehaviour
     List<GameObject> overlays = new List<GameObject>();
     string currentTiffPath = "";
 
-
     // GeoTIFF bounds (koordinat geografis)
     double geoMinLat, geoMaxLat, geoMinLon, geoMaxLon;
     int imageWidth, imageHeight;
@@ -43,7 +46,6 @@ public class TiffLayerManager : MonoBehaviour
     double lastMapLat, lastMapLon;
     int lastMapZoom;
 
-    // Struct untuk menyimpan data layer
     // Struct untuk menyimpan data layer
     [System.Serializable]
     public class LayerData
@@ -1162,6 +1164,14 @@ public class TiffLayerManager : MonoBehaviour
         UpdateOverlayPosition(overlay);
 
         overlays.Add(overlay);
+
+        //Den : Add custom Material
+        if (img.material != null)
+        {
+            img.material = enhanceMat;
+            // Debug.Log("mat ADDED!");
+        }
+        enhanceTool.AssignValues(overlay, layer.name);
     }
 
     void HideLayerFromMap(LayerData layer)

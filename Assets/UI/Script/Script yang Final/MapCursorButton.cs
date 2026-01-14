@@ -53,6 +53,7 @@ public class MapCursorButton : MonoBehaviour
                         return false;
                     }
                 }
+                return false;
             }
         }
         return true;

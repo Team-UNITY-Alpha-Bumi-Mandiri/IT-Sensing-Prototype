@@ -25,6 +25,9 @@ public class ProjectManager : MonoBehaviour
     public TMP_InputField renameProjectInput; // Input rename project
     public Button renameProjectButton;        // Tombol rename
 
+    [Header("Other Tools")]
+    public AutoplayTool autoplayTool;
+
     // =========================================
     // STRUKTUR DATA
     // =========================================
@@ -411,6 +414,9 @@ public class ProjectManager : MonoBehaviour
         {
             propertyPanel.ShowProperties(proj.GetProps());
         }
+
+        //DEN: panggil method untuk Autoplay
+        autoplayTool.UpdateDropdownOptions();
     }
 
     // =========================================

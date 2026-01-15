@@ -4,41 +4,38 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine.Events;
 
-// =========================================
-// Panel untuk menampilkan daftar property toggle
-// Contoh: Panel berisi checkbox "Night Mode", "Show Grid", dll
-// =========================================
+// ============================================================
+// PropertyPanel - Panel untuk menampilkan daftar property toggle
+// ============================================================
+// Fitur:
+// - Menampilkan list toggle dengan nama property
+// - Mendukung rename dan delete property
+// - Callback untuk setiap perubahan
+// ============================================================
 public class PropertyPanel : MonoBehaviour
 {
     [Header("UI References")]
-    public GameObject panel;           // Panel utama
-    public Transform content;          // Wadah item toggle
-    public GameObject togglePrefab;    // Prefab PropertyToggleItem
-    public ScrollRect scrollRect;      // Untuk scroll
+    public GameObject panel;         // Root panel
+    public Transform content;        // Container untuk toggle items
+    public GameObject togglePrefab;  // Prefab PropertyToggleItem
+    public ScrollRect scrollRect;    // ScrollRect untuk scroll handling
 
-    // Event saat toggle berubah (nama property, nilai baru)
-    public UnityEvent<string, bool> onPropertyChanged;
-    public UnityEvent<string, string> onPropertyRenamed;
-    public UnityEvent<string> onPropertyDeleted;
+    // Events untuk komunikasi dengan ProjectManager
+    public UnityEvent<string, bool> onPropertyChanged;      // (name, value)
+    public UnityEvent<string, string> onPropertyRenamed;    // (oldName, newName)
+    public UnityEvent<string> onPropertyDeleted;            // (name)
 
-    // Variabel internal
-    Dictionary<string, bool> props = new Dictionary<string, bool>();
-    List<PropertyToggleItem> items = new List<PropertyToggleItem>();
+    Dictionary<string, bool> props = new Dictionary<string, bool>();  // Data property
+    List<PropertyToggleItem> items = new List<PropertyToggleItem>();  // Referensi item UI
     RectTransform contentRect;
 
     void Start()
     {
-        // Cache RectTransform
-        if (content != null)
-        {
-            contentRect = content as RectTransform;
-        }
-
-        // Auto-detect ScrollRect
+        contentRect = content as RectTransform;
+        
+        // Auto-find ScrollRect
         if (scrollRect == null && panel != null)
-        {
             scrollRect = panel.GetComponentInChildren<ScrollRect>();
-        }
     }
 
     // Tampilkan property dari dictionary
@@ -46,12 +43,7 @@ public class PropertyPanel : MonoBehaviour
     {
         props = new Dictionary<string, bool>(properties);
         RefreshList();
-
-        // Reset scroll ke atas
-        if (scrollRect != null)
-        {
-            scrollRect.verticalNormalizedPosition = 1f;
-        }
+        if (scrollRect != null) scrollRect.verticalNormalizedPosition = 1f;
     }
 
     // Kosongkan panel
@@ -61,143 +53,109 @@ public class PropertyPanel : MonoBehaviour
         props.Clear();
     }
 
-    // Refresh tampilan list
+    // Refresh list item berdasarkan props
     void RefreshList()
     {
         ClearItems();
-
         if (content == null || togglePrefab == null) return;
 
-        // Buat toggle untuk setiap property
         foreach (var kv in props)
         {
-            GameObject obj = Instantiate(togglePrefab, content);
-            PropertyToggleItem item = obj.GetComponent<PropertyToggleItem>();
-
+            var obj = Instantiate(togglePrefab, content);
+            var item = obj.GetComponent<PropertyToggleItem>();
             if (item != null)
             {
                 item.Setup(kv.Key, kv.Value, OnToggle, OnRename, OnDelete);
                 items.Add(item);
             }
         }
-
-        // Rebuild layout
         StartCoroutine(RebuildLayout());
     }
 
-    void OnRename(string oldName, string newName)
-    {
-        if (props.ContainsKey(oldName))
-        {
-            bool val = props[oldName];
-            props.Remove(oldName);
-            props[newName] = val;
-            onPropertyRenamed?.Invoke(oldName, newName);
-            RefreshList();
-        }
-    }
-
-    void OnDelete(string name)
-    {
-        if (props.ContainsKey(name))
-        {
-            props.Remove(name);
-            onPropertyDeleted?.Invoke(name);
-            RefreshList();
-        }
-    }
-
-    // Hapus semua item yang di-spawn
+    // Hapus semua item UI
     void ClearItems()
     {
-        foreach (PropertyToggleItem item in items)
-        {
-            if (item != null)
-            {
-                Destroy(item.gameObject);
-            }
-        }
+        foreach (var item in items)
+            if (item != null) Destroy(item.gameObject);
         items.Clear();
     }
 
     // Callback saat toggle berubah
     void OnToggle(string name, bool value)
     {
-        // Update dictionary internal
-        if (props.ContainsKey(name))
-        {
-            props[name] = value;
-        }
-
-        // Trigger event ke luar
+        if (props.ContainsKey(name)) props[name] = value;
         onPropertyChanged?.Invoke(name, value);
     }
 
-    // Getter semua property saat ini
-    public Dictionary<string, bool> GetCurrentProperties()
+    // Callback saat rename
+    void OnRename(string oldName, string newName)
     {
-        return new Dictionary<string, bool>(props);
+        if (!props.ContainsKey(oldName)) return;
+        
+        // Update dictionary
+        props[newName] = props[oldName];
+        props.Remove(oldName);
+        
+        onPropertyRenamed?.Invoke(oldName, newName);
+        RefreshList();
     }
+
+    // Callback saat delete
+    void OnDelete(string name)
+    {
+        if (!props.ContainsKey(name)) return;
+        
+        props.Remove(name);
+        onPropertyDeleted?.Invoke(name);
+        RefreshList();
+    }
+
+    // Dapatkan properties saat ini
+    public Dictionary<string, bool> GetCurrentProperties() => new Dictionary<string, bool>(props);
 
     // Tambah property baru
     public void AddProperty(string name, bool value = false)
     {
-        if (!props.ContainsKey(name))
-        {
-            props[name] = value;
-            RefreshList();
-        }
+        if (props.ContainsKey(name)) return;
+        props[name] = value;
+        RefreshList();
     }
 
     // Hapus property
     public void RemoveProperty(string name)
     {
-        if (props.ContainsKey(name))
-        {
-            props.Remove(name);
-            RefreshList();
-        }
+        if (!props.ContainsKey(name)) return;
+        props.Remove(name);
+        RefreshList();
     }
 
     // Set nilai property tertentu
+    // notify: true untuk trigger event, false untuk silent update
     public void SetPropertyValue(string name, bool value, bool notify = true)
     {
         if (!props.ContainsKey(name)) return;
-
         props[name] = value;
 
-        // Update UI
-        PropertyToggleItem item = items.Find(x => x.PropertyName == name);
+        // Update UI item
+        var item = items.Find(x => x.PropertyName == name);
         if (item != null)
         {
-            if (notify)
-            {
-                item.Setup(name, value, OnToggle);
-            }
-            else
-            {
-                item.SetValueWithoutNotify(value);
-            }
+            if (notify) item.Setup(name, value, OnToggle);
+            else item.SetValueWithoutNotify(value);
         }
 
-        // Trigger event
-        if (notify)
-        {
-            onPropertyChanged?.Invoke(name, value);
-        }
+        if (notify) onPropertyChanged?.Invoke(name, value);
     }
 
-    // Rebuild layout
+    // Rebuild layout setelah item berubah
     IEnumerator RebuildLayout()
     {
         yield return null;
-
         if (contentRect != null)
         {
             LayoutRebuilder.ForceRebuildLayoutImmediate(contentRect);
             Canvas.ForceUpdateCanvases();
         }
-
         if (scrollRect != null)
         {
             scrollRect.verticalNormalizedPosition = 1f;

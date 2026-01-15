@@ -1,109 +1,88 @@
 using UnityEngine;
 using UnityEngine.UI;
-using TMPro; // Moved here
+using TMPro;
 
-// =========================================
-// Tombol untuk pilih mode gambar
+// ============================================================
+// DrawModeButton - Tombol untuk mengaktifkan mode gambar
+// ============================================================
 // Mode: Point, Line, Polygon, Delete
-// =========================================
+// Tombol hanya interactable jika:
+// 1. Ada layer aktif (dari label "Layer : xxx")
+// 2. Layer tersebut ON di project properties
+// 3. Semua layer lain OFF (hanya satu layer yang boleh aktif)
+// ============================================================
 public class DrawModeButton : MonoBehaviour
 {
-    // Mode yang dikontrol tombol ini
-    public DrawTool.DrawMode mode;
-    
-    // Referensi ke DrawTool
-    public DrawTool drawTool;
-
-    // (Color logic removed as requested)
+    public DrawTool.DrawMode mode;  // Mode yang diaktifkan tombol ini
+    public DrawTool drawTool;       // Referensi ke DrawTool
     
     [Header("Validation")]
-    public TextMeshProUGUI layerInfoText;
-    public ProjectManager projectManager;
+    public TextMeshProUGUI layerInfoText;  // Label "Layer : xxx" untuk cek layer aktif
+    public ProjectManager projectManager;   // Manager project untuk cek properties
     
-    Button btn;
+    Button _btn;  // Referensi ke Button component
 
     void Start()
     {
-        // Tambah listener ke tombol
-        if (TryGetComponent(out btn))
-        {
-            btn.onClick.AddListener(OnClick);
-        }
+        if (TryGetComponent(out _btn))
+            _btn.onClick.AddListener(OnClick);
         
-        // Auto-find ProjectManager if missing
+        // Auto-find ProjectManager jika tidak di-assign
         if (projectManager == null)
-        {
             projectManager = FindObjectOfType<ProjectManager>();
-        }
     }
 
     void Update()
     {
-        if (btn == null) return;
-        
-        // Default not interactable unless valid
-        bool isValid = false;
-
-        if (layerInfoText != null && projectManager != null)
-        {
-            var proj = projectManager.GetCurrentProject();
-            if (proj != null)
-            {
-                // Parse "Layer : Name"
-                string txt = layerInfoText.text;
-                if (!string.IsNullOrEmpty(txt) && txt.StartsWith("Layer : "))
-                {
-                    // Parse "Layer : Name" -> "Name"
-                    string layerName = txt.Substring("Layer : ".Length).Trim();
-                    
-                    // Check if property exists and is active
-                    var props = proj.GetProps();
-
-                    if (props.ContainsKey(layerName) && props[layerName] == true)
-                    {
-                        // Check if ALL OTHER toggles are OFF
-                        bool othersOff = true;
-                        foreach (var kv in props)
-                        {
-                            if (kv.Key != layerName && kv.Value == true)
-                            {
-                                othersOff = false;
-                                break;
-                            }
-                        }
-
-                        if (othersOff)
-                        {
-                            isValid = true;
-                        }
-                    }
-                }
-            }
-        }
-        
-        btn.interactable = isValid;
+        // Update interactable berdasarkan validasi
+        if (_btn != null) _btn.interactable = IsValid();
     }
 
-    // Saat diklik: aktifkan mode jika belum aktif, matikan jika sudah
+    // Validasi kondisi untuk enable tombol
+    bool IsValid()
+    {
+        if (layerInfoText == null || projectManager == null) return false;
+        
+        var proj = projectManager.GetCurrentProject();
+        if (proj == null) return false;
+
+        // Parse nama layer dari label "Layer : xxx"
+        string txt = layerInfoText.text;
+        if (string.IsNullOrEmpty(txt) || !txt.StartsWith("Layer : ")) return false;
+        
+        string layerName = txt.Substring("Layer : ".Length).Trim();
+        var props = proj.GetProps();
+
+        // Layer harus ada dan ON
+        if (!props.ContainsKey(layerName) || !props[layerName]) return false;
+        
+        // Semua layer lain harus OFF
+        foreach (var kv in props)
+        {
+            if (kv.Key != layerName && kv.Value) return false;
+        }
+        
+        return true;
+    }
+
+    // Dipanggil saat tombol diklik
     void OnClick()
     {
-        // Double check validation (optional, as interactable handles it)
-        if (!btn.interactable) return;
-        
+        if (!_btn.interactable) return;
+
+        // Toggle mode: aktifkan jika belum aktif, nonaktifkan jika sudah aktif
         if (!drawTool.IsModeActive(mode))
         {
-            // Set layer name ke DrawTool agar objek yang dibuat tahu dia punya siapa
+            // Set layer name untuk objek yang akan digambar
             if (layerInfoText != null && layerInfoText.text.StartsWith("Layer : "))
-            {
                 drawTool.currentDrawingLayer = layerInfoText.text.Substring("Layer : ".Length).Trim();
-            }
 
             drawTool.ActivateMode(mode);
         }
         else
         {
             drawTool.DeactivateMode(mode);
-            drawTool.currentDrawingLayer = ""; // Reset
+            drawTool.currentDrawingLayer = "";
         }
     }
 }

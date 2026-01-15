@@ -2,757 +2,474 @@ using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
 using System.Collections.Generic;
+using System.IO;
+using UnityEngine.Events;
 
-// =========================================
-// Manager utama untuk CRUD project
-// Create, Read, Update, Delete
-// =========================================
+// ============================================================
+// ProjectManager - Manager utama untuk CRUD project
+// ============================================================
+// Fungsi:
+// - Create: Buat project baru dengan polygon boundary
+// - Read/Select: Pilih project dan load datanya
+// - Update: Rename project
+// - Delete: Hapus project beserta file TIFF-nya
+// - Property Management: Tambah, hapus, update properties (layers)
+// - Save/Load: Persistensi data ke JSON
+// ============================================================
 public class ProjectManager : MonoBehaviour
 {
     [Header("Dependencies")]
-    public SimpleMapController_Baru mapController; // Kontrol peta
-    public SearchableDropdown projectDropdown;     // Dropdown pilih project
-    public DrawTool drawTool;                      // Tool gambar
-    public PropertyPanel propertyPanel;            // Panel property
-    public TiffLayerManager tiffLayerManager;      // Manager layer TIFF
+    public SimpleMapController_Baru mapController;  // Kontrol peta
+    public SearchableDropdown projectDropdown;      // Dropdown pilih project
+    public DrawTool drawTool;                       // Tool gambar polygon
+    public PropertyPanel propertyPanel;             // Panel property
+    public TiffLayerManager tiffLayerManager;       // Manager layer TIFF
 
     [Header("Form UI")]
-    public TMP_InputField newProjectNameInput; // Input nama project baru
-    public Button createProjectButton;         // Tombol buat project
-    public Button deleteProjectButton;         // Tombol hapus project
+    public TMP_InputField newProjectNameInput;      // Input nama project baru
+    public Button createProjectButton;              // Tombol buat project
+    public Button deleteProjectButton;              // Tombol hapus project
 
     [Header("Rename UI")]
-    public TMP_InputField renameProjectInput; // Input rename project
-    public Button renameProjectButton;        // Tombol rename
+    public TMP_InputField renameProjectInput;       // Input rename project
+    public Button renameProjectButton;              // Tombol rename
 
     [Header("Other Tools")]
-    public AutoplayTool autoplayTool;
+    public AutoplayTool autoplayTool;               // Tool autoplay untuk refresh dropdown
 
-    // =========================================
-    // STRUKTUR DATA
-    // =========================================
+    // Event saat project dengan TIFF diload (dipanggil oleh TiffLayerManager)
+    public UnityEvent<string> onTiffProjectLoaded;
 
-    // Entry property (untuk serialisasi JSON)
+    // Data internal
+    List<ProjectData> projects = new();     // Semua project
+    ProjectData current = null;             // Project aktif saat ini
+    string SavePath => Path.Combine(Application.persistentDataPath, "projects.json");
+
+    // ============================================================
+    // DATA CLASSES
+    // ============================================================
+
+    // Entry property untuk serialisasi JSON
     [System.Serializable]
     public class PropertyEntry
     {
         public string key;
         public bool value;
-
-        public PropertyEntry(string k, bool v)
-        {
-            key = k;
-            value = v;
-        }
+        public PropertyEntry(string k, bool v) { key = k; value = v; }
     }
 
-    // Objek gambar yang diserialisasi
+    // Drawing object yang diserialisasi
     [System.Serializable]
     public class SerializedDrawObject
     {
-        public string id; // Simpan ID agar bisa dihapus dengan akurat
-        public DrawTool.DrawMode type;
-        public string layerName;
-        public List<Vector2> coordinates;
-        public bool useTexture;
+        public string id;                   // ID unik
+        public DrawTool.DrawMode type;      // Tipe gambar
+        public string layerName;            // Layer
+        public List<Vector2> coordinates;   // Koordinat
+        public bool useTexture;             // Pakai texture atau tidak
     }
 
     // Data project
     [System.Serializable]
     public class ProjectData
     {
-        public string id;
-        public string name;
-        public double lat;
-        public double lon;
-        public int zoom;
-        public string tiffPath; // Path ke file TIFF (opsional)
-        public List<Vector2> polygonCoords;
-        public List<PropertyEntry> properties = new List<PropertyEntry>();
-        public List<SerializedDrawObject> drawings = new List<SerializedDrawObject>(); // Daftar gambar
+        public string id, name, tiffPath;           // ID, nama, path TIFF (opsional)
+        public double lat, lon;                     // Koordinat center
+        public int zoom;                            // Zoom level
+        public List<Vector2> polygonCoords;         // Polygon boundary (ROI)
+        public List<PropertyEntry> properties = new();       // Properties (layers)
+        public List<SerializedDrawObject> drawings = new();  // Drawings dalam project
 
-        // Convert list ke dictionary
+        // Convert properties ke Dictionary
         public Dictionary<string, bool> GetProps()
         {
-            Dictionary<string, bool> dict = new Dictionary<string, bool>();
-            
-            if (properties != null)
-            {
-                foreach (PropertyEntry p in properties)
-                {
-                    dict[p.key] = p.value;
-                }
-            }
-            
+            var dict = new Dictionary<string, bool>();
+            properties?.ForEach(p => dict[p.key] = p.value);
             return dict;
         }
 
-        // Set dari dictionary
+        // Set properties dari Dictionary
         public void SetProps(Dictionary<string, bool> dict)
         {
             properties = new List<PropertyEntry>();
-            
-            foreach (var kv in dict)
-            {
-                properties.Add(new PropertyEntry(kv.Key, kv.Value));
-            }
+            foreach (var kv in dict) properties.Add(new PropertyEntry(kv.Key, kv.Value));
         }
     }
 
     // Wrapper untuk serialisasi JSON
     [System.Serializable]
-    class Wrapper
-    {
-        public List<ProjectData> items;
-    }
+    class Wrapper { public List<ProjectData> items; }
 
-    // Variabel internal
-    List<ProjectData> projects = new List<ProjectData>();
-    ProjectData current = null;
+    // ============================================================
+    // LIFECYCLE
+    // ============================================================
 
-    // =========================================
-    // INISIALISASI
-    // =========================================
     void Start()
     {
         // Load data tersimpan
         LoadProjects();
-
-        // Setup dropdown
         SetupDropdown();
 
-        // Setup listener tombol
-        if (createProjectButton != null)
-        {
-            createProjectButton.onClick.AddListener(StartCreate);
-        }
+        // Setup button listeners
+        createProjectButton?.onClick.AddListener(StartCreate);
+        deleteProjectButton?.onClick.AddListener(Delete);
+        renameProjectButton?.onClick.AddListener(Rename);
 
-        if (deleteProjectButton != null)
-        {
-            deleteProjectButton.onClick.AddListener(Delete);
-        }
-
-        if (renameProjectButton != null)
-        {
-            renameProjectButton.onClick.AddListener(Rename);
-        }
-
-        // Listener Property Panel
+        // Setup PropertyPanel listener
+        // Setup PropertyPanel listener
         if (propertyPanel != null)
         {
             propertyPanel.onPropertyChanged.AddListener(OnPropertyChanged);
+            propertyPanel.onPropertyRenamed.AddListener(OnPropertyRenamed);
+            propertyPanel.onPropertyDeleted.AddListener(OnPropertyDeleted);
         }
 
+        // Setup DrawTool listeners
         if (drawTool != null)
         {
             drawTool.onDrawComplete.AddListener(OnDrawn);
-            drawTool.onObjectDeleted.AddListener(OnObjectDeleted); // Subscribe delete
+            drawTool.onObjectDeleted.AddListener(OnObjectDeleted);
         }
-
-        current = null;
     }
 
-    // =========================================
-    // CUSTOM EVENT
-    // =========================================
-    // Event saat project dengan TIFF diload
-    public UnityEngine.Events.UnityEvent<string> onTiffProjectLoaded; 
-
-    // =========================================
+    // ============================================================
     // DROPDOWN
-    // =========================================
+    // ============================================================
+
+    // Setup dropdown dengan daftar project
     void SetupDropdown()
     {
         if (projectDropdown == null) return;
 
-        // Buat list nama project
-        List<string> names = new List<string>();
-        foreach (ProjectData p in projects)
-        {
-            names.Add(p.name);
-        }
+        var names = new List<string>();
+        projects.ForEach(p => names.Add(p.name));
 
-        // Set ke dropdown
         projectDropdown.SetOptions(names);
-        
-        // Setup listener
         projectDropdown.onValueChanged.RemoveListener(OnSelect);
         projectDropdown.onValueChanged.AddListener(OnSelect);
     }
 
-    // Saat project dipilih dari dropdown
+    // Callback saat project dipilih dari dropdown
     void OnSelect(string name)
     {
-        ProjectData p = projects.Find(x => x.name == name);
-        if (p != null)
-        {
-            Select(p);
-        }
+        var p = projects.Find(x => x.name == name);
+        if (p != null) Select(p);
     }
 
-    // =========================================
-    // CREATE (Buat Project Baru)
-    // =========================================
+    // ============================================================
+    // CREATE - Buat project baru
+    // ============================================================
+
+    // Mulai proses create project (gambar polygon boundary)
     void StartCreate()
     {
-        // Validasi nama
-        if (newProjectNameInput == null || string.IsNullOrEmpty(newProjectNameInput.text))
-        {
-            Debug.LogWarning("Isi nama project terlebih dahulu!");
-            return;
-        }
+        if (string.IsNullOrEmpty(newProjectNameInput?.text) || drawTool == null) return;
 
-        if (drawTool == null) return;
-
-        // Mulai gambar polygon
         drawTool.ClearAll();
-        drawTool.forceTextureOnNext = true;
+        drawTool.forceTextureOnNext = true;  // Gunakan texture untuk ROI polygon
         drawTool.ActivateMode(DrawTool.DrawMode.Polygon);
     }
 
     // Callback selesai gambar
     void OnDrawn(DrawTool.DrawObject obj)
     {
-        // KASUS A: Tambah gambar ke project yang sedang aktif (Layer Drawing)
+        // CASE A: Tambah drawing ke project aktif (Layer Drawing)
         if (current != null && !string.IsNullOrEmpty(obj.layerName))
         {
             current.drawings.Add(new SerializedDrawObject
             {
-                id = obj.id,
-                type = obj.type,
-                layerName = obj.layerName,
-                coordinates = new List<Vector2>(obj.coordinates),
-                useTexture = obj.useTexture
+                id = obj.id, type = obj.type, layerName = obj.layerName,
+                coordinates = new List<Vector2>(obj.coordinates), useTexture = obj.useTexture
             });
             Save();
-            return; // Selesai
-        }
-
-        // KASUS B: Buat project baru (ROI Drawing)
-        if (newProjectNameInput == null || string.IsNullOrEmpty(newProjectNameInput.text))
-        {
             return;
         }
 
-        if (obj.coordinates.Count == 0)
-        {
-            return;
-        }
+        // CASE B: Buat project baru (ROI Drawing)
+        if (string.IsNullOrEmpty(newProjectNameInput?.text) || obj.coordinates.Count == 0) return;
 
-        // Buat project baru
-        ProjectData proj = new ProjectData
+        var proj = new ProjectData
         {
             id = System.Guid.NewGuid().ToString(),
             name = newProjectNameInput.text,
             lat = obj.coordinates[0].x,
             lon = obj.coordinates[0].y,
-            zoom = (mapController != null) ? mapController.zoom : 15,
+            zoom = mapController?.zoom ?? 15,
             polygonCoords = new List<Vector2>(obj.coordinates)
         };
 
-        // Jika gambar diawali dari layer tertentu (selain auto-project)
+        // Jika drawing ada layer name, simpan juga
         if (!string.IsNullOrEmpty(drawTool.currentDrawingLayer))
         {
             proj.drawings.Add(new SerializedDrawObject
             {
-                id = obj.id,
-                type = obj.type,
-                layerName = obj.layerName,
-                coordinates = new List<Vector2>(obj.coordinates),
-                useTexture = obj.useTexture
+                id = obj.id, type = obj.type, layerName = obj.layerName,
+                coordinates = new List<Vector2>(obj.coordinates), useTexture = obj.useTexture
             });
         }
 
-
-
-        // Simpan
         projects.Add(proj);
         Save();
-
-        // Update dropdown
         SetupDropdown();
+
+        // Select project baru
         projectDropdown.onValueChanged.RemoveListener(OnSelect);
         projectDropdown.SelectItem(proj.name);
         projectDropdown.onValueChanged.AddListener(OnSelect);
 
-        // Set sebagai current
         current = proj;
-        
-        if (renameProjectInput != null)
-        {
-            renameProjectInput.text = proj.name;
-        }
-
+        if (renameProjectInput != null) renameProjectInput.text = proj.name;
         newProjectNameInput.text = "";
-
-        // Tampilkan property
-        if (propertyPanel != null)
-        {
-            propertyPanel.ShowProperties(proj.GetProps());
-        }
+        propertyPanel?.ShowProperties(proj.GetProps());
     }
 
-    // Buat Project Otomatis (untuk hasil sharpening)
+    // Buat project otomatis (untuk hasil sharpening, dll)
     public ProjectData CreateProjectAuto(string name, double lat, double lon, int zoom, string tiffPath, List<Vector2> polyCoords = null)
     {
-        ProjectData proj = new ProjectData
+        var proj = new ProjectData
         {
             id = System.Guid.NewGuid().ToString(),
-            name = name,
-            lat = lat,
-            lon = lon,
-            zoom = zoom,
-            tiffPath = tiffPath,
-            polygonCoords = (polyCoords != null) ? new List<Vector2>(polyCoords) : new List<Vector2>()
+            name = name, lat = lat, lon = lon, zoom = zoom, tiffPath = tiffPath,
+            polygonCoords = polyCoords != null ? new List<Vector2>(polyCoords) : new()
         };
 
-        // Simpan
         projects.Add(proj);
         Save();
-
-        // Update dropdown
         SetupDropdown();
-        
-        // Select project ini
         Select(proj);
-        if (projectDropdown != null)
-        {
-            projectDropdown.onValueChanged.RemoveListener(OnSelect);
-            projectDropdown.SelectItem(proj.name);
-            projectDropdown.onValueChanged.AddListener(OnSelect);
-        }
-
         return proj;
     }
 
+    // ============================================================
+    // SELECT - Pilih project
+    // ============================================================
 
-
-    // =========================================
-    // SELECT / READ (Pilih Project)
-    // =========================================
     void Select(ProjectData proj)
     {
         current = proj;
 
-        // CATATAN: Tidak ada reset property di sini.
-        // Toggle diatur via OverlayToggleController.
+        // Update rename input
+        if (renameProjectInput != null) renameProjectInput.text = proj.name;
 
+        // Navigasi ke lokasi project
+        mapController?.GoToLocation(proj.lat, proj.lon, proj.zoom);
 
-        // Set nama di input rename
-        if (renameProjectInput != null)
-        {
-            renameProjectInput.text = proj.name;
-        }
+        // Sembunyikan semua visual dulu
+        drawTool?.ForceHideAllVisuals();
 
-        // Pindah ke lokasi
-        if (mapController != null)
-        {
-            mapController.GoToLocation(proj.lat, proj.lon, proj.zoom);
-        }
-
-        if (drawTool != null) 
-        { 
-            // Jangan hapus, tapi sembunyikan semua dulu (Brute Force Cleanup)
-            drawTool.ForceHideAllVisuals(); 
-        }
-
-        // Tampilkan polygon profil (ROI)
-        if (proj.polygonCoords != null && proj.polygonCoords.Count > 0)
+        // Load ROI Polygon
+        if (proj.polygonCoords?.Count > 0)
         {
             string roiId = proj.id + "_ROI";
-            if (drawTool.HasDrawing(roiId))
-            {
-                drawTool.ShowDrawing(roiId, true);
-            }
-            else
-            {
-                // Load baru dengan ID spesifik agar ter-link ke project ini
-                // Gunakan LayerName unik agar tidak bisa di-toggle massal oleh script lain
-                drawTool.LoadPolygon(proj.polygonCoords, true, "Loaded_" + roiId, roiId);
-            }
+            if (drawTool.HasDrawing(roiId)) drawTool.ShowDrawing(roiId, true);
+            else drawTool.LoadPolygon(proj.polygonCoords, true, "Loaded_" + roiId, roiId);
         }
 
-        // Load project ini
+        // Load drawings project
         if (proj.drawings != null && drawTool != null)
         {
             foreach (var d in proj.drawings)
             {
-                // Cek apakah drawing sudah ada di memori?
-                if (drawTool.HasDrawing(d.id))
-                {
-                    // Tampilkan kembali
-                    drawTool.ShowDrawing(d.id, true);
-                }
-                else
-                {
-                    // Load baru
-                    drawTool.CreateObj(d.type, d.coordinates, d.layerName, d.useTexture, d.id);
-                }
+                if (drawTool.HasDrawing(d.id)) drawTool.ShowDrawing(d.id, true);
+                else drawTool.CreateObj(d.type, d.coordinates, d.layerName, d.useTexture, d.id);
             }
         }
 
-        // Matikan gambar yang layernya OFF
-        Dictionary<string, bool> props = proj.GetProps();
-        foreach (var kv in props)
-        {
-            drawTool.SetLayerVisibility(kv.Key, kv.Value);
-        }
+        // Set layer visibility
+        var props = proj.GetProps();
+        foreach (var kv in props) drawTool?.SetLayerVisibility(kv.Key, kv.Value);
 
-        // Notify TiffLayerManager jika ada tiffPath
-        if (!string.IsNullOrEmpty(proj.tiffPath))
-        {
-            onTiffProjectLoaded?.Invoke(proj.tiffPath);
-        }
-        else
-        {
-            // Reset tiff jika tidak ada
-            onTiffProjectLoaded?.Invoke("");
-        }
+        // Notify TiffLayerManager
+        onTiffProjectLoaded?.Invoke(proj.tiffPath ?? "");
 
-        // Tampilkan property
-        if (propertyPanel != null)
-        {
-            propertyPanel.ShowProperties(proj.GetProps());
-        }
+        // Update PropertyPanel
+        propertyPanel?.ShowProperties(proj.GetProps());
 
-        //DEN: panggil method untuk Autoplay
-        autoplayTool.UpdateDropdownOptions();
+        // Update Autoplay dropdown
+        autoplayTool?.UpdateDropdownOptions();
     }
 
-    // =========================================
-    // RENAME / UPDATE (Ubah Nama)
-    // =========================================
+    // ============================================================
+    // RENAME - Rename project
+    // ============================================================
+
     void Rename()
     {
-        // Validasi
-        if (current == null) return;
-        if (renameProjectInput == null) return;
-        if (string.IsNullOrEmpty(renameProjectInput.text)) return;
+        if (current == null || string.IsNullOrEmpty(renameProjectInput?.text)) return;
+        if (current.name == renameProjectInput.text) return;
 
-        // Cek apakah berubah
-        if (current.name == renameProjectInput.text)
-        {
-            return;
-        }
-
-        // Update nama
         current.name = renameProjectInput.text;
         Save();
-
-        // Refresh dropdown
         SetupDropdown();
-
-        if (projectDropdown != null)
-        {
-            projectDropdown.SelectItem(current.name);
-        }
+        projectDropdown?.SelectItem(current.name);
     }
 
-    // =========================================
-    // DELETE (Hapus Project)
-    // =========================================
+    // ============================================================
+    // DELETE - Hapus project
+    // ============================================================
+
     void Delete()
     {
         if (current == null) return;
 
-        if (!string.IsNullOrEmpty(current.tiffPath) && System.IO.File.Exists(current.tiffPath))
+        // Hapus file TIFF jika ada
+        if (!string.IsNullOrEmpty(current.tiffPath) && File.Exists(current.tiffPath))
         {
             try
             {
-                System.IO.File.Delete(current.tiffPath);
-                
-                // Hapus juga file .meta agar Unity Editor tidak error "Asset version error"
-                string metaPath = current.tiffPath + ".meta";
-                if (System.IO.File.Exists(metaPath))
-                {
-                    System.IO.File.Delete(metaPath);
-                }
-
-                // Hapus dari cache memory
-                if (tiffLayerManager != null)
-                {
-                    tiffLayerManager.UnloadFromCache(current.tiffPath);
-                }
-
-                Debug.Log($"[ProjectManager] Deleted associated TIFF file: {current.tiffPath}");
-                
+                File.Delete(current.tiffPath);
+                if (File.Exists(current.tiffPath + ".meta")) File.Delete(current.tiffPath + ".meta");
+                tiffLayerManager?.UnloadFromCache(current.tiffPath);
 #if UNITY_EDITOR
-                // Paksa Unity Editor untuk refresh database agar file hilang dari Project View
                 UnityEditor.AssetDatabase.Refresh();
 #endif
             }
-            catch (System.Exception e)
-            {
-                Debug.LogWarning($"[ProjectManager] Failed to delete TIFF file: {e.Message}");
-            }
+            catch (System.Exception e) { Debug.LogWarning($"[ProjectManager] Delete TIFF failed: {e.Message}"); }
         }
 
-        // Hapus dari list
         projects.Remove(current);
         Save();
-
-        // Reset state
         current = null;
 
-        if (drawTool != null)
-        {
-            drawTool.ClearAll();
-        }
-
-        if (propertyPanel != null)
-        {
-            propertyPanel.ClearPanel();
-        }
-
-        // Refresh dropdown
+        // Cleanup
+        drawTool?.ClearAll();
+        propertyPanel?.ClearPanel();
         SetupDropdown();
 
-        if (renameProjectInput != null)
-        {
-            renameProjectInput.text = "";
-        }
-
-        if (projectDropdown != null)
-        {
-            projectDropdown.SelectItem("Select Project");
-        }
+        if (renameProjectInput != null) renameProjectInput.text = "";
+        projectDropdown?.SelectItem("Select Project");
     }
 
-    // =========================================
+    // ============================================================
     // PROPERTY MANAGEMENT
-    // =========================================
+    // ============================================================
 
     // Tambah property baru
     public void AddProperty(string name, bool value = false)
     {
         if (current == null) return;
+        var dict = current.GetProps();
+        if (dict.ContainsKey(name)) return;
 
-        Dictionary<string, bool> dict = current.GetProps();
-        
-        if (!dict.ContainsKey(name))
-        {
-            dict[name] = value;
-            current.SetProps(dict);
-            Save();
-
-            if (propertyPanel != null)
-            {
-                propertyPanel.ShowProperties(dict);
-            }
-        }
+        dict[name] = value;
+        current.SetProps(dict);
+        Save();
+        propertyPanel?.ShowProperties(dict);
     }
 
     // Hapus property
     public void RemoveProperty(string name)
     {
         if (current == null) return;
+        var dict = current.GetProps();
+        if (!dict.ContainsKey(name)) return;
 
-        Dictionary<string, bool> dict = current.GetProps();
-        
-        if (dict.ContainsKey(name))
-        {
-            dict.Remove(name);
-            current.SetProps(dict);
-            Save();
-
-            if (propertyPanel != null)
-            {
-                propertyPanel.ShowProperties(dict);
-            }
-        }
+        dict.Remove(name);
+        current.SetProps(dict);
+        Save();
+        propertyPanel?.ShowProperties(dict);
     }
 
     // Callback saat property berubah dari panel
     public void OnPropertyChanged(string name, bool value)
     {
         if (current == null) return;
-
-        Dictionary<string, bool> dict = current.GetProps();
+        var dict = current.GetProps();
         dict[name] = value;
         current.SetProps(dict);
         Save();
-
-        // Update visibilitas gambar di DrawTool
-        if (drawTool != null)
-        {
-            drawTool.SetLayerVisibility(name, value);
-        }
+        drawTool?.SetLayerVisibility(name, value);
     }
 
-    // Callback saat objek gambar dihapus dari peta
+    // Callback saat objek dihapus dari peta
     void OnObjectDeleted(DrawTool.DrawObject obj)
     {
-        if (current == null || current.drawings == null) return;
-
-        // Cari berdasarkan ID
+        if (current?.drawings == null) return;
         int idx = current.drawings.FindIndex(x => x.id == obj.id);
-        if (idx != -1)
-        {
-            current.drawings.RemoveAt(idx);
-            Save();
-            Debug.Log($"[ProjectManager] Deleted drawing {obj.id} from project data.");
-        }
+        if (idx != -1) { current.drawings.RemoveAt(idx); Save(); }
     }
 
-    // Callback saat property dihapus (Layer/Drawing layer)
+    // Callback saat property dihapus
     public void OnPropertyDeleted(string name)
     {
         if (current == null) return;
 
-        // 1. Hapus dari Project Props
-        Dictionary<string, bool> dict = current.GetProps();
-        if (dict.ContainsKey(name))
-        {
-            dict.Remove(name);
-            current.SetProps(dict);
-            Save();
-        }
+        // Hapus dari project props
+        var dict = current.GetProps();
+        if (dict.ContainsKey(name)) { dict.Remove(name); current.SetProps(dict); Save(); }
 
-        // 2. Hubungi TiffLayerManager untuk hapus layer & file
-        if (tiffLayerManager != null)
-        {
-            tiffLayerManager.RemoveLayer(name, true);
-        }
-
-        // 3. Hubungi DrawTool jika itu adalah layer gambar
-        if (drawTool != null)
-        {
-            drawTool.DeleteLayer(name); 
-        }
-
-        Debug.Log($"[ProjectManager] Property deleted: {name}");
+        // Hapus layer dan drawing
+        tiffLayerManager?.RemoveLayer(name, true);
+        drawTool?.DeleteLayer(name);
     }
 
     // Callback saat property di-rename
     public void OnPropertyRenamed(string oldName, string newName)
     {
-        if (current == null) return;
-        if (oldName == newName) return;
+        if (current == null || oldName == newName) return;
 
-        // 1. Update Project Props
-        Dictionary<string, bool> dict = current.GetProps();
-        if (dict.ContainsKey(oldName))
-        {
-            bool val = dict[oldName];
-            dict.Remove(oldName);
-            dict[newName] = val;
-            current.SetProps(dict);
-            Save();
-        }
+        var dict = current.GetProps();
+        if (!dict.ContainsKey(oldName)) return;
 
-        // 2. Update di TiffLayerManager (Rename File + Memory)
-        if (tiffLayerManager != null)
-        {
-            tiffLayerManager.RenameLayer(oldName, newName);
-        }
+        dict[newName] = dict[oldName];
+        dict.Remove(oldName);
+        current.SetProps(dict);
+        Save();
 
-        // 3. Update di DrawTool
-        if (drawTool != null)
-        {
-            drawTool.RenameLayer(oldName, newName);
-        }
-
-        Debug.Log($"[ProjectManager] Property renamed from {oldName} to {newName}");
+        tiffLayerManager?.RenameLayer(oldName, newName);
+        drawTool?.RenameLayer(oldName, newName);
     }
+
+    // ============================================================
+    // PUBLIC API
+    // ============================================================
 
     // Getter project saat ini
-    public ProjectData GetCurrentProject()
-    {
-        return current;
-    }
+    public ProjectData GetCurrentProject() => current;
 
-    // Set visibility polygon project
+    // Set visibility polygon project (ROI dan drawings)
     public void SetProjectPolygonVisibility(bool visible)
     {
         if (drawTool == null || current == null) return;
 
-        // 1. Toggle ROI Polygon (ID: projectID + "_ROI")
+        // Toggle ROI Polygon
         string roiId = current.id + "_ROI";
-        if (drawTool.HasDrawing(roiId))
+        if (drawTool.HasDrawing(roiId)) drawTool.ShowDrawing(roiId, visible);
+
+        // Toggle drawings
+        if (current.drawings == null) return;
+        var props = current.GetProps();
+
+        foreach (var d in current.drawings)
         {
-            drawTool.ShowDrawing(roiId, visible);
-        }
+            if (!visible) { drawTool.ShowDrawing(d.id, false); continue; }
 
-        // 2. Toggle Drawings milik project
-        if (current.drawings != null)
-        {
-            Dictionary<string, bool> props = current.GetProps();
-
-            foreach (var d in current.drawings)
-            {
-                // Jika visible=TRUE (ingin menampilkan):
-                // Kita harus menghormati toggle layer individu.
-                // Jika layer drawing itu OFF, maka jangan di-show.
-                // Jika visible=FALSE (ingin menyembunyikan):
-                // Force hide tidak peduli status layernya.
-                
-                if (visible)
-                {
-                    bool isLayerActive = true;
-                    if (!string.IsNullOrEmpty(d.layerName) && props.ContainsKey(d.layerName))
-                    {
-                        isLayerActive = props[d.layerName];
-                    }
-
-                    if (isLayerActive)
-                    {
-                        drawTool.ShowDrawing(d.id, true);
-                    }
-                }
-                else
-                {
-                    drawTool.ShowDrawing(d.id, false);
-                }
-            }
+            // Jika visible=true, cek apakah layer drawing aktif
+            bool layerActive = string.IsNullOrEmpty(d.layerName) || !props.ContainsKey(d.layerName) || props[d.layerName];
+            if (layerActive) drawTool.ShowDrawing(d.id, true);
         }
     }
 
-    // =========================================
+    // ============================================================
     // SAVE / LOAD
-    // =========================================
-    
-    // Path file save
-    string SavePath
-    {
-        get { return System.IO.Path.Combine(Application.persistentDataPath, "projects.json"); }
-    }
+    // ============================================================
 
-    // Simpan ke file
+    // Simpan ke file JSON
     public void Save()
     {
-        try
-        {
-            Wrapper wrapper = new Wrapper { items = projects };
-            string json = JsonUtility.ToJson(wrapper, true);
-            System.IO.File.WriteAllText(SavePath, json);
-        }
-        catch (System.Exception e)
-        {
-            Debug.LogError("Gagal menyimpan: " + e.Message);
-        }
+        try { File.WriteAllText(SavePath, JsonUtility.ToJson(new Wrapper { items = projects }, true)); }
+        catch (System.Exception e) { Debug.LogError("Save failed: " + e.Message); }
     }
 
-    // Load dari file
+    // Load dari file JSON
     void LoadProjects()
     {
-        if (!System.IO.File.Exists(SavePath))
-        {
-            return;
-        }
-
+        if (!File.Exists(SavePath)) return;
         try
         {
-            string json = System.IO.File.ReadAllText(SavePath);
-            Wrapper wrapper = JsonUtility.FromJson<Wrapper>(json);
-
-            if (wrapper != null && wrapper.items != null)
-            {
-                projects = wrapper.items;
-            }
+            var wrapper = JsonUtility.FromJson<Wrapper>(File.ReadAllText(SavePath));
+            if (wrapper?.items != null) projects = wrapper.items;
         }
-        catch
-        {
-            // Abaikan error load
-        }
+        catch { }
     }
 }

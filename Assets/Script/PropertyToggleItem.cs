@@ -3,99 +3,92 @@ using UnityEngine.UI;
 using TMPro;
 using System;
 
-// =========================================
-// Satu item toggle di panel property
-// Contoh: "Night Mode [x]", "Show Grid [ ]"
-// =========================================
+// ============================================================
+// PropertyToggleItem - Item toggle di panel property
+// ============================================================
+// Menampilkan toggle dengan label, mendukung rename dan delete.
+// Contoh tampilan: "[x] Layer Name  [Rename] [Delete]"
+// ============================================================
 public class PropertyToggleItem : MonoBehaviour
 {
-    // Checkbox on/off
-    public Toggle toggle;
-    
-    // Label nama property
-    public TMP_Text labelText;
+    [Header("UI Components")]
+    public Toggle toggle;           // Toggle checkbox
+    public TMP_Text labelText;      // Label nama property
 
-    [Header("Rename & Delete UI")]
-    public Button renameButton;
-    public Button deleteButton;
-    public GameObject renamePanel;     // Wadah input rename (Objek "Rename" di gambar)
-    public TMP_InputField renameInput; // Input untuk nama baru
-    public Button confirmRenameBtn;    // Tombol Save
-    public Button cancelRenameBtn;     // Tombol Cancel
+    [Header("Rename & Delete")]
+    public Button renameButton;     // Tombol buka rename UI
+    public Button deleteButton;     // Tombol hapus property
+    public GameObject renamePanel;  // Panel rename (hidden by default)
+    public TMP_InputField renameInput;   // Input nama baru
+    public Button confirmRenameBtn;      // Tombol konfirmasi rename
+    public Button cancelRenameBtn;       // Tombol batal rename
 
-    // Variabel internal
-    string _name;
-    Action<string, bool> _onChange;
-    Action<string, string> _onRename;
-    Action<string> _onDelete;
+    // Callback internal
+    string _name;                        // Nama property saat ini
+    Action<string, bool> _onChange;      // Callback saat toggle berubah
+    Action<string, string> _onRename;    // Callback saat rename (oldName, newName)
+    Action<string> _onDelete;            // Callback saat delete
 
-    // Getter nama property
+    // Properti untuk akses nama dari luar
     public string PropertyName => _name;
 
-    // Setup toggle dengan nama, nilai awal, dan callback saat berubah
-    public void Setup(string name, bool value, Action<string, bool> onChange, Action<string, string> onRename = null, Action<string> onDelete = null)
+    // Setup toggle dengan data dan callbacks
+    // name     - Nama property
+    // value    - Nilai awal toggle (on/off)
+    // onChange - Callback saat nilai berubah
+    // onRename - Callback saat rename (opsional)
+    // onDelete - Callback saat delete (opsional)
+    public void Setup(string name, bool value, Action<string, bool> onChange, 
+                      Action<string, string> onRename = null, Action<string> onDelete = null)
     {
         _name = name;
         _onChange = onChange;
         _onRename = onRename;
         _onDelete = onDelete;
 
-        // Set label
-        if (labelText != null)
-        {
-            labelText.text = name;
-        }
+        if (labelText != null) labelText.text = name;
 
-        // Set toggle
+        // Setup toggle
         if (toggle != null)
         {
             toggle.isOn = value;
             toggle.onValueChanged.RemoveAllListeners();
-            toggle.onValueChanged.AddListener(OnValueChanged);
+            toggle.onValueChanged.AddListener(val => _onChange?.Invoke(_name, val));
         }
 
-        // Setup Buttons
-        if (renameButton != null)
-        {
-            renameButton.onClick.RemoveAllListeners();
-            renameButton.onClick.AddListener(OpenRenameUI);
-        }
+        // Setup buttons
+        SetupButton(renameButton, OpenRenameUI);
+        SetupButton(deleteButton, () => _onDelete?.Invoke(_name));
+        SetupButton(confirmRenameBtn, OnRenameConfirm);
+        SetupButton(cancelRenameBtn, CloseRenameUI);
 
-        if (deleteButton != null)
-        {
-            deleteButton.onClick.RemoveAllListeners();
-            deleteButton.onClick.AddListener(OnDeleteClick);
-        }
-
-        if (confirmRenameBtn != null)
-        {
-            confirmRenameBtn.onClick.RemoveAllListeners();
-            confirmRenameBtn.onClick.AddListener(OnRenameConfirm);
-        }
-
-        if (cancelRenameBtn != null)
-        {
-            cancelRenameBtn.onClick.RemoveAllListeners();
-            cancelRenameBtn.onClick.AddListener(CloseRenameUI);
-        }
-
+        // Sembunyikan rename panel
         if (renamePanel != null) renamePanel.SetActive(false);
     }
 
-    void OpenRenameUI()
+    // Helper: Setup button dengan listener
+    void SetupButton(Button btn, Action action)
     {
-        if (renamePanel != null)
-        {
-            renamePanel.SetActive(true);
-            if (renameInput != null) renameInput.text = _name;
-        }
+        if (btn == null) return;
+        btn.onClick.RemoveAllListeners();
+        btn.onClick.AddListener(() => action());
     }
 
+    // Buka UI rename
+    void OpenRenameUI()
+    {
+        if (renamePanel == null) return;
+        renamePanel.SetActive(true);
+        if (renameInput != null) renameInput.text = _name;
+    }
+
+    // Tutup UI rename
     void CloseRenameUI()
     {
         if (renamePanel != null) renamePanel.SetActive(false);
     }
 
+    // Konfirmasi rename
     void OnRenameConfirm()
     {
         if (renameInput != null && !string.IsNullOrEmpty(renameInput.text))
@@ -105,23 +98,9 @@ public class PropertyToggleItem : MonoBehaviour
         }
     }
 
-    void OnDeleteClick()
-    {
-        _onDelete?.Invoke(_name);
-    }
-
-    // Callback internal saat toggle berubah
-    void OnValueChanged(bool value)
-    {
-        _onChange?.Invoke(_name, value);
-    }
-
-    // Set nilai tanpa trigger event (untuk update dari luar)
+    // Set nilai toggle tanpa trigger event (untuk update dari luar)
     public void SetValueWithoutNotify(bool value)
     {
-        if (toggle != null)
-        {
-            toggle.SetIsOnWithoutNotify(value);
-        }
+        if (toggle != null) toggle.SetIsOnWithoutNotify(value);
     }
 }

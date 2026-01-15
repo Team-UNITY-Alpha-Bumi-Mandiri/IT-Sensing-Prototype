@@ -8957,13 +8957,13 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 0}
-        m_TargetAssemblyTypeName: 
-        m_MethodName: 
+      - m_Target: {fileID: 1992073858}
+        m_TargetAssemblyTypeName: AutoplayTool, Assembly-CSharp
+        m_MethodName: Button_Pause
         m_Mode: 1
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
-          m_ObjectArgumentAssemblyTypeName: 
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
           m_IntArgument: 0
           m_FloatArgument: 0
           m_StringArgument: 
@@ -16637,13 +16637,13 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 0}
-        m_TargetAssemblyTypeName: 
-        m_MethodName: 
+      - m_Target: {fileID: 1992073858}
+        m_TargetAssemblyTypeName: AutoplayTool, Assembly-CSharp
+        m_MethodName: Button_Next
         m_Mode: 1
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
-          m_ObjectArgumentAssemblyTypeName: 
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
           m_IntArgument: 0
           m_FloatArgument: 0
           m_StringArgument: 
@@ -47030,7 +47030,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!224 &1179465679
 RectTransform:
   m_ObjectHideFlags: 0
@@ -65290,13 +65290,13 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 0}
-        m_TargetAssemblyTypeName: 
-        m_MethodName: 
+      - m_Target: {fileID: 1992073858}
+        m_TargetAssemblyTypeName: AutoplayTool, Assembly-CSharp
+        m_MethodName: Button_Previous
         m_Mode: 1
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
-          m_ObjectArgumentAssemblyTypeName: 
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
           m_IntArgument: 0
           m_FloatArgument: 0
           m_StringArgument: 
@@ -67507,7 +67507,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!224 &1631608807
 RectTransform:
   m_ObjectHideFlags: 0
@@ -74538,10 +74538,10 @@ RectTransform:
   - {fileID: 1418735829}
   m_Father: {fileID: 2105009200}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 0, y: 1}
-  m_AnchorMax: {x: 0, y: 1}
-  m_AnchoredPosition: {x: 45, y: -16}
-  m_SizeDelta: {x: 80, y: 22}
+  m_AnchorMin: {x: 0, y: 0}
+  m_AnchorMax: {x: 0, y: 0}
+  m_AnchoredPosition: {x: 0, y: 0}
+  m_SizeDelta: {x: 0, y: 0}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1829777261
 MonoBehaviour:
@@ -74556,7 +74556,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.LayoutElement
   m_IgnoreLayout: 0
-  m_MinWidth: 80
+  m_MinWidth: 150
   m_MinHeight: -1
   m_PreferredWidth: -1
   m_PreferredHeight: 22
@@ -80373,7 +80373,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!224 &1967941043
 RectTransform:
   m_ObjectHideFlags: 0
@@ -81684,15 +81684,12 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::AutoplayTool
   tiffManager: {fileID: 375825893}
   projectManager: {fileID: 1285994912}
-  chosenLayers:
-  - {fileID: 1428764302}
-  - {fileID: 265180714}
-  - {fileID: 1202791794}
-  autoplayPopUp: {fileID: 1179465678}
-  autoplaySeekBar: {fileID: 1181429794}
   intervalInput: {fileID: 1241539959}
   loopToggle: {fileID: 2019393639}
   reverseToggle: {fileID: 885853688}
+  startAutoplayButton: {fileID: 267530840}
+  autoplayPopUp: {fileID: 1179465678}
+  autoplaySeekBar: {fileID: 1181429794}
   tokenInputField: {fileID: 1829777262}
   contentBox: {fileID: 2105009199}
   tokenChipPrefab: {fileID: 2519158335427439466, guid: 56ab0df0cea691b44a02e52bd20203f4, type: 3}
@@ -82084,13 +82081,13 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 0}
-        m_TargetAssemblyTypeName: 
-        m_MethodName: 
+      - m_Target: {fileID: 1992073858}
+        m_TargetAssemblyTypeName: AutoplayTool, Assembly-CSharp
+        m_MethodName: RecordSlideShow
         m_Mode: 1
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
-          m_ObjectArgumentAssemblyTypeName: 
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
           m_IntArgument: 0
           m_FloatArgument: 0
           m_StringArgument: 
@@ -86805,7 +86802,7 @@ RectTransform:
   m_AnchorMin: {x: 0, y: 1}
   m_AnchorMax: {x: 1, y: 1}
   m_AnchoredPosition: {x: 0.000015258789, y: -21.752478}
-  m_SizeDelta: {x: -1.58, y: 32}
+  m_SizeDelta: {x: -1.58, y: 0}
   m_Pivot: {x: 0.5, y: 1}
 --- !u!114 &2105009201
 MonoBehaviour:

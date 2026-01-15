@@ -1,6 +1,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Reflection;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
@@ -12,12 +13,11 @@ public class AutoplayTool : MonoBehaviour
     string currentProjectName, oldProjectName;
 
     [Header("Autoplay Settings")]
-    public GameObject[] chosenLayers; // placeholder testing
     List<string> chosenLayersList;
-    public GameObject autoplayPopUp, autoplaySeekBar;
-
     public TMP_InputField intervalInput;
     public Toggle loopToggle, reverseToggle;
+    public Button startAutoplayButton;
+    public GameObject autoplayPopUp, autoplaySeekBar;
 
     [Header("Token Input Field")]
     public TMP_InputField tokenInputField;
@@ -29,14 +29,16 @@ public class AutoplayTool : MonoBehaviour
     public GameObject seekMarker, frameMarkerContainer, frameMarkerPref;
 
     float interval, seekBarSegment, seekBarLeftEdge;
-    bool loopPlay, reversePlay;
+    bool loopPlay, reversePlay, isPaused;
     IEnumerator r;
+    int orderIndex;
 
     void Start()
     {
         tiffManager = tiffManager.GetComponent<TiffLayerManager>();
         projectManager = projectManager.GetComponent<ProjectManager>();
         chosenLayersList = new List<string>();
+        startAutoplayButton.interactable = false;
 
         //  PrepareSlideShow(); //tempt test
     }
@@ -81,16 +83,25 @@ public class AutoplayTool : MonoBehaviour
         TMP_Text chipText = newChip.GetComponentInChildren<TMP_Text>();
         chipText.text = selectedLayerText;
 
+        //set Token chip to remember AutoplayTool
+        Autoplay_TokenChip chipData = newChip.GetComponent<Autoplay_TokenChip>();
+        chipData.SetToolScript(this);
+
+        //add Token name to the internal list
         chosenLayersList.Add(selectedLayerText);
+        if (chosenLayersList.Count > 1)
+            startAutoplayButton.interactable = true;
 
         tokenInputField.transform.SetAsLastSibling();
         tokenInputField.text = "";
         //  tokenInputField.ActivateInputField();
     }
 
-    void PrepareSlideShow()
+    public void DeleteChip(string chipName)
     {
-
+        chosenLayersList.Remove(chipName);
+        if (chosenLayersList.Count < 2)
+            startAutoplayButton.interactable = false;
     }
 
     public void StartSlideShow()
@@ -110,7 +121,7 @@ public class AutoplayTool : MonoBehaviour
             frameMarkerInst.transform.localPosition = new Vector2(seekBarLeftEdge + i * seekBarSegment, 0);
         }
 
-        interval = Convert.ToInt32(intervalInput);
+        interval = Convert.ToInt32(intervalInput.text);
         loopPlay = loopToggle.isOn;
         reversePlay = reverseToggle.isOn;
         if (r != null)
@@ -124,36 +135,27 @@ public class AutoplayTool : MonoBehaviour
     {
         StopCoroutine(r);
         autoplaySeekBar.SetActive(false);
-    }
-
-    /*
-    public list string selectedlayers = new list string
-
-      {
-
-        int index = 0
-        while true
+        foreach (string g in chosenLayersList)
         {
-            string currentlyer = selectedlayer(index)
-        
-            tiffmanager.onpropertytoggleexternal(currentlayer,true)
-           interval
-             tiffmanager.onpropertytoggleexternal(currentlayer,true)
-             index=(index+1)%selectedlayers.count
+            tiffManager.OnPropertyToggleExternal(g, false);
         }
     }
-    */
 
-    //start loop
+    public void RecordSlideShow()
+    {
+
+    }
+
     IEnumerator SlideShow()
     {
         for (int i = 0; i < chosenLayersList.Count; i++)
         {
-            int j = reversePlay ? (chosenLayersList.Count - 1 - i) : i;
-            SlideChooser(j);
-            yield return new WaitForSeconds(interval);
+            orderIndex = reversePlay ? (chosenLayersList.Count - 1 - i) : i;
 
-            if ((j == 0 && reversePlay) || (j == (chosenLayersList.Count - 1) && !reversePlay))
+            SlideChooser(orderIndex);
+            yield return new WaitForSeconds(interval);
+            yield return new WaitUntil(() => !isPaused);
+            if ((orderIndex == 0 && reversePlay) || (orderIndex == (chosenLayersList.Count - 1) && !reversePlay))
             {
                 if (loopPlay)
                     i = -1;
@@ -180,19 +182,27 @@ public class AutoplayTool : MonoBehaviour
         seekMarker.transform.localPosition = new Vector2(seekBarLeftEdge + index * seekBarSegment, 0);
     }
 
-    void SlideSolo(int index)
+    public void Button_Pause()
     {
-        foreach (GameObject g in chosenLayers)
-        {
-            if (g == chosenLayers[index])
-            {
-                g.SetActive(true);
-            }
-            else
-            {
-                g.SetActive(false);
-            }
-        }
-        seekMarker.transform.localPosition = new Vector2(seekBarLeftEdge + index * seekBarSegment, 0);
+        isPaused = !isPaused;
+    }
+
+    public void Button_Previous()
+    {
+        ListLoop(-1);
+        SlideChooser(orderIndex);
+    }
+
+    public void Button_Next()
+    {
+        ListLoop(1);
+        SlideChooser(orderIndex);
+    }
+
+    int ListLoop(int number)
+    {
+        orderIndex += number;
+        int realOrder = orderIndex > chosenLayersList.Count - 1 ? 0 : orderIndex;
+        return realOrder;
     }
 }

@@ -2,78 +2,70 @@ using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
 
+// ============================================================
+// LayerInputController - Controller untuk menambah layer baru
+// ============================================================
+// Tombol aktif hanya jika:
+// 1. Ada project aktif
+// 2. Dropdown mode = "New"
+// 3. Input nama tidak kosong
+// ============================================================
 [RequireComponent(typeof(Button))]
 public class LayerInputController : MonoBehaviour
 {
     [Header("External References")]
-    public ProjectManager projectManager;
-    public TMP_Dropdown modeDropdown;
-    public TMP_InputField layerNameInput;
-    public TextMeshProUGUI targetLayerLabel; // Text to be updated "Layer : ..."
+    public ProjectManager projectManager;    // Manager project untuk AddProperty
+    public TMP_Dropdown modeDropdown;        // Dropdown pilihan mode (harus = "New")
+    public TMP_InputField layerNameInput;    // Input nama layer baru
+    public TextMeshProUGUI targetLayerLabel; // Label yang akan diupdate setelah submit
 
     [Header("Settings")]
-    public string newOptionName = "New"; // Option text that enables this button
+    public string newOptionName = "New";     // Nama opsi "New" di dropdown
 
-    private Button myButton;
+    Button _btn;  // Referensi ke Button component
 
     void Start()
     {
-        myButton = GetComponent<Button>();
-        myButton.onClick.AddListener(OnSubmit);
-
-        // Auto-find ProjectManager if not assigned
+        _btn = GetComponent<Button>();
+        _btn.onClick.AddListener(OnSubmit);
+        
+        // Auto-find ProjectManager jika tidak di-assign
         if (projectManager == null)
-        {
             projectManager = FindObjectOfType<ProjectManager>();
-        }
     }
 
     void Update()
     {
-        if (myButton == null) return;
-
-        bool isValid = CheckConditions();
-        myButton.interactable = isValid;
+        // Update interactable berdasarkan validasi
+        if (_btn != null) _btn.interactable = IsValid();
     }
 
-    bool CheckConditions()
+    // Validasi kondisi untuk enable tombol
+    bool IsValid()
     {
-        // 1. Check Project Selected
-        if (projectManager == null || projectManager.GetCurrentProject() == null)
-            return false;
+        // 1. Cek project aktif
+        if (projectManager?.GetCurrentProject() == null) return false;
 
-        // 2. Check Dropdown is selected to "New"
-        if (modeDropdown == null)
-            return false;
+        // 2. Cek dropdown terpilih "New"
+        if (modeDropdown == null) return false;
+        if (modeDropdown.value < 0 || modeDropdown.value >= modeDropdown.options.Count) return false;
+        if (modeDropdown.options[modeDropdown.value].text != newOptionName) return false;
+
+        // 3. Cek input tidak kosong
+        return !string.IsNullOrEmpty(layerNameInput?.text);
+    }
+
+    // Dipanggil saat tombol diklik
+    void OnSubmit()
+    {
+        if (layerNameInput == null || targetLayerLabel == null) return;
         
-        // Safety check index
-        if (modeDropdown.value < 0 || modeDropdown.value >= modeDropdown.options.Count)
-            return false;
-
-        string selectedOption = modeDropdown.options[modeDropdown.value].text;
-        if (selectedOption != newOptionName)
-            return false;
-
-        // 3. Check Input Field not empty
-        if (layerNameInput == null || string.IsNullOrEmpty(layerNameInput.text))
-            return false;
-
-        return true;
-    }
-
-    public void OnSubmit()
-    {
-        if (layerNameInput != null && targetLayerLabel != null)
-        {
-            // Format requested: "Layer : @inputfield"
-            targetLayerLabel.text = "Layer : " + layerNameInput.text;
-            Debug.Log($"[LayerInputController] Updated Label: {targetLayerLabel.text}");
-
-            // Add new property to Current Project and turn it ON
-            if (projectManager != null)
-            {
-                projectManager.AddProperty(layerNameInput.text, true);
-            }
-        }
+        // Update label target
+        targetLayerLabel.text = "Layer : " + layerNameInput.text;
+        
+        // Tambah property ke project (default ON)
+        projectManager?.AddProperty(layerNameInput.text, true);
+        
+        Debug.Log($"[LayerInputController] Layer dibuat: {layerNameInput.text}");
     }
 }

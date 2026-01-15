@@ -1,98 +1,63 @@
 using UnityEngine;
 
-// =========================================
-// Controller untuk mengatur ON/OFF toggle overlay
-// Bisa dipanggil dari mana saja (SharpeningController, ProjectManager, dll)
-// =========================================
+// ============================================================
+// OverlayToggleController - Controller ON/OFF semua overlay
+// ============================================================
+// Fungsi:
+// - EnableAll/DisableAll: Toggle semua property sekaligus
+// - SetProperty: Set property tertentu ke nilai tertentu
+// Dipanggil dari UI button atau script lain (SharpeningController)
+// ============================================================
 public class OverlayToggleController : MonoBehaviour
 {
     [Header("References")]
-    public ProjectManager projectManager;
-    public PropertyPanel propertyPanel;
-    public TiffLayerManager tiffLayerManager;
+    public ProjectManager projectManager;    // Manager project untuk akses properties
+    public PropertyPanel propertyPanel;      // Panel UI untuk refresh tampilan
+    public TiffLayerManager tiffLayerManager; // Manager layer untuk sync visibility
 
-    // =========================================
-    // PUBLIC METHODS
-    // =========================================
+    // Nyalakan semua property toggle
+    public void EnableAll() => SetAllProperties(true);
 
-    /// <summary>
-    /// Nyalakan semua property toggle di project saat ini
-    /// </summary>
-    public void EnableAll()
-    {
-        SetAllProperties(true);
-    }
+    // Matikan semua property toggle
+    public void DisableAll() => SetAllProperties(false);
 
-    /// <summary>
-    /// Matikan semua property toggle di project saat ini
-    /// </summary>
-    public void DisableAll()
-    {
-        SetAllProperties(false);
-    }
-
-    /// <summary>
-    /// Set semua property ke nilai tertentu
-    /// </summary>
+    // Set semua property ke nilai tertentu
     void SetAllProperties(bool value)
     {
-        if (projectManager == null) return;
-        var proj = projectManager.GetCurrentProject();
-        if (proj == null || proj.properties == null) return;
+        var proj = projectManager?.GetCurrentProject();
+        if (proj?.properties == null) return;
 
-        foreach (var p in proj.properties)
-        {
-            p.value = value;
-        }
+        // Update semua property
+        foreach (var p in proj.properties) p.value = value;
         projectManager.Save();
 
-        // Refresh PropertyPanel
-        if (propertyPanel != null)
-        {
-            propertyPanel.ShowProperties(proj.GetProps());
-        }
+        // Refresh UI panel
+        propertyPanel?.ShowProperties(proj.GetProps());
 
-        // Sync TiffLayerManager visibility
+        // Sync visibility ke layer manager
         if (tiffLayerManager != null)
         {
-            // Trigger property changed untuk setiap layer
-            var props = proj.GetProps();
-            foreach (var kv in props)
-            {
-                // Manually notify TiffLayerManager
+            foreach (var kv in proj.GetProps())
                 tiffLayerManager.OnPropertyToggleExternal(kv.Key, kv.Value);
-            }
         }
 
-        Debug.Log($"[OverlayToggleController] Set all properties to {value}");
+        Debug.Log($"[OverlayToggleController] Set all = {value}");
     }
 
-    /// <summary>
-    /// Set property tertentu ke nilai tertentu
-    /// </summary>
+    // Set property tertentu ke nilai tertentu
+    // Berguna untuk toggle spesifik dari script lain
     public void SetProperty(string name, bool value)
     {
-        if (projectManager == null) return;
-        var proj = projectManager.GetCurrentProject();
-        if (proj == null || proj.properties == null) return;
+        var proj = projectManager?.GetCurrentProject();
+        if (proj?.properties == null) return;
 
         var prop = proj.properties.Find(p => p.key == name);
-        if (prop != null)
-        {
-            prop.value = value;
-            projectManager.Save();
+        if (prop == null) return;
 
-            // Refresh PropertyPanel
-            if (propertyPanel != null)
-            {
-                propertyPanel.ShowProperties(proj.GetProps());
-            }
+        prop.value = value;
+        projectManager.Save();
 
-            // Sync TiffLayerManager
-            if (tiffLayerManager != null)
-            {
-                tiffLayerManager.OnPropertyToggleExternal(name, value);
-            }
-        }
+        propertyPanel?.ShowProperties(proj.GetProps());
+        tiffLayerManager?.OnPropertyToggleExternal(name, value);
     }
 }

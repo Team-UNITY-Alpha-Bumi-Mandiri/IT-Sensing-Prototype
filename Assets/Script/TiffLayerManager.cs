@@ -545,7 +545,34 @@ public class TiffLayerManager : MonoBehaviour
 
         // Load TIFF jika belum ada atau path berubah
         if (currentTiffPath != path || layers.Count == 0 || overlays.Count == 0)
-            LoadTiff(path);
+        {
+            string ext = Path.GetExtension(path).ToLower();
+            if (ext == ".png")
+            {
+                // Handle PNG Overlay (Composite/Raster Result)
+                if (proj != null && proj.polygonCoords != null && proj.polygonCoords.Count > 0)
+                {
+                    double n = double.MinValue, s = double.MaxValue, w = double.MaxValue, e = double.MinValue;
+                    foreach (var c in proj.polygonCoords)
+                    {
+                        if (c.x > n) n = c.x;
+                        if (c.x < s) s = c.x;
+                        if (c.y > e) e = c.y; // Lon is y? ProjectManager uses x=lat, y=lon
+                        if (c.y < w) w = c.y;
+                    }
+                    LoadPngOverlay(path, n, s, w, e, false, true);
+                }
+                else
+                {
+                    Debug.LogWarning("[TiffLayerManager] PNG loaded without bounds in project. Cannot display overlay.");
+                }
+            }
+            else
+            {
+                // Handle GeoTIFF
+                LoadTiff(path);
+            }
+        }
         else
             SyncWithProject();
 

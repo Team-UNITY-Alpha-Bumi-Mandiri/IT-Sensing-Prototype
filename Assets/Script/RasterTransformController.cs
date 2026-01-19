@@ -129,14 +129,26 @@ public class RasterTransformController : MonoBehaviour
         string fullExePath = Path.Combine(backendFolder, exeName);
         string cleanInput = inputPath.Replace("\\", "/");
         
-        // Format: python rasterTransform.py -n <NamaOutput> --algo <Algoritma> --input <FileTiff>
-        // Note: Script python akan otomatis menyimpan ke folder output defaultnya (biasanya relatif terhadap script)
-        // Kita asumsikan script menyimpan di folder yang sama atau kita biarkan script menangani output pathnya.
-        // Berdasarkan README, argumennya hanya nama output (-n), bukan path full.
-        
+        // --- LOGIC DETEKSI PYTHON ENVIRONMENT (Copied from CompositeManager) ---
+        // Cek apakah ada virtual environment di project root (.venv)
+        // string projectRoot = Directory.GetParent(Application.dataPath).FullName;
+        // string venvPython = Path.Combine(projectRoot, ".venv", "Scripts", "python.exe");
+
+        // if (File.Exists(venvPython))
+        // {
+        //     fullExePath = venvPython;
+        //     UnityEngine.Debug.Log($"[RasterTransform] Using venv python: {fullExePath}");
+        // }
+        // else
+        // {
+        //     fullExePath = "python"; // Asumsi python ada di PATH global
+        // }
+
+        // Arguments: "script_path" -n "name" --algo algo --input "input"
+        // args = $"\"{scriptPath}\" -n \"{outputName}\" --algo {algo} --input \"{cleanInput}\"";
         string args = $"-n \"{outputName}\" --algo {algo} --input \"{cleanInput}\"";
 
-        UnityEngine.Debug.Log($"[RasterTransform] Running: {exeName} {args}");
+        UnityEngine.Debug.Log($"[RasterTransform] Running: {fullExePath} {args}");
 
         string result = await Task.Run(() =>
         {
@@ -149,6 +161,12 @@ public class RasterTransformController : MonoBehaviour
             startInfo.CreateNoWindow = true;
             startInfo.WorkingDirectory = backendFolder;
 
+            // Environment Variables for Python UTF-8
+            startInfo.EnvironmentVariables["PYTHONIOENCODING"] = "utf-8";
+            startInfo.EnvironmentVariables["PYTHONUTF8"] = "1";
+            startInfo.StandardOutputEncoding = System.Text.Encoding.UTF8;
+            startInfo.StandardErrorEncoding = System.Text.Encoding.UTF8;
+
             try
             {
                 Process p = Process.Start(startInfo);
@@ -156,8 +174,11 @@ public class RasterTransformController : MonoBehaviour
                 string error = p.StandardError.ReadToEnd();
                 p.WaitForExit();
 
+                UnityEngine.Debug.Log($"[RasterTransform] StdOut: {output}");
+                if (!string.IsNullOrEmpty(error)) UnityEngine.Debug.LogError($"[RasterTransform] StdErr: {error}");
+
                 if (!string.IsNullOrEmpty(error) && !error.Contains("UserWarning"))
-                    return "ERROR: " + error + "\nOutput: " + output;
+                     return "ERROR: " + error + "\nOutput: " + output;
                 
                 return output;
             }
@@ -347,14 +368,25 @@ public class RasterTransformController : MonoBehaviour
                 layerManager.LoadPngOverlay(fullPngPath, bounds.north, bounds.south, bounds.west, bounds.east);
                 
                 // Buka folder
-                string folder = Path.GetDirectoryName(fullPngPath);
-                Process.Start("explorer.exe", folder);
+                // string folder = Path.GetDirectoryName(fullPngPath);
+                // Process.Start("explorer.exe", folder);
                 
                 // Register ke Project Manager (menggunakan nama PNG)
                 if (projectManager != null)
                 {
                     string layerName = Path.GetFileNameWithoutExtension(fullPngPath);
-                    projectManager.AddProperty(layerName, true);
+                    // Gunakan CreateProjectAuto agar masuk grid dengan benar
+                    double centerLat = (bounds.north + bounds.south) / 2.0;
+                    double centerLon = (bounds.west + bounds.east) / 2.0;
+                    int zoom = layerManager.CalculateFitZoom();
+                    List<Vector2> polyCoords = new List<Vector2>
+                    {
+                        new Vector2((float)bounds.north, (float)bounds.west),
+                        new Vector2((float)bounds.north, (float)bounds.east),
+                        new Vector2((float)bounds.south, (float)bounds.east),
+                        new Vector2((float)bounds.south, (float)bounds.west)
+                    };
+                    projectManager.CreateProjectAuto(layerName, centerLat, centerLon, zoom, fullPngPath, polyCoords);
                 }
                 return;
             }
@@ -375,13 +407,26 @@ public class RasterTransformController : MonoBehaviour
         // Daftarkan ke Project Manager (optional, agar tersimpan di sesi)
         if (projectManager != null)
         {
-            string layerName = Path.GetFileNameWithoutExtension(filePath);
-            projectManager.AddProperty(layerName, true);
+            if (layerManager.GetTiffBounds(filePath, out double minLat, out double maxLat, out double minLon, out double maxLon))
+            {
+                double centerLat = (minLat + maxLat) / 2.0;
+                double centerLon = (minLon + maxLon) / 2.0;
+                int zoom = layerManager.CalculateFitZoom();
+                List<Vector2> polyCoords = new List<Vector2>
+                {
+                    new Vector2((float)maxLat, (float)minLon),
+                    new Vector2((float)maxLat, (float)maxLon),
+                    new Vector2((float)minLat, (float)maxLon),
+                    new Vector2((float)minLat, (float)minLon)
+                };
+                string layerName = Path.GetFileNameWithoutExtension(filePath);
+                projectManager.CreateProjectAuto(layerName, centerLat, centerLon, zoom, filePath, polyCoords);
+            }
         }
 
         // Buka folder di explorer agar user tau
-        string tiffFolder = Path.GetDirectoryName(filePath);
-        Process.Start("explorer.exe", tiffFolder);
+        // string tiffFolder = Path.GetDirectoryName(filePath);
+        // Process.Start("explorer.exe", tiffFolder);
     }
 
     private void SetButtonText(GameObject btnObj, string newText)

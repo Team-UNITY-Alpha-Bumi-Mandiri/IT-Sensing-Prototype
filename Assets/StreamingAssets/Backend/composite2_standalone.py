@@ -3,7 +3,75 @@ import rasterio
 import numpy as np
 import os
 import sys
+from PIL import Image
 
+# --------------------------------------------------
+# Save preview as PNG
+# --------------------------------------------------
+def save_preview_png(rgb_array, output_tif_path):
+    try:
+        # Normalize logic:
+        # rgb_array shape is (3, H, W)
+        # We need to normalize each channel to 0-255 independently for better visualization
+        
+        c, h, w = rgb_array.shape
+        rgb_norm = np.zeros((h, w, 3), dtype=np.uint8)
+        
+        for i in range(3):
+            band = rgb_array[i]
+            
+            # Handle NaN/Inf
+            band = np.nan_to_num(band, nan=0.0, posinf=0.0, neginf=0.0)
+            
+            # Use Percentile Stretch (2-98%) for better visual contrast
+            # Min-Max is too sensitive to outliers
+            
+            # Check if band has any data
+            if np.all(band == 0):
+                rgb_norm[:, :, i] = 0
+                continue
+                
+            p2, p98 = np.percentile(band, (2, 98))
+            
+            if p98 - p2 > 1e-6:
+                band_norm = (band - p2) / (p98 - p2)
+            else:
+                # If range is zero, try min-max as fallback
+                min_val = np.min(band)
+                max_val = np.max(band)
+                if max_val - min_val > 1e-6:
+                    band_norm = (band - min_val) / (max_val - min_val)
+                else:
+                    band_norm = np.zeros_like(band)
+                
+            # Clip to 0-1 range after stretching
+            band_norm = np.clip(band_norm, 0, 1)
+                
+            rgb_norm[:, :, i] = (band_norm * 255).astype(np.uint8)
+            
+        # Create Mask for Transparency
+        # Assuming 0,0,0 is nodata/background
+        # Or better, check original data for nodata value if available, but for now simple sum check
+        
+        img = Image.fromarray(rgb_norm)
+        
+        # Add Alpha Channel? (Optional, if user wants transparency for nodata)
+        # alpha = np.sum(rgb_norm, axis=2) > 0
+        # alpha = (alpha * 255).astype(np.uint8)
+        # img.putalpha(Image.fromarray(alpha))
+        
+        # Create preview filename
+        base, _ = os.path.splitext(output_tif_path)
+        preview_path = f"{base}_preview.png"
+        
+        # Resize for thumbnail (max 1024px)
+        img.thumbnail((1024, 1024))
+        img.save(preview_path)
+        print(f"Preview generated at: {preview_path}")
+        return preview_path
+    except Exception as e:
+        print(f"Warning: Failed to create preview PNG: {e}")
+        return None
 
 # --------------------------------------------------
 # Band info (optional, for inspection/debug)
@@ -79,8 +147,25 @@ def composite_rgb_from_single_tif(
             dtype=rgb.dtype
         )
 
+        # Handle PNG output
+        if output_tif.lower().endswith(".png"):
+            profile.update(driver="PNG")
+            # PNG typically requires uint8 or uint16. 
+            # If we stretched (float32 0-1), we should convert to uint8.
+            if rgb.dtype == 'float32' or rgb.dtype == 'float64':
+                rgb = (rgb * 255).astype('uint8')
+                profile.update(dtype='uint8')
+            # If original was not stretched (e.g. uint16), PNG supports uint16, 
+            # but for visualization uint8 is often preferred. 
+            # We'll leave it unless it's float.
+
     with rasterio.open(output_tif, "w", **profile) as dst:
         dst.write(rgb)
+        
+    # Generate Preview
+    preview_file = save_preview_png(rgb, output_tif)
+    if preview_file:
+        print(f"Preview: {preview_file}")
 
 
 # --------------------------------------------------
@@ -170,8 +255,8 @@ def main():
         print(f"ERROR: {e}")
         sys.exit(1)
 
-    print("✅ RGB composite created successfully")
-    print(f"➡ Output: {args.output}")
+    print("RGB composite created successfully")
+    print(f"Output: {args.output}")
 
 
 if __name__ == "__main__":

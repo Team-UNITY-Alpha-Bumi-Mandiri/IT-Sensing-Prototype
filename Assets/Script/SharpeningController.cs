@@ -52,8 +52,8 @@ public class SharpeningController : MonoBehaviour
         if (panelRoot != null) panelRoot.SetActive(false);
 
         // 2. Reset Status
-        textStatus.text = "Siap.";
-        btnProcess.interactable = false;
+        if (textStatus != null) textStatus.text = "Siap.";
+        if (btnProcess != null) btnProcess.interactable = false;
 
         // 3. Reset Label Tombol
         SetButtonText(btnMultispectral, "Pilih File RGB (Bisa > 1)...");

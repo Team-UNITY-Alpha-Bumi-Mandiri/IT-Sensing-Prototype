@@ -42,13 +42,18 @@ public class CompositeManager : MonoBehaviour
     void Start()
     {
         // 1. Setup Folder
-        // Asumsi script python ada di folder yang sama dengan rasterTransform
-        // Atau di folder khusus 'Python file' sesuai request user
-        // Untuk konsistensi deployment, kita copy ke StreamingAssets/Backend
-        backendFolder = Path.Combine(Application.streamingAssetsPath, "Backend");
+        string streamingAssets = Application.streamingAssetsPath.Replace("/", "\\");
+        backendFolder = Path.Combine(streamingAssets, "Backend");
         outputFolder = Path.Combine(backendFolder, "Composite_Results");
         
+        // [HARDCODED TARGET] Langsung set exe name untuk memastikan
+        exeName = "composite2_standalone.exe";
+
         if (!Directory.Exists(outputFolder)) Directory.CreateDirectory(outputFolder);
+
+        // Debug check
+        string targetExe = Path.Combine(backendFolder, exeName);
+        UnityEngine.Debug.Log($"[Composite] Target EXE: {targetExe} (Exists: {File.Exists(targetExe)})");
 
         // 2. Setup Dropdowns
         SetupDropdown(dropdownRed, 3);   // Default Band 4 (Red for L8) -> Index 3
@@ -159,9 +164,12 @@ public class CompositeManager : MonoBehaviour
             }
             UnityEngine.Debug.Log($"[Composite] Output saved to: {outputFullPath}");
             
-            // Buka folder dan select file
-            string argument = "/select, \"" + outputFullPath.Replace("/", "\\") + "\"";
-            Process.Start("explorer.exe", argument);
+            // [UPDATED] Tidak lagi membuka explorer
+            // string argument = "/select, \"" + outputFullPath.Replace("/", "\\") + "\"";
+            // Process.Start("explorer.exe", argument);
+
+            // [NEW] Load ke Grid Project
+            AddToProject(outputFullPath);
         }
         else
         {
@@ -184,33 +192,36 @@ public class CompositeManager : MonoBehaviour
         string cleanOutput = outputPath.Replace("\\", "/");
 
         // Deteksi Mode: Editor (Python Script) vs Build (Exe)
-#if UNITY_EDITOR
-        if (!useExeInEditor)
-        {
-            // [Updated] Mengambil script langsung dari folder 'Assets/Python File'
-            string scriptPath = Path.Combine(Application.dataPath, "Python File", pythonScriptName);
-
-            // Validasi keberadaan file
-            if (!File.Exists(scriptPath))
-            {
-                UnityEngine.Debug.LogWarning($"[Composite] Script tidak ditemukan di: {scriptPath}. Mencoba fallback ke StreamingAssets.");
-                scriptPath = Path.Combine(backendFolder, pythonScriptName);
-            }
-
-            fullExePath = "python"; // Asumsi python ada di PATH
-            // args: --input "..." --r 4 --g 3 --b 2 --output "..." --stretch
-            args = $"\"{scriptPath}\" --input \"{cleanInput}\" --r {r} --g {g} --b {b} --output \"{cleanOutput}\" --stretch";
-        }
-        else
-        {
-            fullExePath = Path.Combine(backendFolder, exeName);
-            args = $"--input \"{cleanInput}\" --r {r} --g {g} --b {b} --output \"{cleanOutput}\" --stretch";
-        }
-#else
-        // BUILD MODE
+// #if UNITY_EDITOR
+        // if (!useExeInEditor)
+        // {
+             // fullExePath = Path.Combine(backendFolder, exeName);
+             // args = $"--input \"{cleanInput}\" --r {r} --g {g} --b {b} --output \"{cleanOutput}\" --stretch";
+             // args: --input "..." --r 4 --g 3 --b 2 --output "..." --stretch
+             // args = $"\"{scriptPath}\" --input \"{cleanInput}\" --r {r} --g {g} --b {b} --output \"{cleanOutput}\" --stretch";
+        // }
+        // else
+        // {
+        //    fullExePath = Path.Combine(backendFolder, exeName);
+        //    args = $"--input \"{cleanInput}\" --r {r} --g {g} --b {b} --output \"{cleanOutput}\" --stretch";
+        // }
+// #else
+        // BUILD MODE & Editor (Default to EXE)
         fullExePath = Path.Combine(backendFolder, exeName);
+        
+        // [FIX] Double check if exe exists
+        if (!File.Exists(fullExePath))
+        {
+             // Debugging Path issues
+             UnityEngine.Debug.LogError($"[Composite] Exe NOT FOUND at: {fullExePath}");
+             UnityEngine.Debug.LogError($"[Composite] StreamingAssetsPath: {Application.streamingAssetsPath}");
+             UnityEngine.Debug.LogError($"[Composite] Backend Folder: {backendFolder}");
+             
+             return $"EXECUTABLE NOT FOUND: {fullExePath}";
+        }
+
         args = $"--input \"{cleanInput}\" --r {r} --g {g} --b {b} --output \"{cleanOutput}\" --stretch";
-#endif
+// #endif
 
         UnityEngine.Debug.Log($"[Composite] Running: {fullExePath} {args}");
 
@@ -224,12 +235,14 @@ public class CompositeManager : MonoBehaviour
         startInfo.WorkingDirectory = backendFolder;
 
         // [Fix] Paksa Python menggunakan UTF-8 untuk menghindari error charmap di Windows
-        startInfo.EnvironmentVariables["PYTHONIOENCODING"] = "utf-8";
-        startInfo.EnvironmentVariables["PYTHONUTF8"] = "1";
+        // if (!fullExePath.EndsWith(".exe")) {
+        //      startInfo.EnvironmentVariables["PYTHONIOENCODING"] = "utf-8";
+        //      startInfo.EnvironmentVariables["PYTHONUTF8"] = "1";
+        // }
         
         // [Fix] Pastikan C# membaca output stream sebagai UTF-8
-        startInfo.StandardOutputEncoding = System.Text.Encoding.UTF8;
-        startInfo.StandardErrorEncoding = System.Text.Encoding.UTF8;
+        // startInfo.StandardOutputEncoding = System.Text.Encoding.UTF8;
+        // startInfo.StandardErrorEncoding = System.Text.Encoding.UTF8;
 
         try
         {
@@ -237,6 +250,10 @@ public class CompositeManager : MonoBehaviour
             string output = p.StandardOutput.ReadToEnd();
             string error = p.StandardError.ReadToEnd();
             p.WaitForExit();
+
+            // Log everything for debugging
+            UnityEngine.Debug.Log($"[Composite] StdOut: {output}");
+            if (!string.IsNullOrEmpty(error)) UnityEngine.Debug.LogError($"[Composite] StdErr: {error}");
 
             if (p.ExitCode == 0)
             {
@@ -250,6 +267,72 @@ public class CompositeManager : MonoBehaviour
         catch (System.Exception e)
         {
             return "SYSTEM ERROR: " + e.Message;
+        }
+    }
+
+    // [NEW] Helper untuk load ke ProjectManager
+    void AddToProject(string tiffPath)
+    {
+        // Cari ProjectManager & LayerManager
+        ProjectManager pm = FindFirstObjectByType<ProjectManager>();
+        TiffLayerManager lm = FindFirstObjectByType<TiffLayerManager>();
+
+        if (lm != null && pm != null)
+        {
+            // [Check Preview PNG]
+            // Format preview yang dihasilkan python: {OriginalName}_preview.png
+            // Tapi tiffPath kita adalah outputFullPath (yang ada timestamp)
+            // Di python: base, _ = os.path.splitext(output_tif_path) -> preview_path = f"{base}_preview.png"
+            string previewPng = Path.ChangeExtension(tiffPath, null) + "_preview.png";
+            string fileToLoad = tiffPath;
+            bool usePng = false;
+
+            if (File.Exists(previewPng))
+            {
+                fileToLoad = previewPng;
+                usePng = true;
+                UnityEngine.Debug.Log($"[Composite] Found preview PNG: {previewPng}");
+            }
+
+            // Ambil info bounds & center dari file TIFF (selalu pakai TIFF untuk georeference)
+            if (lm.GetTiffBounds(tiffPath, out double minLat, out double maxLat, out double minLon, out double maxLon))
+            {
+                double centerLat = (minLat + maxLat) / 2.0;
+                double centerLon = (minLon + maxLon) / 2.0;
+                int zoom = lm.CalculateFitZoom();
+
+                List<Vector2> polyCoords = new List<Vector2>
+                {
+                    new Vector2((float)maxLat, (float)minLon),
+                    new Vector2((float)maxLat, (float)maxLon),
+                    new Vector2((float)minLat, (float)maxLon),
+                    new Vector2((float)minLat, (float)minLon)
+                };
+
+                string projectName = Path.GetFileNameWithoutExtension(tiffPath);
+                
+                // Tambahkan sebagai project baru di grid
+                // Param ke-5 (tiffPath) diganti fileToLoad (bisa PNG atau TIFF)
+                // [FIX] Jangan load overlay terpisah jika fileToLoad sudah PNG
+                // Fungsi CreateProjectAuto akan mengurus load layer via ProjectItem.
+                pm.CreateProjectAuto(projectName, centerLat, centerLon, zoom, fileToLoad, polyCoords);
+                
+                UnityEngine.Debug.Log($"[Composite] Added to project grid: {projectName} (Source: {Path.GetFileName(fileToLoad)})");
+                
+                // [REMOVED] Jangan panggil LoadPngOverlay lagi karena CreateProjectAuto sudah akan mentrigger load.
+                // if (usePng)
+                // {
+                //    lm.LoadPngOverlay(previewPng, minLat, maxLat, minLon, maxLon);
+                // }
+            }
+            else
+            {
+                UnityEngine.Debug.LogWarning("[Composite] Failed to get TIFF bounds. Cannot add to grid.");
+            }
+        }
+        else
+        {
+            UnityEngine.Debug.LogWarning("[Composite] ProjectManager or TiffLayerManager not found.");
         }
     }
 }

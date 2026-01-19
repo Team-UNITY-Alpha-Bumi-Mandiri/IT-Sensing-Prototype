@@ -1,0 +1,1839 @@
+('E:\\Collab '
+ 'Projek\\IT-Sensing-Prototype\\Assets\\StreamingAssets\\Backend\\composite2_standalone.exe',
+ True,
+ False,
+ False,
+ 'e:\\Collab '
+ 'Projek\\IT-Sensing-Prototype\\.venv\\Lib\\site-packages\\PyInstaller\\bootloader\\images\\icon-console.ico',
+ None,
+ False,
+ False,
+ b'<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\n<assembly xmlns='
+ b'"urn:schemas-microsoft-com:asm.v1" manifestVersion="1.0">\n  <trustInfo x'
+ b'mlns="urn:schemas-microsoft-com:asm.v3">\n    <security>\n      <requested'
+ b'Privileges>\n        <requestedExecutionLevel level="asInvoker" uiAccess='
+ b'"false"/>\n      </requestedPrivileges>\n    </security>\n  </trustInfo>\n  '
+ b'<compatibility xmlns="urn:schemas-microsoft-com:compatibility.v1">\n    <'
+ b'application>\n      <supportedOS Id="{e2011457-1546-43c5-a5fe-008deee3d3f'
+ b'0}"/>\n      <supportedOS Id="{35138b9a-5d96-4fbd-8e2d-a2440225f93a}"/>\n '
+ b'     <supportedOS Id="{4a2f28e3-53b9-4441-ba9c-d69d4a4a6e38}"/>\n      <s'
+ b'upportedOS Id="{1f676c76-80e1-4239-95bb-83d0f6d0da78}"/>\n      <supporte'
+ b'dOS Id="{8e0f7a12-bfb3-4fe8-b9a5-48fd50a15a9a}"/>\n    </application>\n  <'
+ b'/compatibility>\n  <application xmlns="urn:schemas-microsoft-com:asm.v3">'
+ b'\n    <windowsSettings>\n      <longPathAware xmlns="http://schemas.micros'
+ b'oft.com/SMI/2016/WindowsSettings">true</longPathAware>\n    </windowsSett'
+ b'ings>\n  </application>\n  <dependency>\n    <dependentAssembly>\n      <ass'
+ b'emblyIdentity type="win32" name="Microsoft.Windows.Common-Controls" version='
+ b'"6.0.0.0" processorArchitecture="*" publicKeyToken="6595b64144ccf1df" langua'
+ b'ge="*"/>\n    </dependentAssembly>\n  </dependency>\n</assembly>',
+ True,
+ False,
+ None,
+ None,
+ None,
+ 'E:\\Collab '
+ 'Projek\\IT-Sensing-Prototype\\Assets\\StreamingAssets\\Backend\\build\\composite2_standalone\\composite2_standalone.pkg',
+ [('pyi-contents-directory _internal', '', 'OPTION'),
+  ('PYZ-00.pyz',
+   'E:\\Collab '
+   'Projek\\IT-Sensing-Prototype\\Assets\\StreamingAssets\\Backend\\build\\composite2_standalone\\PYZ-00.pyz',
+   'PYZ'),
+  ('struct',
+   'E:\\Collab '
+   'Projek\\IT-Sensing-Prototype\\Assets\\StreamingAssets\\Backend\\build\\composite2_standalone\\localpycs\\struct.pyc',
+   'PYMODULE'),
+  ('pyimod01_archive',
+   'E:\\Collab '
+   'Projek\\IT-Sensing-Prototype\\Assets\\StreamingAssets\\Backend\\build\\composite2_standalone\\localpycs\\pyimod01_archive.pyc',
+   'PYMODULE'),
+  ('pyimod02_importers',
+   'E:\\Collab '
+   'Projek\\IT-Sensing-Prototype\\Assets\\StreamingAssets\\Backend\\build\\composite2_standalone\\localpycs\\pyimod02_importers.pyc',
+   'PYMODULE'),
+  ('pyimod03_ctypes',
+   'E:\\Collab '
+   'Projek\\IT-Sensing-Prototype\\Assets\\StreamingAssets\\Backend\\build\\composite2_standalone\\localpycs\\pyimod03_ctypes.pyc',
+   'PYMODULE'),
+  ('pyimod04_pywin32',
+   'E:\\Collab '
+   'Projek\\IT-Sensing-Prototype\\Assets\\StreamingAssets\\Backend\\build\\composite2_standalone\\localpycs\\pyimod04_pywin32.pyc',
+   'PYMODULE'),
+  ('pyiboot01_bootstrap',
+   'e:\\Collab '
+   'Projek\\IT-Sensing-Prototype\\.venv\\Lib\\site-packages\\PyInstaller\\loader\\pyiboot01_bootstrap.py',
+   'PYSOURCE'),
+  ('pyi_rth_inspect',
+   'E:\\Collab '
+   'Projek\\IT-Sensing-Prototype\\.venv\\Lib\\site-packages\\PyInstaller\\hooks\\rthooks\\pyi_rth_inspect.py',
+   'PYSOURCE'),
+  ('pyi_rth_setuptools',
+   'E:\\Collab '
+   'Projek\\IT-Sensing-Prototype\\.venv\\Lib\\site-packages\\PyInstaller\\hooks\\rthooks\\pyi_rth_setuptools.py',
+   'PYSOURCE'),
+  ('pyi_rth_pkgutil',
+   'E:\\Collab '
+   'Projek\\IT-Sensing-Prototype\\.venv\\Lib\\site-packages\\PyInstaller\\hooks\\rthooks\\pyi_rth_pkgutil.py',
+   'PYSOURCE'),
+  ('pyi_rth_multiprocessing',
+   'E:\\Collab '
+   'Projek\\IT-Sensing-Prototype\\.venv\\Lib\\site-packages\\PyInstaller\\hooks\\rthooks\\pyi_rth_multiprocessing.py',
+   'PYSOURCE'),
+  ('composite2_standalone',
+   'E:\\Collab '
+   'Projek\\IT-Sensing-Prototype\\Assets\\StreamingAssets\\Backend\\composite2_standalone.py',
+   'PYSOURCE'),
+  ('python313.dll',
+   'C:\\Users\\HP\\AppData\\Local\\Programs\\Python\\Python313\\python313.dll',
+   'BINARY'),
+  ('numpy.libs\\libscipy_openblas64_-9e3e5a4229c1ca39f10dc82bba9e2b2b.dll',
+   'e:\\Collab '
+   'Projek\\IT-Sensing-Prototype\\.venv\\Lib\\site-packages\\numpy.libs\\libscipy_openblas64_-9e3e5a4229c1ca39f10dc82bba9e2b2b.dll',
+   'BINARY'),
+  ('numpy.libs\\msvcp140-a4c2229bdc2a2a630acdc095b4d86008.dll',
+   'e:\\Collab '
+   'Projek\\IT-Sensing-Prototype\\.venv\\Lib\\site-packages\\numpy.libs\\msvcp140-a4c2229bdc2a2a630acdc095b4d86008.dll',
+   'BINARY'),
+  ('select.pyd',
+   'C:\\Users\\HP\\AppData\\Local\\Programs\\Python\\Python313\\DLLs\\select.pyd',
+   'EXTENSION'),
+  ('_multiprocessing.pyd',
+   'C:\\Users\\HP\\AppData\\Local\\Programs\\Python\\Python313\\DLLs\\_multiprocessing.pyd',
+   'EXTENSION'),
+  ('pyexpat.pyd',
+   'C:\\Users\\HP\\AppData\\Local\\Programs\\Python\\Python313\\DLLs\\pyexpat.pyd',
+   'EXTENSION'),
+  ('_ssl.pyd',
+   'C:\\Users\\HP\\AppData\\Local\\Programs\\Python\\Python313\\DLLs\\_ssl.pyd',
+   'EXTENSION'),
+  ('_hashlib.pyd',
+   'C:\\Users\\HP\\AppData\\Local\\Programs\\Python\\Python313\\DLLs\\_hashlib.pyd',
+   'EXTENSION'),
+  ('unicodedata.pyd',
+   'C:\\Users\\HP\\AppData\\Local\\Programs\\Python\\Python313\\DLLs\\unicodedata.pyd',
+   'EXTENSION'),
+  ('_decimal.pyd',
+   'C:\\Users\\HP\\AppData\\Local\\Programs\\Python\\Python313\\DLLs\\_decimal.pyd',
+   'EXTENSION'),
+  ('_socket.pyd',
+   'C:\\Users\\HP\\AppData\\Local\\Programs\\Python\\Python313\\DLLs\\_socket.pyd',
+   'EXTENSION'),
+  ('_lzma.pyd',
+   'C:\\Users\\HP\\AppData\\Local\\Programs\\Python\\Python313\\DLLs\\_lzma.pyd',
+   'EXTENSION'),
+  ('_bz2.pyd',
+   'C:\\Users\\HP\\AppData\\Local\\Programs\\Python\\Python313\\DLLs\\_bz2.pyd',
+   'EXTENSION'),
+  ('_ctypes.pyd',
+   'C:\\Users\\HP\\AppData\\Local\\Programs\\Python\\Python313\\DLLs\\_ctypes.pyd',
+   'EXTENSION'),
+  ('_queue.pyd',
+   'C:\\Users\\HP\\AppData\\Local\\Programs\\Python\\Python313\\DLLs\\_queue.pyd',
+   'EXTENSION'),
+  ('_overlapped.pyd',
+   'C:\\Users\\HP\\AppData\\Local\\Programs\\Python\\Python313\\DLLs\\_overlapped.pyd',
+   'EXTENSION'),
+  ('_asyncio.pyd',
+   'C:\\Users\\HP\\AppData\\Local\\Programs\\Python\\Python313\\DLLs\\_asyncio.pyd',
+   'EXTENSION'),
+  ('_wmi.pyd',
+   'C:\\Users\\HP\\AppData\\Local\\Programs\\Python\\Python313\\DLLs\\_wmi.pyd',
+   'EXTENSION'),
+  ('_elementtree.pyd',
+   'C:\\Users\\HP\\AppData\\Local\\Programs\\Python\\Python313\\DLLs\\_elementtree.pyd',
+   'EXTENSION'),
+  ('rasterio\\shutil.cp313-win_amd64.pyd',
+   'e:\\Collab '
+   'Projek\\IT-Sensing-Prototype\\.venv\\Lib\\site-packages\\rasterio\\shutil.cp313-win_amd64.pyd',
+   'EXTENSION'),
+  ('_uuid.pyd',
+   'C:\\Users\\HP\\AppData\\Local\\Programs\\Python\\Python313\\DLLs\\_uuid.pyd',
+   'EXTENSION'),
+  ('numpy\\_core\\_multiarray_umath.cp313-win_amd64.pyd',
+   'e:\\Collab '
+   'Projek\\IT-Sensing-Prototype\\.venv\\Lib\\site-packages\\numpy\\_core\\_multiarray_umath.cp313-win_amd64.pyd',
+   'EXTENSION'),
+  ('numpy\\linalg\\_umath_linalg.cp313-win_amd64.pyd',
+   'e:\\Collab '
+   'Projek\\IT-Sensing-Prototype\\.venv\\Lib\\site-packages\\numpy\\linalg\\_umath_linalg.cp313-win_amd64.pyd',
+   'EXTENSION'),
+  ('rasterio\\crs.cp313-win_amd64.pyd',
+   'e:\\Collab '
+   'Projek\\IT-Sensing-Prototype\\.venv\\Lib\\site-packages\\rasterio\\crs.cp313-win_amd64.pyd',
+   'EXTENSION'),
+  ('rasterio\\cache.cp313-win_amd64.pyd',
+   'e:\\Collab '
+   'Projek\\IT-Sensing-Prototype\\.venv\\Lib\\site-packages\\rasterio\\cache.cp313-win_amd64.pyd',
+   'EXTENSION'),
+  ('rasterio\\_warp.cp313-win_amd64.pyd',
+   'e:\\Collab '
+   'Projek\\IT-Sensing-Prototype\\.venv\\Lib\\site-packages\\rasterio\\_warp.cp313-win_amd64.pyd',
+   'EXTENSION'),
+  ('rasterio\\_vsiopener.cp313-win_amd64.pyd',
+   'e:\\Collab '
+   'Projek\\IT-Sensing-Prototype\\.venv\\Lib\\site-packages\\rasterio\\_vsiopener.cp313-win_amd64.pyd',
+   'EXTENSION'),
+  ('rasterio\\_version.cp313-win_amd64.pyd',
+   'e:\\Collab '
+   'Projek\\IT-Sensing-Prototype\\.venv\\Lib\\site-packages\\rasterio\\_version.cp313-win_amd64.pyd',
+   'EXTENSION'),
+  ('rasterio\\_transform.cp313-win_amd64.pyd',
+   'e:\\Collab '
+   'Projek\\IT-Sensing-Prototype\\.venv\\Lib\\site-packages\\rasterio\\_transform.cp313-win_amd64.pyd',
+   'EXTENSION'),
+  ('rasterio\\_io.cp313-win_amd64.pyd',
+   'e:\\Collab '
+   'Projek\\IT-Sensing-Prototype\\.venv\\Lib\\site-packages\\rasterio\\_io.cp313-win_amd64.pyd',
+   'EXTENSION'),
+  ('rasterio\\_fill.cp313-win_amd64.pyd',
+   'e:\\Collab '
+   'Projek\\IT-Sensing-Prototype\\.venv\\Lib\\site-packages\\rasterio\\_fill.cp313-win_amd64.pyd',
+   'EXTENSION'),
+  ('rasterio\\_filepath.cp313-win_amd64.pyd',
+   'e:\\Collab '
+   'Projek\\IT-Sensing-Prototype\\.venv\\Lib\\site-packages\\rasterio\\_filepath.cp313-win_amd64.pyd',
+   'EXTENSION'),
+  ('rasterio\\_example.cp313-win_amd64.pyd',
+   'e:\\Collab '
+   'Projek\\IT-Sensing-Prototype\\.venv\\Lib\\site-packages\\rasterio\\_example.cp313-win_amd64.pyd',
+   'EXTENSION'),
+  ('rasterio\\_err.cp313-win_amd64.pyd',
+   'e:\\Collab '
+   'Projek\\IT-Sensing-Prototype\\.venv\\Lib\\site-packages\\rasterio\\_err.cp313-win_amd64.pyd',
+   'EXTENSION'),
+  ('rasterio\\_env.cp313-win_amd64.pyd',
+   'e:\\Collab '
+   'Projek\\IT-Sensing-Prototype\\.venv\\Lib\\site-packages\\rasterio\\_env.cp313-win_amd64.pyd',
+   'EXTENSION'),
+  ('rasterio\\_base.cp313-win_amd64.pyd',
+   'e:\\Collab '
+   'Projek\\IT-Sensing-Prototype\\.venv\\Lib\\site-packages\\rasterio\\_base.cp313-win_amd64.pyd',
+   'EXTENSION'),
+  ('rasterio\\_features.cp313-win_amd64.pyd',
+   'e:\\Collab '
+   'Projek\\IT-Sensing-Prototype\\.venv\\Lib\\site-packages\\rasterio\\_features.cp313-win_amd64.pyd',
+   'EXTENSION'),
+  ('PIL\\_webp.cp313-win_amd64.pyd',
+   'e:\\Collab '
+   'Projek\\IT-Sensing-Prototype\\.venv\\Lib\\site-packages\\PIL\\_webp.cp313-win_amd64.pyd',
+   'EXTENSION'),
+  ('PIL\\_imagingtk.cp313-win_amd64.pyd',
+   'e:\\Collab '
+   'Projek\\IT-Sensing-Prototype\\.venv\\Lib\\site-packages\\PIL\\_imagingtk.cp313-win_amd64.pyd',
+   'EXTENSION'),
+  ('PIL\\_avif.cp313-win_amd64.pyd',
+   'e:\\Collab '
+   'Projek\\IT-Sensing-Prototype\\.venv\\Lib\\site-packages\\PIL\\_avif.cp313-win_amd64.pyd',
+   'EXTENSION'),
+  ('PIL\\_imagingcms.cp313-win_amd64.pyd',
+   'e:\\Collab '
+   'Projek\\IT-Sensing-Prototype\\.venv\\Lib\\site-packages\\PIL\\_imagingcms.cp313-win_amd64.pyd',
+   'EXTENSION'),
+  ('PIL\\_imagingmath.cp313-win_amd64.pyd',
+   'e:\\Collab '
+   'Projek\\IT-Sensing-Prototype\\.venv\\Lib\\site-packages\\PIL\\_imagingmath.cp313-win_amd64.pyd',
+   'EXTENSION'),
+  ('PIL\\_imaging.cp313-win_amd64.pyd',
+   'e:\\Collab '
+   'Projek\\IT-Sensing-Prototype\\.venv\\Lib\\site-packages\\PIL\\_imaging.cp313-win_amd64.pyd',
+   'EXTENSION'),
+  ('numpy\\_core\\_multiarray_tests.cp313-win_amd64.pyd',
+   'e:\\Collab '
+   'Projek\\IT-Sensing-Prototype\\.venv\\Lib\\site-packages\\numpy\\_core\\_multiarray_tests.cp313-win_amd64.pyd',
+   'EXTENSION'),
+  ('numpy\\random\\mtrand.cp313-win_amd64.pyd',
+   'e:\\Collab '
+   'Projek\\IT-Sensing-Prototype\\.venv\\Lib\\site-packages\\numpy\\random\\mtrand.cp313-win_amd64.pyd',
+   'EXTENSION'),
+  ('numpy\\random\\bit_generator.cp313-win_amd64.pyd',
+   'e:\\Collab '
+   'Projek\\IT-Sensing-Prototype\\.venv\\Lib\\site-packages\\numpy\\random\\bit_generator.cp313-win_amd64.pyd',
+   'EXTENSION'),
+  ('numpy\\random\\_sfc64.cp313-win_amd64.pyd',
+   'e:\\Collab '
+   'Projek\\IT-Sensing-Prototype\\.venv\\Lib\\site-packages\\numpy\\random\\_sfc64.cp313-win_amd64.pyd',
+   'EXTENSION'),
+  ('numpy\\random\\_philox.cp313-win_amd64.pyd',
+   'e:\\Collab '
+   'Projek\\IT-Sensing-Prototype\\.venv\\Lib\\site-packages\\numpy\\random\\_philox.cp313-win_amd64.pyd',
+   'EXTENSION'),
+  ('numpy\\random\\_pcg64.cp313-win_amd64.pyd',
+   'e:\\Collab '
+   'Projek\\IT-Sensing-Prototype\\.venv\\Lib\\site-packages\\numpy\\random\\_pcg64.cp313-win_amd64.pyd',
+   'EXTENSION'),
+  ('numpy\\random\\_mt19937.cp313-win_amd64.pyd',
+   'e:\\Collab '
+   'Projek\\IT-Sensing-Prototype\\.venv\\Lib\\site-packages\\numpy\\random\\_mt19937.cp313-win_amd64.pyd',
+   'EXTENSION'),
+  ('numpy\\random\\_generator.cp313-win_amd64.pyd',
+   'e:\\Collab '
+   'Projek\\IT-Sensing-Prototype\\.venv\\Lib\\site-packages\\numpy\\random\\_generator.cp313-win_amd64.pyd',
+   'EXTENSION'),
+  ('numpy\\random\\_common.cp313-win_amd64.pyd',
+   'e:\\Collab '
+   'Projek\\IT-Sensing-Prototype\\.venv\\Lib\\site-packages\\numpy\\random\\_common.cp313-win_amd64.pyd',
+   'EXTENSION'),
+  ('numpy\\random\\_bounded_integers.cp313-win_amd64.pyd',
+   'e:\\Collab '
+   'Projek\\IT-Sensing-Prototype\\.venv\\Lib\\site-packages\\numpy\\random\\_bounded_integers.cp313-win_amd64.pyd',
+   'EXTENSION'),
+  ('numpy\\fft\\_pocketfft_umath.cp313-win_amd64.pyd',
+   'e:\\Collab '
+   'Projek\\IT-Sensing-Prototype\\.venv\\Lib\\site-packages\\numpy\\fft\\_pocketfft_umath.cp313-win_amd64.pyd',
+   'EXTENSION'),
+  ('VCRUNTIME140.dll',
+   'C:\\Users\\HP\\AppData\\Local\\Programs\\Python\\Python313\\VCRUNTIME140.dll',
+   'BINARY'),
+  ('VCRUNTIME140_1.dll',
+   'C:\\Users\\HP\\AppData\\Local\\Programs\\Python\\Python313\\VCRUNTIME140_1.dll',
+   'BINARY'),
+  ('libssl-3.dll',
+   'C:\\Users\\HP\\AppData\\Local\\Programs\\Python\\Python313\\DLLs\\libssl-3.dll',
+   'BINARY'),
+  ('libcrypto-3.dll',
+   'C:\\Users\\HP\\AppData\\Local\\Programs\\Python\\Python313\\DLLs\\libcrypto-3.dll',
+   'BINARY'),
+  ('libffi-8.dll',
+   'C:\\Users\\HP\\AppData\\Local\\Programs\\Python\\Python313\\DLLs\\libffi-8.dll',
+   'BINARY'),
+  ('rasterio.libs\\gdal-360e5d11b6a02621294737b98153f3c0.dll',
+   'e:\\Collab '
+   'Projek\\IT-Sensing-Prototype\\.venv\\Lib\\site-packages\\rasterio.libs\\gdal-360e5d11b6a02621294737b98153f3c0.dll',
+   'BINARY'),
+  ('rasterio.libs\\jpeg62-5e852952c54eb4fa3ce9869ab22cda34.dll',
+   'e:\\Collab '
+   'Projek\\IT-Sensing-Prototype\\.venv\\Lib\\site-packages\\rasterio.libs\\jpeg62-5e852952c54eb4fa3ce9869ab22cda34.dll',
+   'BINARY'),
+  ('rasterio.libs\\pcre2-8-84af85d3b6ffdd48db5201eb2ca0988c.dll',
+   'e:\\Collab '
+   'Projek\\IT-Sensing-Prototype\\.venv\\Lib\\site-packages\\rasterio.libs\\pcre2-8-84af85d3b6ffdd48db5201eb2ca0988c.dll',
+   'BINARY'),
+  ('rasterio.libs\\Lerc-7cdbc54dfa89d962ee8bd80bc004a914.dll',
+   'e:\\Collab '
+   'Projek\\IT-Sensing-Prototype\\.venv\\Lib\\site-packages\\rasterio.libs\\Lerc-7cdbc54dfa89d962ee8bd80bc004a914.dll',
+   'BINARY'),
+  ('rasterio.libs\\libssl-3-x64-d3e8a793ae15a5d3862f2995bbb056f2.dll',
+   'e:\\Collab '
+   'Projek\\IT-Sensing-Prototype\\.venv\\Lib\\site-packages\\rasterio.libs\\libssl-3-x64-d3e8a793ae15a5d3862f2995bbb056f2.dll',
+   'BINARY'),
+  ('rasterio.libs\\msvcp140-2a7008da6f9aae43c7a434835dcaf31e.dll',
+   'e:\\Collab '
+   'Projek\\IT-Sensing-Prototype\\.venv\\Lib\\site-packages\\rasterio.libs\\msvcp140-2a7008da6f9aae43c7a434835dcaf31e.dll',
+   'BINARY'),
+  ('rasterio.libs\\spatialite-e379e7518ce70153a626abc3882fdb0b.dll',
+   'e:\\Collab '
+   'Projek\\IT-Sensing-Prototype\\.venv\\Lib\\site-packages\\rasterio.libs\\spatialite-e379e7518ce70153a626abc3882fdb0b.dll',
+   'BINARY'),
+  ('rasterio.libs\\minizip-e3a8dd628991843b1fae8dde28ff4222.dll',
+   'e:\\Collab '
+   'Projek\\IT-Sensing-Prototype\\.venv\\Lib\\site-packages\\rasterio.libs\\minizip-e3a8dd628991843b1fae8dde28ff4222.dll',
+   'BINARY'),
+  ('rasterio.libs\\json-c-1f637ee91c49e5d2d22eec26b950b75e.dll',
+   'e:\\Collab '
+   'Projek\\IT-Sensing-Prototype\\.venv\\Lib\\site-packages\\rasterio.libs\\json-c-1f637ee91c49e5d2d22eec26b950b75e.dll',
+   'BINARY'),
+  ('rasterio.libs\\libpq-733b299424e10c94165f27199c19b128.dll',
+   'e:\\Collab '
+   'Projek\\IT-Sensing-Prototype\\.venv\\Lib\\site-packages\\rasterio.libs\\libpq-733b299424e10c94165f27199c19b128.dll',
+   'BINARY'),
+  ('rasterio.libs\\liblzma-b4ca3e2f60afbc292e9519d9fa5a02d0.dll',
+   'e:\\Collab '
+   'Projek\\IT-Sensing-Prototype\\.venv\\Lib\\site-packages\\rasterio.libs\\liblzma-b4ca3e2f60afbc292e9519d9fa5a02d0.dll',
+   'BINARY'),
+  ('rasterio.libs\\zlib1-ec9e22149d83f8cc3797c1ce79270bf7.dll',
+   'e:\\Collab '
+   'Projek\\IT-Sensing-Prototype\\.venv\\Lib\\site-packages\\rasterio.libs\\zlib1-ec9e22149d83f8cc3797c1ce79270bf7.dll',
+   'BINARY'),
+  ('rasterio.libs\\proj_9-1e8ff6fdaef06b192a61d4568e6d1013.dll',
+   'e:\\Collab '
+   'Projek\\IT-Sensing-Prototype\\.venv\\Lib\\site-packages\\rasterio.libs\\proj_9-1e8ff6fdaef06b192a61d4568e6d1013.dll',
+   'BINARY'),
+  ('rasterio.libs\\geos_c-8f6dddb1707598fe32c85d1a31571b6d.dll',
+   'e:\\Collab '
+   'Projek\\IT-Sensing-Prototype\\.venv\\Lib\\site-packages\\rasterio.libs\\geos_c-8f6dddb1707598fe32c85d1a31571b6d.dll',
+   'BINARY'),
+  ('rasterio.libs\\libpng16-f054c0d9835511bc57b774698fad2783.dll',
+   'e:\\Collab '
+   'Projek\\IT-Sensing-Prototype\\.venv\\Lib\\site-packages\\rasterio.libs\\libpng16-f054c0d9835511bc57b774698fad2783.dll',
+   'BINARY'),
+  ('rasterio.libs\\iconv-2-f6a9f9697c1d3624dff736d793670975.dll',
+   'e:\\Collab '
+   'Projek\\IT-Sensing-Prototype\\.venv\\Lib\\site-packages\\rasterio.libs\\iconv-2-f6a9f9697c1d3624dff736d793670975.dll',
+   'BINARY'),
+  ('rasterio.libs\\libcurl-0689d2121758a5e30a8762339ebc3cc9.dll',
+   'e:\\Collab '
+   'Projek\\IT-Sensing-Prototype\\.venv\\Lib\\site-packages\\rasterio.libs\\libcurl-0689d2121758a5e30a8762339ebc3cc9.dll',
+   'BINARY'),
+  ('rasterio.libs\\qhull_r-17cc67bd3b00ba5df17d7612ae041d76.dll',
+   'e:\\Collab '
+   'Projek\\IT-Sensing-Prototype\\.venv\\Lib\\site-packages\\rasterio.libs\\qhull_r-17cc67bd3b00ba5df17d7612ae041d76.dll',
+   'BINARY'),
+  ('rasterio.libs\\libwebp-2383c6ec1c7dc241cbfb6e9e5442b459.dll',
+   'e:\\Collab '
+   'Projek\\IT-Sensing-Prototype\\.venv\\Lib\\site-packages\\rasterio.libs\\libwebp-2383c6ec1c7dc241cbfb6e9e5442b459.dll',
+   'BINARY'),
+  ('rasterio.libs\\netcdf-479d4e63c16800a04764f87bf93c034c.dll',
+   'e:\\Collab '
+   'Projek\\IT-Sensing-Prototype\\.venv\\Lib\\site-packages\\rasterio.libs\\netcdf-479d4e63c16800a04764f87bf93c034c.dll',
+   'BINARY'),
+  ('rasterio.libs\\libexpat-3230d82405a76c244938d73d8cdc9cbc.dll',
+   'e:\\Collab '
+   'Projek\\IT-Sensing-Prototype\\.venv\\Lib\\site-packages\\rasterio.libs\\libexpat-3230d82405a76c244938d73d8cdc9cbc.dll',
+   'BINARY'),
+  ('rasterio.libs\\libcrypto-3-x64-24efc0e281185bea19397e4126bab770.dll',
+   'e:\\Collab '
+   'Projek\\IT-Sensing-Prototype\\.venv\\Lib\\site-packages\\rasterio.libs\\libcrypto-3-x64-24efc0e281185bea19397e4126bab770.dll',
+   'BINARY'),
+  ('rasterio.libs\\sqlite3-4dc2715c27dc17b6f0b8f3e9c29fbe44.dll',
+   'e:\\Collab '
+   'Projek\\IT-Sensing-Prototype\\.venv\\Lib\\site-packages\\rasterio.libs\\sqlite3-4dc2715c27dc17b6f0b8f3e9c29fbe44.dll',
+   'BINARY'),
+  ('rasterio.libs\\geotiff-3f3eb5f2008bdf8669990f0a50b4f250.dll',
+   'e:\\Collab '
+   'Projek\\IT-Sensing-Prototype\\.venv\\Lib\\site-packages\\rasterio.libs\\geotiff-3f3eb5f2008bdf8669990f0a50b4f250.dll',
+   'BINARY'),
+  ('rasterio.libs\\openjp2-9bbda36af72b7118177b8a7889be7e41.dll',
+   'e:\\Collab '
+   'Projek\\IT-Sensing-Prototype\\.venv\\Lib\\site-packages\\rasterio.libs\\openjp2-9bbda36af72b7118177b8a7889be7e41.dll',
+   'BINARY'),
+  ('rasterio.libs\\hdf5-410e5a1d52c7f8e53a092375c2b0d9a0.dll',
+   'e:\\Collab '
+   'Projek\\IT-Sensing-Prototype\\.venv\\Lib\\site-packages\\rasterio.libs\\hdf5-410e5a1d52c7f8e53a092375c2b0d9a0.dll',
+   'BINARY'),
+  ('rasterio.libs\\gif-047ab6eab54a3d9cec30d8258eb65ee3.dll',
+   'e:\\Collab '
+   'Projek\\IT-Sensing-Prototype\\.venv\\Lib\\site-packages\\rasterio.libs\\gif-047ab6eab54a3d9cec30d8258eb65ee3.dll',
+   'BINARY'),
+  ('rasterio.libs\\tiff-48fd8518ac7eda8c24f372d147e54850.dll',
+   'e:\\Collab '
+   'Projek\\IT-Sensing-Prototype\\.venv\\Lib\\site-packages\\rasterio.libs\\tiff-48fd8518ac7eda8c24f372d147e54850.dll',
+   'BINARY'),
+  ('rasterio.libs\\libxml2-cd5c08e5e53cc3e3c9e2a5a71c31c513.dll',
+   'e:\\Collab '
+   'Projek\\IT-Sensing-Prototype\\.venv\\Lib\\site-packages\\rasterio.libs\\libxml2-cd5c08e5e53cc3e3c9e2a5a71c31c513.dll',
+   'BINARY'),
+  ('rasterio.libs\\zstd-d821511e98f820b90f34131f19b1e391.dll',
+   'e:\\Collab '
+   'Projek\\IT-Sensing-Prototype\\.venv\\Lib\\site-packages\\rasterio.libs\\zstd-d821511e98f820b90f34131f19b1e391.dll',
+   'BINARY'),
+  ('rasterio.libs\\freexl-1-42fcc8e8097aaea5819be7cc151f1604.dll',
+   'e:\\Collab '
+   'Projek\\IT-Sensing-Prototype\\.venv\\Lib\\site-packages\\rasterio.libs\\freexl-1-42fcc8e8097aaea5819be7cc151f1604.dll',
+   'BINARY'),
+  ('rasterio.libs\\geos-88ee7acd56d16cd0b8bc3b65cfbf1fe7.dll',
+   'e:\\Collab '
+   'Projek\\IT-Sensing-Prototype\\.venv\\Lib\\site-packages\\rasterio.libs\\geos-88ee7acd56d16cd0b8bc3b65cfbf1fe7.dll',
+   'BINARY'),
+  ('rasterio.libs\\libsharpyuv-2ad10baafcb64f643aec1a3e483fe7d1.dll',
+   'e:\\Collab '
+   'Projek\\IT-Sensing-Prototype\\.venv\\Lib\\site-packages\\rasterio.libs\\libsharpyuv-2ad10baafcb64f643aec1a3e483fe7d1.dll',
+   'BINARY'),
+  ('rasterio.libs\\hdf5_hl-02110dfb897123c7a83ca65944e6eb8c.dll',
+   'e:\\Collab '
+   'Projek\\IT-Sensing-Prototype\\.venv\\Lib\\site-packages\\rasterio.libs\\hdf5_hl-02110dfb897123c7a83ca65944e6eb8c.dll',
+   'BINARY'),
+  ('rasterio.libs\\tinyxml2-4237dcff32b89d11572b01fa6a30778d.dll',
+   'e:\\Collab '
+   'Projek\\IT-Sensing-Prototype\\.venv\\Lib\\site-packages\\rasterio.libs\\tinyxml2-4237dcff32b89d11572b01fa6a30778d.dll',
+   'BINARY'),
+  ('rasterio.libs\\szip-75194b7211b9e60aa45eacbb2793e4a1.dll',
+   'e:\\Collab '
+   'Projek\\IT-Sensing-Prototype\\.venv\\Lib\\site-packages\\rasterio.libs\\szip-75194b7211b9e60aa45eacbb2793e4a1.dll',
+   'BINARY'),
+  ('rasterio-1.5.0.dist-info\\DELVEWHEEL',
+   'e:\\Collab '
+   'Projek\\IT-Sensing-Prototype\\.venv\\Lib\\site-packages\\rasterio-1.5.0.dist-info\\DELVEWHEEL',
+   'DATA'),
+  ('rasterio-1.5.0.dist-info\\INSTALLER',
+   'e:\\Collab '
+   'Projek\\IT-Sensing-Prototype\\.venv\\Lib\\site-packages\\rasterio-1.5.0.dist-info\\INSTALLER',
+   'DATA'),
+  ('rasterio-1.5.0.dist-info\\METADATA',
+   'e:\\Collab '
+   'Projek\\IT-Sensing-Prototype\\.venv\\Lib\\site-packages\\rasterio-1.5.0.dist-info\\METADATA',
+   'DATA'),
+  ('rasterio-1.5.0.dist-info\\RECORD',
+   'e:\\Collab '
+   'Projek\\IT-Sensing-Prototype\\.venv\\Lib\\site-packages\\rasterio-1.5.0.dist-info\\RECORD',
+   'DATA'),
+  ('rasterio-1.5.0.dist-info\\REQUESTED',
+   'e:\\Collab '
+   'Projek\\IT-Sensing-Prototype\\.venv\\Lib\\site-packages\\rasterio-1.5.0.dist-info\\REQUESTED',
+   'DATA'),
+  ('rasterio-1.5.0.dist-info\\WHEEL',
+   'e:\\Collab '
+   'Projek\\IT-Sensing-Prototype\\.venv\\Lib\\site-packages\\rasterio-1.5.0.dist-info\\WHEEL',
+   'DATA'),
+  ('rasterio-1.5.0.dist-info\\entry_points.txt',
+   'e:\\Collab '
+   'Projek\\IT-Sensing-Prototype\\.venv\\Lib\\site-packages\\rasterio-1.5.0.dist-info\\entry_points.txt',
+   'DATA'),
+  ('rasterio-1.5.0.dist-info\\licenses\\AUTHORS.txt',
+   'e:\\Collab '
+   'Projek\\IT-Sensing-Prototype\\.venv\\Lib\\site-packages\\rasterio-1.5.0.dist-info\\licenses\\AUTHORS.txt',
+   'DATA'),
+  ('rasterio-1.5.0.dist-info\\licenses\\LICENSE.txt',
+   'e:\\Collab '
+   'Projek\\IT-Sensing-Prototype\\.venv\\Lib\\site-packages\\rasterio-1.5.0.dist-info\\licenses\\LICENSE.txt',
+   'DATA'),
+  ('rasterio-1.5.0.dist-info\\top_level.txt',
+   'e:\\Collab '
+   'Projek\\IT-Sensing-Prototype\\.venv\\Lib\\site-packages\\rasterio-1.5.0.dist-info\\top_level.txt',
+   'DATA'),
+  ('rasterio\\__init__.py',
+   'e:\\Collab '
+   'Projek\\IT-Sensing-Prototype\\.venv\\Lib\\site-packages\\rasterio\\__init__.py',
+   'DATA'),
+  ('rasterio\\_base.c',
+   'e:\\Collab '
+   'Projek\\IT-Sensing-Prototype\\.venv\\Lib\\site-packages\\rasterio\\_base.c',
+   'DATA'),
+  ('rasterio\\_base.pxd',
+   'e:\\Collab '
+   'Projek\\IT-Sensing-Prototype\\.venv\\Lib\\site-packages\\rasterio\\_base.pxd',
+   'DATA'),
+  ('rasterio\\_base.pyx',
+   'e:\\Collab '
+   'Projek\\IT-Sensing-Prototype\\.venv\\Lib\\site-packages\\rasterio\\_base.pyx',
+   'DATA'),
+  ('rasterio\\_env.c',
+   'e:\\Collab '
+   'Projek\\IT-Sensing-Prototype\\.venv\\Lib\\site-packages\\rasterio\\_env.c',
+   'DATA'),
+  ('rasterio\\_env.pxd',
+   'e:\\Collab '
+   'Projek\\IT-Sensing-Prototype\\.venv\\Lib\\site-packages\\rasterio\\_env.pxd',
+   'DATA'),
+  ('rasterio\\_env.pyx',
+   'e:\\Collab '
+   'Projek\\IT-Sensing-Prototype\\.venv\\Lib\\site-packages\\rasterio\\_env.pyx',
+   'DATA'),
+  ('rasterio\\_err.c',
+   'e:\\Collab '
+   'Projek\\IT-Sensing-Prototype\\.venv\\Lib\\site-packages\\rasterio\\_err.c',
+   'DATA'),
+  ('rasterio\\_err.pxd',
+   'e:\\Collab '
+   'Projek\\IT-Sensing-Prototype\\.venv\\Lib\\site-packages\\rasterio\\_err.pxd',
+   'DATA'),
+  ('rasterio\\_err.pyx',
+   'e:\\Collab '
+   'Projek\\IT-Sensing-Prototype\\.venv\\Lib\\site-packages\\rasterio\\_err.pyx',
+   'DATA'),
+  ('rasterio\\_example.c',
+   'e:\\Collab '
+   'Projek\\IT-Sensing-Prototype\\.venv\\Lib\\site-packages\\rasterio\\_example.c',
+   'DATA'),
+  ('rasterio\\_example.pyx',
+   'e:\\Collab '
+   'Projek\\IT-Sensing-Prototype\\.venv\\Lib\\site-packages\\rasterio\\_example.pyx',
+   'DATA'),
+  ('rasterio\\_features.c',
+   'e:\\Collab '
+   'Projek\\IT-Sensing-Prototype\\.venv\\Lib\\site-packages\\rasterio\\_features.c',
+   'DATA'),
+  ('rasterio\\_features.pxd',
+   'e:\\Collab '
+   'Projek\\IT-Sensing-Prototype\\.venv\\Lib\\site-packages\\rasterio\\_features.pxd',
+   'DATA'),
+  ('rasterio\\_features.pyx',
+   'e:\\Collab '
+   'Projek\\IT-Sensing-Prototype\\.venv\\Lib\\site-packages\\rasterio\\_features.pyx',
+   'DATA'),
+  ('rasterio\\_filepath.cpp',
+   'e:\\Collab '
+   'Projek\\IT-Sensing-Prototype\\.venv\\Lib\\site-packages\\rasterio\\_filepath.cpp',
+   'DATA'),
+  ('rasterio\\_filepath.pxd',
+   'e:\\Collab '
+   'Projek\\IT-Sensing-Prototype\\.venv\\Lib\\site-packages\\rasterio\\_filepath.pxd',
+   'DATA'),
+  ('rasterio\\_filepath.pyx',
+   'e:\\Collab '
+   'Projek\\IT-Sensing-Prototype\\.venv\\Lib\\site-packages\\rasterio\\_filepath.pyx',
+   'DATA'),
+  ('rasterio\\_fill.cpp',
+   'e:\\Collab '
+   'Projek\\IT-Sensing-Prototype\\.venv\\Lib\\site-packages\\rasterio\\_fill.cpp',
+   'DATA'),
+  ('rasterio\\_fill.pyx',
+   'e:\\Collab '
+   'Projek\\IT-Sensing-Prototype\\.venv\\Lib\\site-packages\\rasterio\\_fill.pyx',
+   'DATA'),
+  ('rasterio\\_io.c',
+   'e:\\Collab '
+   'Projek\\IT-Sensing-Prototype\\.venv\\Lib\\site-packages\\rasterio\\_io.c',
+   'DATA'),
+  ('rasterio\\_io.pxd',
+   'e:\\Collab '
+   'Projek\\IT-Sensing-Prototype\\.venv\\Lib\\site-packages\\rasterio\\_io.pxd',
+   'DATA'),
+  ('rasterio\\_io.pyx',
+   'e:\\Collab '
+   'Projek\\IT-Sensing-Prototype\\.venv\\Lib\\site-packages\\rasterio\\_io.pyx',
+   'DATA'),
+  ('rasterio\\_path.py',
+   'e:\\Collab '
+   'Projek\\IT-Sensing-Prototype\\.venv\\Lib\\site-packages\\rasterio\\_path.py',
+   'DATA'),
+  ('rasterio\\_show_versions.py',
+   'e:\\Collab '
+   'Projek\\IT-Sensing-Prototype\\.venv\\Lib\\site-packages\\rasterio\\_show_versions.py',
+   'DATA'),
+  ('rasterio\\_transform.c',
+   'e:\\Collab '
+   'Projek\\IT-Sensing-Prototype\\.venv\\Lib\\site-packages\\rasterio\\_transform.c',
+   'DATA'),
+  ('rasterio\\_transform.pyx',
+   'e:\\Collab '
+   'Projek\\IT-Sensing-Prototype\\.venv\\Lib\\site-packages\\rasterio\\_transform.pyx',
+   'DATA'),
+  ('rasterio\\_vendor\\__init__.py',
+   'e:\\Collab '
+   'Projek\\IT-Sensing-Prototype\\.venv\\Lib\\site-packages\\rasterio\\_vendor\\__init__.py',
+   'DATA'),
+  ('rasterio\\_vendor\\click_plugins.py',
+   'e:\\Collab '
+   'Projek\\IT-Sensing-Prototype\\.venv\\Lib\\site-packages\\rasterio\\_vendor\\click_plugins.py',
+   'DATA'),
+  ('rasterio\\_vendor\\snuggs.py',
+   'e:\\Collab '
+   'Projek\\IT-Sensing-Prototype\\.venv\\Lib\\site-packages\\rasterio\\_vendor\\snuggs.py',
+   'DATA'),
+  ('rasterio\\_version.c',
+   'e:\\Collab '
+   'Projek\\IT-Sensing-Prototype\\.venv\\Lib\\site-packages\\rasterio\\_version.c',
+   'DATA'),
+  ('rasterio\\_version.pxd',
+   'e:\\Collab '
+   'Projek\\IT-Sensing-Prototype\\.venv\\Lib\\site-packages\\rasterio\\_version.pxd',
+   'DATA'),
+  ('rasterio\\_version.pyx',
+   'e:\\Collab '
+   'Projek\\IT-Sensing-Prototype\\.venv\\Lib\\site-packages\\rasterio\\_version.pyx',
+   'DATA'),
+  ('rasterio\\_vsiopener.c',
+   'e:\\Collab '
+   'Projek\\IT-Sensing-Prototype\\.venv\\Lib\\site-packages\\rasterio\\_vsiopener.c',
+   'DATA'),
+  ('rasterio\\_vsiopener.pxd',
+   'e:\\Collab '
+   'Projek\\IT-Sensing-Prototype\\.venv\\Lib\\site-packages\\rasterio\\_vsiopener.pxd',
+   'DATA'),
+  ('rasterio\\_vsiopener.pyx',
+   'e:\\Collab '
+   'Projek\\IT-Sensing-Prototype\\.venv\\Lib\\site-packages\\rasterio\\_vsiopener.pyx',
+   'DATA'),
+  ('rasterio\\_warp.cpp',
+   'e:\\Collab '
+   'Projek\\IT-Sensing-Prototype\\.venv\\Lib\\site-packages\\rasterio\\_warp.cpp',
+   'DATA'),
+  ('rasterio\\_warp.pxd',
+   'e:\\Collab '
+   'Projek\\IT-Sensing-Prototype\\.venv\\Lib\\site-packages\\rasterio\\_warp.pxd',
+   'DATA'),
+  ('rasterio\\_warp.pyx',
+   'e:\\Collab '
+   'Projek\\IT-Sensing-Prototype\\.venv\\Lib\\site-packages\\rasterio\\_warp.pyx',
+   'DATA'),
+  ('rasterio\\abc.py',
+   'e:\\Collab '
+   'Projek\\IT-Sensing-Prototype\\.venv\\Lib\\site-packages\\rasterio\\abc.py',
+   'DATA'),
+  ('rasterio\\cache.c',
+   'e:\\Collab '
+   'Projek\\IT-Sensing-Prototype\\.venv\\Lib\\site-packages\\rasterio\\cache.c',
+   'DATA'),
+  ('rasterio\\cache.pyx',
+   'e:\\Collab '
+   'Projek\\IT-Sensing-Prototype\\.venv\\Lib\\site-packages\\rasterio\\cache.pyx',
+   'DATA'),
+  ('rasterio\\control.py',
+   'e:\\Collab '
+   'Projek\\IT-Sensing-Prototype\\.venv\\Lib\\site-packages\\rasterio\\control.py',
+   'DATA'),
+  ('rasterio\\coords.py',
+   'e:\\Collab '
+   'Projek\\IT-Sensing-Prototype\\.venv\\Lib\\site-packages\\rasterio\\coords.py',
+   'DATA'),
+  ('rasterio\\crs.c',
+   'e:\\Collab '
+   'Projek\\IT-Sensing-Prototype\\.venv\\Lib\\site-packages\\rasterio\\crs.c',
+   'DATA'),
+  ('rasterio\\crs.pxd',
+   'e:\\Collab '
+   'Projek\\IT-Sensing-Prototype\\.venv\\Lib\\site-packages\\rasterio\\crs.pxd',
+   'DATA'),
+  ('rasterio\\crs.pyx',
+   'e:\\Collab '
+   'Projek\\IT-Sensing-Prototype\\.venv\\Lib\\site-packages\\rasterio\\crs.pyx',
+   'DATA'),
+  ('rasterio\\drivers.py',
+   'e:\\Collab '
+   'Projek\\IT-Sensing-Prototype\\.venv\\Lib\\site-packages\\rasterio\\drivers.py',
+   'DATA'),
+  ('rasterio\\dtypes.py',
+   'e:\\Collab '
+   'Projek\\IT-Sensing-Prototype\\.venv\\Lib\\site-packages\\rasterio\\dtypes.py',
+   'DATA'),
+  ('rasterio\\enums.py',
+   'e:\\Collab '
+   'Projek\\IT-Sensing-Prototype\\.venv\\Lib\\site-packages\\rasterio\\enums.py',
+   'DATA'),
+  ('rasterio\\env.py',
+   'e:\\Collab '
+   'Projek\\IT-Sensing-Prototype\\.venv\\Lib\\site-packages\\rasterio\\env.py',
+   'DATA'),
+  ('rasterio\\errors.py',
+   'e:\\Collab '
+   'Projek\\IT-Sensing-Prototype\\.venv\\Lib\\site-packages\\rasterio\\errors.py',
+   'DATA'),
+  ('rasterio\\features.py',
+   'e:\\Collab '
+   'Projek\\IT-Sensing-Prototype\\.venv\\Lib\\site-packages\\rasterio\\features.py',
+   'DATA'),
+  ('rasterio\\fill.py',
+   'e:\\Collab '
+   'Projek\\IT-Sensing-Prototype\\.venv\\Lib\\site-packages\\rasterio\\fill.py',
+   'DATA'),
+  ('rasterio\\gdal.pxi',
+   'e:\\Collab '
+   'Projek\\IT-Sensing-Prototype\\.venv\\Lib\\site-packages\\rasterio\\gdal.pxi',
+   'DATA'),
+  ('rasterio\\gdal_data\\GDAL-targets-debug.cmake',
+   'e:\\Collab '
+   'Projek\\IT-Sensing-Prototype\\.venv\\Lib\\site-packages\\rasterio\\gdal_data\\GDAL-targets-debug.cmake',
+   'DATA'),
+  ('rasterio\\gdal_data\\GDAL-targets-release.cmake',
+   'e:\\Collab '
+   'Projek\\IT-Sensing-Prototype\\.venv\\Lib\\site-packages\\rasterio\\gdal_data\\GDAL-targets-release.cmake',
+   'DATA'),
+  ('rasterio\\gdal_data\\GDAL-targets.cmake',
+   'e:\\Collab '
+   'Projek\\IT-Sensing-Prototype\\.venv\\Lib\\site-packages\\rasterio\\gdal_data\\GDAL-targets.cmake',
+   'DATA'),
+  ('rasterio\\gdal_data\\GDALConfig.cmake',
+   'e:\\Collab '
+   'Projek\\IT-Sensing-Prototype\\.venv\\Lib\\site-packages\\rasterio\\gdal_data\\GDALConfig.cmake',
+   'DATA'),
+  ('rasterio\\gdal_data\\GDALConfigVersion.cmake',
+   'e:\\Collab '
+   'Projek\\IT-Sensing-Prototype\\.venv\\Lib\\site-packages\\rasterio\\gdal_data\\GDALConfigVersion.cmake',
+   'DATA'),
+  ('rasterio\\gdal_data\\GDALLogoBW.svg',
+   'e:\\Collab '
+   'Projek\\IT-Sensing-Prototype\\.venv\\Lib\\site-packages\\rasterio\\gdal_data\\GDALLogoBW.svg',
+   'DATA'),
+  ('rasterio\\gdal_data\\GDALLogoColor.svg',
+   'e:\\Collab '
+   'Projek\\IT-Sensing-Prototype\\.venv\\Lib\\site-packages\\rasterio\\gdal_data\\GDALLogoColor.svg',
+   'DATA'),
+  ('rasterio\\gdal_data\\GDALLogoGS.svg',
+   'e:\\Collab '
+   'Projek\\IT-Sensing-Prototype\\.venv\\Lib\\site-packages\\rasterio\\gdal_data\\GDALLogoGS.svg',
+   'DATA'),
+  ('rasterio\\gdal_data\\LICENSE.TXT',
+   'e:\\Collab '
+   'Projek\\IT-Sensing-Prototype\\.venv\\Lib\\site-packages\\rasterio\\gdal_data\\LICENSE.TXT',
+   'DATA'),
+  ('rasterio\\gdal_data\\MM_m_idofic.csv',
+   'e:\\Collab '
+   'Projek\\IT-Sensing-Prototype\\.venv\\Lib\\site-packages\\rasterio\\gdal_data\\MM_m_idofic.csv',
+   'DATA'),
+  ('rasterio\\gdal_data\\bag_template.xml',
+   'e:\\Collab '
+   'Projek\\IT-Sensing-Prototype\\.venv\\Lib\\site-packages\\rasterio\\gdal_data\\bag_template.xml',
+   'DATA'),
+  ('rasterio\\gdal_data\\copyright',
+   'e:\\Collab '
+   'Projek\\IT-Sensing-Prototype\\.venv\\Lib\\site-packages\\rasterio\\gdal_data\\copyright',
+   'DATA'),
+  ('rasterio\\gdal_data\\cubewerx_extra.wkt',
+   'e:\\Collab '
+   'Projek\\IT-Sensing-Prototype\\.venv\\Lib\\site-packages\\rasterio\\gdal_data\\cubewerx_extra.wkt',
+   'DATA'),
+  ('rasterio\\gdal_data\\default.rsc',
+   'e:\\Collab '
+   'Projek\\IT-Sensing-Prototype\\.venv\\Lib\\site-packages\\rasterio\\gdal_data\\default.rsc',
+   'DATA'),
+  ('rasterio\\gdal_data\\ecw_cs.wkt',
+   'e:\\Collab '
+   'Projek\\IT-Sensing-Prototype\\.venv\\Lib\\site-packages\\rasterio\\gdal_data\\ecw_cs.wkt',
+   'DATA'),
+  ('rasterio\\gdal_data\\eedaconf.json',
+   'e:\\Collab '
+   'Projek\\IT-Sensing-Prototype\\.venv\\Lib\\site-packages\\rasterio\\gdal_data\\eedaconf.json',
+   'DATA'),
+  ('rasterio\\gdal_data\\epsg.wkt',
+   'e:\\Collab '
+   'Projek\\IT-Sensing-Prototype\\.venv\\Lib\\site-packages\\rasterio\\gdal_data\\epsg.wkt',
+   'DATA'),
+  ('rasterio\\gdal_data\\esri_StatePlane_extra.wkt',
+   'e:\\Collab '
+   'Projek\\IT-Sensing-Prototype\\.venv\\Lib\\site-packages\\rasterio\\gdal_data\\esri_StatePlane_extra.wkt',
+   'DATA'),
+  ('rasterio\\gdal_data\\gdal_algorithm.schema.json',
+   'e:\\Collab '
+   'Projek\\IT-Sensing-Prototype\\.venv\\Lib\\site-packages\\rasterio\\gdal_data\\gdal_algorithm.schema.json',
+   'DATA'),
+  ('rasterio\\gdal_data\\gdalg.schema.json',
+   'e:\\Collab '
+   'Projek\\IT-Sensing-Prototype\\.venv\\Lib\\site-packages\\rasterio\\gdal_data\\gdalg.schema.json',
+   'DATA'),
+  ('rasterio\\gdal_data\\gdalicon.png',
+   'e:\\Collab '
+   'Projek\\IT-Sensing-Prototype\\.venv\\Lib\\site-packages\\rasterio\\gdal_data\\gdalicon.png',
+   'DATA'),
+  ('rasterio\\gdal_data\\gdalinfo_output.schema.json',
+   'e:\\Collab '
+   'Projek\\IT-Sensing-Prototype\\.venv\\Lib\\site-packages\\rasterio\\gdal_data\\gdalinfo_output.schema.json',
+   'DATA'),
+  ('rasterio\\gdal_data\\gdalmdiminfo_output.schema.json',
+   'e:\\Collab '
+   'Projek\\IT-Sensing-Prototype\\.venv\\Lib\\site-packages\\rasterio\\gdal_data\\gdalmdiminfo_output.schema.json',
+   'DATA'),
+  ('rasterio\\gdal_data\\gdaltileindex.xsd',
+   'e:\\Collab '
+   'Projek\\IT-Sensing-Prototype\\.venv\\Lib\\site-packages\\rasterio\\gdal_data\\gdaltileindex.xsd',
+   'DATA'),
+  ('rasterio\\gdal_data\\gdalvrt.xsd',
+   'e:\\Collab '
+   'Projek\\IT-Sensing-Prototype\\.venv\\Lib\\site-packages\\rasterio\\gdal_data\\gdalvrt.xsd',
+   'DATA'),
+  ('rasterio\\gdal_data\\gfs.xsd',
+   'e:\\Collab '
+   'Projek\\IT-Sensing-Prototype\\.venv\\Lib\\site-packages\\rasterio\\gdal_data\\gfs.xsd',
+   'DATA'),
+  ('rasterio\\gdal_data\\gml_registry.xml',
+   'e:\\Collab '
+   'Projek\\IT-Sensing-Prototype\\.venv\\Lib\\site-packages\\rasterio\\gdal_data\\gml_registry.xml',
+   'DATA'),
+  ('rasterio\\gdal_data\\gml_registry.xsd',
+   'e:\\Collab '
+   'Projek\\IT-Sensing-Prototype\\.venv\\Lib\\site-packages\\rasterio\\gdal_data\\gml_registry.xsd',
+   'DATA'),
+  ('rasterio\\gdal_data\\grib2_center.csv',
+   'e:\\Collab '
+   'Projek\\IT-Sensing-Prototype\\.venv\\Lib\\site-packages\\rasterio\\gdal_data\\grib2_center.csv',
+   'DATA'),
+  ('rasterio\\gdal_data\\grib2_process.csv',
+   'e:\\Collab '
+   'Projek\\IT-Sensing-Prototype\\.venv\\Lib\\site-packages\\rasterio\\gdal_data\\grib2_process.csv',
+   'DATA'),
+  ('rasterio\\gdal_data\\grib2_subcenter.csv',
+   'e:\\Collab '
+   'Projek\\IT-Sensing-Prototype\\.venv\\Lib\\site-packages\\rasterio\\gdal_data\\grib2_subcenter.csv',
+   'DATA'),
+  ('rasterio\\gdal_data\\grib2_table_4_2_0_0.csv',
+   'e:\\Collab '
+   'Projek\\IT-Sensing-Prototype\\.venv\\Lib\\site-packages\\rasterio\\gdal_data\\grib2_table_4_2_0_0.csv',
+   'DATA'),
+  ('rasterio\\gdal_data\\grib2_table_4_2_0_1.csv',
+   'e:\\Collab '
+   'Projek\\IT-Sensing-Prototype\\.venv\\Lib\\site-packages\\rasterio\\gdal_data\\grib2_table_4_2_0_1.csv',
+   'DATA'),
+  ('rasterio\\gdal_data\\grib2_table_4_2_0_13.csv',
+   'e:\\Collab '
+   'Projek\\IT-Sensing-Prototype\\.venv\\Lib\\site-packages\\rasterio\\gdal_data\\grib2_table_4_2_0_13.csv',
+   'DATA'),
+  ('rasterio\\gdal_data\\grib2_table_4_2_0_14.csv',
+   'e:\\Collab '
+   'Projek\\IT-Sensing-Prototype\\.venv\\Lib\\site-packages\\rasterio\\gdal_data\\grib2_table_4_2_0_14.csv',
+   'DATA'),
+  ('rasterio\\gdal_data\\grib2_table_4_2_0_15.csv',
+   'e:\\Collab '
+   'Projek\\IT-Sensing-Prototype\\.venv\\Lib\\site-packages\\rasterio\\gdal_data\\grib2_table_4_2_0_15.csv',
+   'DATA'),
+  ('rasterio\\gdal_data\\grib2_table_4_2_0_16.csv',
+   'e:\\Collab '
+   'Projek\\IT-Sensing-Prototype\\.venv\\Lib\\site-packages\\rasterio\\gdal_data\\grib2_table_4_2_0_16.csv',
+   'DATA'),
+  ('rasterio\\gdal_data\\grib2_table_4_2_0_17.csv',
+   'e:\\Collab '
+   'Projek\\IT-Sensing-Prototype\\.venv\\Lib\\site-packages\\rasterio\\gdal_data\\grib2_table_4_2_0_17.csv',
+   'DATA'),
+  ('rasterio\\gdal_data\\grib2_table_4_2_0_18.csv',
+   'e:\\Collab '
+   'Projek\\IT-Sensing-Prototype\\.venv\\Lib\\site-packages\\rasterio\\gdal_data\\grib2_table_4_2_0_18.csv',
+   'DATA'),
+  ('rasterio\\gdal_data\\grib2_table_4_2_0_19.csv',
+   'e:\\Collab '
+   'Projek\\IT-Sensing-Prototype\\.venv\\Lib\\site-packages\\rasterio\\gdal_data\\grib2_table_4_2_0_19.csv',
+   'DATA'),
+  ('rasterio\\gdal_data\\grib2_table_4_2_0_190.csv',
+   'e:\\Collab '
+   'Projek\\IT-Sensing-Prototype\\.venv\\Lib\\site-packages\\rasterio\\gdal_data\\grib2_table_4_2_0_190.csv',
+   'DATA'),
+  ('rasterio\\gdal_data\\grib2_table_4_2_0_191.csv',
+   'e:\\Collab '
+   'Projek\\IT-Sensing-Prototype\\.venv\\Lib\\site-packages\\rasterio\\gdal_data\\grib2_table_4_2_0_191.csv',
+   'DATA'),
+  ('rasterio\\gdal_data\\grib2_table_4_2_0_2.csv',
+   'e:\\Collab '
+   'Projek\\IT-Sensing-Prototype\\.venv\\Lib\\site-packages\\rasterio\\gdal_data\\grib2_table_4_2_0_2.csv',
+   'DATA'),
+  ('rasterio\\gdal_data\\grib2_table_4_2_0_20.csv',
+   'e:\\Collab '
+   'Projek\\IT-Sensing-Prototype\\.venv\\Lib\\site-packages\\rasterio\\gdal_data\\grib2_table_4_2_0_20.csv',
+   'DATA'),
+  ('rasterio\\gdal_data\\grib2_table_4_2_0_21.csv',
+   'e:\\Collab '
+   'Projek\\IT-Sensing-Prototype\\.venv\\Lib\\site-packages\\rasterio\\gdal_data\\grib2_table_4_2_0_21.csv',
+   'DATA'),
+  ('rasterio\\gdal_data\\grib2_table_4_2_0_22.csv',
+   'e:\\Collab '
+   'Projek\\IT-Sensing-Prototype\\.venv\\Lib\\site-packages\\rasterio\\gdal_data\\grib2_table_4_2_0_22.csv',
+   'DATA'),
+  ('rasterio\\gdal_data\\grib2_table_4_2_0_3.csv',
+   'e:\\Collab '
+   'Projek\\IT-Sensing-Prototype\\.venv\\Lib\\site-packages\\rasterio\\gdal_data\\grib2_table_4_2_0_3.csv',
+   'DATA'),
+  ('rasterio\\gdal_data\\grib2_table_4_2_0_4.csv',
+   'e:\\Collab '
+   'Projek\\IT-Sensing-Prototype\\.venv\\Lib\\site-packages\\rasterio\\gdal_data\\grib2_table_4_2_0_4.csv',
+   'DATA'),
+  ('rasterio\\gdal_data\\grib2_table_4_2_0_5.csv',
+   'e:\\Collab '
+   'Projek\\IT-Sensing-Prototype\\.venv\\Lib\\site-packages\\rasterio\\gdal_data\\grib2_table_4_2_0_5.csv',
+   'DATA'),
+  ('rasterio\\gdal_data\\grib2_table_4_2_0_6.csv',
+   'e:\\Collab '
+   'Projek\\IT-Sensing-Prototype\\.venv\\Lib\\site-packages\\rasterio\\gdal_data\\grib2_table_4_2_0_6.csv',
+   'DATA'),
+  ('rasterio\\gdal_data\\grib2_table_4_2_0_7.csv',
+   'e:\\Collab '
+   'Projek\\IT-Sensing-Prototype\\.venv\\Lib\\site-packages\\rasterio\\gdal_data\\grib2_table_4_2_0_7.csv',
+   'DATA'),
+  ('rasterio\\gdal_data\\grib2_table_4_2_10_0.csv',
+   'e:\\Collab '
+   'Projek\\IT-Sensing-Prototype\\.venv\\Lib\\site-packages\\rasterio\\gdal_data\\grib2_table_4_2_10_0.csv',
+   'DATA'),
+  ('rasterio\\gdal_data\\grib2_table_4_2_10_1.csv',
+   'e:\\Collab '
+   'Projek\\IT-Sensing-Prototype\\.venv\\Lib\\site-packages\\rasterio\\gdal_data\\grib2_table_4_2_10_1.csv',
+   'DATA'),
+  ('rasterio\\gdal_data\\grib2_table_4_2_10_191.csv',
+   'e:\\Collab '
+   'Projek\\IT-Sensing-Prototype\\.venv\\Lib\\site-packages\\rasterio\\gdal_data\\grib2_table_4_2_10_191.csv',
+   'DATA'),
+  ('rasterio\\gdal_data\\grib2_table_4_2_10_2.csv',
+   'e:\\Collab '
+   'Projek\\IT-Sensing-Prototype\\.venv\\Lib\\site-packages\\rasterio\\gdal_data\\grib2_table_4_2_10_2.csv',
+   'DATA'),
+  ('rasterio\\gdal_data\\grib2_table_4_2_10_3.csv',
+   'e:\\Collab '
+   'Projek\\IT-Sensing-Prototype\\.venv\\Lib\\site-packages\\rasterio\\gdal_data\\grib2_table_4_2_10_3.csv',
+   'DATA'),
+  ('rasterio\\gdal_data\\grib2_table_4_2_10_4.csv',
+   'e:\\Collab '
+   'Projek\\IT-Sensing-Prototype\\.venv\\Lib\\site-packages\\rasterio\\gdal_data\\grib2_table_4_2_10_4.csv',
+   'DATA'),
+  ('rasterio\\gdal_data\\grib2_table_4_2_1_0.csv',
+   'e:\\Collab '
+   'Projek\\IT-Sensing-Prototype\\.venv\\Lib\\site-packages\\rasterio\\gdal_data\\grib2_table_4_2_1_0.csv',
+   'DATA'),
+  ('rasterio\\gdal_data\\grib2_table_4_2_1_1.csv',
+   'e:\\Collab '
+   'Projek\\IT-Sensing-Prototype\\.venv\\Lib\\site-packages\\rasterio\\gdal_data\\grib2_table_4_2_1_1.csv',
+   'DATA'),
+  ('rasterio\\gdal_data\\grib2_table_4_2_1_2.csv',
+   'e:\\Collab '
+   'Projek\\IT-Sensing-Prototype\\.venv\\Lib\\site-packages\\rasterio\\gdal_data\\grib2_table_4_2_1_2.csv',
+   'DATA'),
+  ('rasterio\\gdal_data\\grib2_table_4_2_20_0.csv',
+   'e:\\Collab '
+   'Projek\\IT-Sensing-Prototype\\.venv\\Lib\\site-packages\\rasterio\\gdal_data\\grib2_table_4_2_20_0.csv',
+   'DATA'),
+  ('rasterio\\gdal_data\\grib2_table_4_2_20_1.csv',
+   'e:\\Collab '
+   'Projek\\IT-Sensing-Prototype\\.venv\\Lib\\site-packages\\rasterio\\gdal_data\\grib2_table_4_2_20_1.csv',
+   'DATA'),
+  ('rasterio\\gdal_data\\grib2_table_4_2_20_2.csv',
+   'e:\\Collab '
+   'Projek\\IT-Sensing-Prototype\\.venv\\Lib\\site-packages\\rasterio\\gdal_data\\grib2_table_4_2_20_2.csv',
+   'DATA'),
+  ('rasterio\\gdal_data\\grib2_table_4_2_20_3.csv',
+   'e:\\Collab '
+   'Projek\\IT-Sensing-Prototype\\.venv\\Lib\\site-packages\\rasterio\\gdal_data\\grib2_table_4_2_20_3.csv',
+   'DATA'),
+  ('rasterio\\gdal_data\\grib2_table_4_2_2_0.csv',
+   'e:\\Collab '
+   'Projek\\IT-Sensing-Prototype\\.venv\\Lib\\site-packages\\rasterio\\gdal_data\\grib2_table_4_2_2_0.csv',
+   'DATA'),
+  ('rasterio\\gdal_data\\grib2_table_4_2_2_3.csv',
+   'e:\\Collab '
+   'Projek\\IT-Sensing-Prototype\\.venv\\Lib\\site-packages\\rasterio\\gdal_data\\grib2_table_4_2_2_3.csv',
+   'DATA'),
+  ('rasterio\\gdal_data\\grib2_table_4_2_2_4.csv',
+   'e:\\Collab '
+   'Projek\\IT-Sensing-Prototype\\.venv\\Lib\\site-packages\\rasterio\\gdal_data\\grib2_table_4_2_2_4.csv',
+   'DATA'),
+  ('rasterio\\gdal_data\\grib2_table_4_2_2_5.csv',
+   'e:\\Collab '
+   'Projek\\IT-Sensing-Prototype\\.venv\\Lib\\site-packages\\rasterio\\gdal_data\\grib2_table_4_2_2_5.csv',
+   'DATA'),
+  ('rasterio\\gdal_data\\grib2_table_4_2_2_6.csv',
+   'e:\\Collab '
+   'Projek\\IT-Sensing-Prototype\\.venv\\Lib\\site-packages\\rasterio\\gdal_data\\grib2_table_4_2_2_6.csv',
+   'DATA'),
+  ('rasterio\\gdal_data\\grib2_table_4_2_2_7.csv',
+   'e:\\Collab '
+   'Projek\\IT-Sensing-Prototype\\.venv\\Lib\\site-packages\\rasterio\\gdal_data\\grib2_table_4_2_2_7.csv',
+   'DATA'),
+  ('rasterio\\gdal_data\\grib2_table_4_2_3_0.csv',
+   'e:\\Collab '
+   'Projek\\IT-Sensing-Prototype\\.venv\\Lib\\site-packages\\rasterio\\gdal_data\\grib2_table_4_2_3_0.csv',
+   'DATA'),
+  ('rasterio\\gdal_data\\grib2_table_4_2_3_1.csv',
+   'e:\\Collab '
+   'Projek\\IT-Sensing-Prototype\\.venv\\Lib\\site-packages\\rasterio\\gdal_data\\grib2_table_4_2_3_1.csv',
+   'DATA'),
+  ('rasterio\\gdal_data\\grib2_table_4_2_3_2.csv',
+   'e:\\Collab '
+   'Projek\\IT-Sensing-Prototype\\.venv\\Lib\\site-packages\\rasterio\\gdal_data\\grib2_table_4_2_3_2.csv',
+   'DATA'),
+  ('rasterio\\gdal_data\\grib2_table_4_2_3_3.csv',
+   'e:\\Collab '
+   'Projek\\IT-Sensing-Prototype\\.venv\\Lib\\site-packages\\rasterio\\gdal_data\\grib2_table_4_2_3_3.csv',
+   'DATA'),
+  ('rasterio\\gdal_data\\grib2_table_4_2_3_4.csv',
+   'e:\\Collab '
+   'Projek\\IT-Sensing-Prototype\\.venv\\Lib\\site-packages\\rasterio\\gdal_data\\grib2_table_4_2_3_4.csv',
+   'DATA'),
+  ('rasterio\\gdal_data\\grib2_table_4_2_3_5.csv',
+   'e:\\Collab '
+   'Projek\\IT-Sensing-Prototype\\.venv\\Lib\\site-packages\\rasterio\\gdal_data\\grib2_table_4_2_3_5.csv',
+   'DATA'),
+  ('rasterio\\gdal_data\\grib2_table_4_2_3_6.csv',
+   'e:\\Collab '
+   'Projek\\IT-Sensing-Prototype\\.venv\\Lib\\site-packages\\rasterio\\gdal_data\\grib2_table_4_2_3_6.csv',
+   'DATA'),
+  ('rasterio\\gdal_data\\grib2_table_4_2_4_0.csv',
+   'e:\\Collab '
+   'Projek\\IT-Sensing-Prototype\\.venv\\Lib\\site-packages\\rasterio\\gdal_data\\grib2_table_4_2_4_0.csv',
+   'DATA'),
+  ('rasterio\\gdal_data\\grib2_table_4_2_4_1.csv',
+   'e:\\Collab '
+   'Projek\\IT-Sensing-Prototype\\.venv\\Lib\\site-packages\\rasterio\\gdal_data\\grib2_table_4_2_4_1.csv',
+   'DATA'),
+  ('rasterio\\gdal_data\\grib2_table_4_2_4_10.csv',
+   'e:\\Collab '
+   'Projek\\IT-Sensing-Prototype\\.venv\\Lib\\site-packages\\rasterio\\gdal_data\\grib2_table_4_2_4_10.csv',
+   'DATA'),
+  ('rasterio\\gdal_data\\grib2_table_4_2_4_2.csv',
+   'e:\\Collab '
+   'Projek\\IT-Sensing-Prototype\\.venv\\Lib\\site-packages\\rasterio\\gdal_data\\grib2_table_4_2_4_2.csv',
+   'DATA'),
+  ('rasterio\\gdal_data\\grib2_table_4_2_4_3.csv',
+   'e:\\Collab '
+   'Projek\\IT-Sensing-Prototype\\.venv\\Lib\\site-packages\\rasterio\\gdal_data\\grib2_table_4_2_4_3.csv',
+   'DATA'),
+  ('rasterio\\gdal_data\\grib2_table_4_2_4_4.csv',
+   'e:\\Collab '
+   'Projek\\IT-Sensing-Prototype\\.venv\\Lib\\site-packages\\rasterio\\gdal_data\\grib2_table_4_2_4_4.csv',
+   'DATA'),
+  ('rasterio\\gdal_data\\grib2_table_4_2_4_5.csv',
+   'e:\\Collab '
+   'Projek\\IT-Sensing-Prototype\\.venv\\Lib\\site-packages\\rasterio\\gdal_data\\grib2_table_4_2_4_5.csv',
+   'DATA'),
+  ('rasterio\\gdal_data\\grib2_table_4_2_4_6.csv',
+   'e:\\Collab '
+   'Projek\\IT-Sensing-Prototype\\.venv\\Lib\\site-packages\\rasterio\\gdal_data\\grib2_table_4_2_4_6.csv',
+   'DATA'),
+  ('rasterio\\gdal_data\\grib2_table_4_2_4_7.csv',
+   'e:\\Collab '
+   'Projek\\IT-Sensing-Prototype\\.venv\\Lib\\site-packages\\rasterio\\gdal_data\\grib2_table_4_2_4_7.csv',
+   'DATA'),
+  ('rasterio\\gdal_data\\grib2_table_4_2_4_8.csv',
+   'e:\\Collab '
+   'Projek\\IT-Sensing-Prototype\\.venv\\Lib\\site-packages\\rasterio\\gdal_data\\grib2_table_4_2_4_8.csv',
+   'DATA'),
+  ('rasterio\\gdal_data\\grib2_table_4_2_4_9.csv',
+   'e:\\Collab '
+   'Projek\\IT-Sensing-Prototype\\.venv\\Lib\\site-packages\\rasterio\\gdal_data\\grib2_table_4_2_4_9.csv',
+   'DATA'),
+  ('rasterio\\gdal_data\\grib2_table_4_2_local_Canada.csv',
+   'e:\\Collab '
+   'Projek\\IT-Sensing-Prototype\\.venv\\Lib\\site-packages\\rasterio\\gdal_data\\grib2_table_4_2_local_Canada.csv',
+   'DATA'),
+  ('rasterio\\gdal_data\\grib2_table_4_2_local_HPC.csv',
+   'e:\\Collab '
+   'Projek\\IT-Sensing-Prototype\\.venv\\Lib\\site-packages\\rasterio\\gdal_data\\grib2_table_4_2_local_HPC.csv',
+   'DATA'),
+  ('rasterio\\gdal_data\\grib2_table_4_2_local_MRMS.csv',
+   'e:\\Collab '
+   'Projek\\IT-Sensing-Prototype\\.venv\\Lib\\site-packages\\rasterio\\gdal_data\\grib2_table_4_2_local_MRMS.csv',
+   'DATA'),
+  ('rasterio\\gdal_data\\grib2_table_4_2_local_NCEP.csv',
+   'e:\\Collab '
+   'Projek\\IT-Sensing-Prototype\\.venv\\Lib\\site-packages\\rasterio\\gdal_data\\grib2_table_4_2_local_NCEP.csv',
+   'DATA'),
+  ('rasterio\\gdal_data\\grib2_table_4_2_local_NDFD.csv',
+   'e:\\Collab '
+   'Projek\\IT-Sensing-Prototype\\.venv\\Lib\\site-packages\\rasterio\\gdal_data\\grib2_table_4_2_local_NDFD.csv',
+   'DATA'),
+  ('rasterio\\gdal_data\\grib2_table_4_2_local_index.csv',
+   'e:\\Collab '
+   'Projek\\IT-Sensing-Prototype\\.venv\\Lib\\site-packages\\rasterio\\gdal_data\\grib2_table_4_2_local_index.csv',
+   'DATA'),
+  ('rasterio\\gdal_data\\grib2_table_4_5.csv',
+   'e:\\Collab '
+   'Projek\\IT-Sensing-Prototype\\.venv\\Lib\\site-packages\\rasterio\\gdal_data\\grib2_table_4_5.csv',
+   'DATA'),
+  ('rasterio\\gdal_data\\grib2_table_versions.csv',
+   'e:\\Collab '
+   'Projek\\IT-Sensing-Prototype\\.venv\\Lib\\site-packages\\rasterio\\gdal_data\\grib2_table_versions.csv',
+   'DATA'),
+  ('rasterio\\gdal_data\\gt_datum.csv',
+   'e:\\Collab '
+   'Projek\\IT-Sensing-Prototype\\.venv\\Lib\\site-packages\\rasterio\\gdal_data\\gt_datum.csv',
+   'DATA'),
+  ('rasterio\\gdal_data\\gt_ellips.csv',
+   'e:\\Collab '
+   'Projek\\IT-Sensing-Prototype\\.venv\\Lib\\site-packages\\rasterio\\gdal_data\\gt_ellips.csv',
+   'DATA'),
+  ('rasterio\\gdal_data\\header.dxf',
+   'e:\\Collab '
+   'Projek\\IT-Sensing-Prototype\\.venv\\Lib\\site-packages\\rasterio\\gdal_data\\header.dxf',
+   'DATA'),
+  ('rasterio\\gdal_data\\inspire_cp_BasicPropertyUnit.gfs',
+   'e:\\Collab '
+   'Projek\\IT-Sensing-Prototype\\.venv\\Lib\\site-packages\\rasterio\\gdal_data\\inspire_cp_BasicPropertyUnit.gfs',
+   'DATA'),
+  ('rasterio\\gdal_data\\inspire_cp_CadastralBoundary.gfs',
+   'e:\\Collab '
+   'Projek\\IT-Sensing-Prototype\\.venv\\Lib\\site-packages\\rasterio\\gdal_data\\inspire_cp_CadastralBoundary.gfs',
+   'DATA'),
+  ('rasterio\\gdal_data\\inspire_cp_CadastralParcel.gfs',
+   'e:\\Collab '
+   'Projek\\IT-Sensing-Prototype\\.venv\\Lib\\site-packages\\rasterio\\gdal_data\\inspire_cp_CadastralParcel.gfs',
+   'DATA'),
+  ('rasterio\\gdal_data\\inspire_cp_CadastralZoning.gfs',
+   'e:\\Collab '
+   'Projek\\IT-Sensing-Prototype\\.venv\\Lib\\site-packages\\rasterio\\gdal_data\\inspire_cp_CadastralZoning.gfs',
+   'DATA'),
+  ('rasterio\\gdal_data\\jpfgdgml_AdmArea.gfs',
+   'e:\\Collab '
+   'Projek\\IT-Sensing-Prototype\\.venv\\Lib\\site-packages\\rasterio\\gdal_data\\jpfgdgml_AdmArea.gfs',
+   'DATA'),
+  ('rasterio\\gdal_data\\jpfgdgml_AdmBdry.gfs',
+   'e:\\Collab '
+   'Projek\\IT-Sensing-Prototype\\.venv\\Lib\\site-packages\\rasterio\\gdal_data\\jpfgdgml_AdmBdry.gfs',
+   'DATA'),
+  ('rasterio\\gdal_data\\jpfgdgml_AdmPt.gfs',
+   'e:\\Collab '
+   'Projek\\IT-Sensing-Prototype\\.venv\\Lib\\site-packages\\rasterio\\gdal_data\\jpfgdgml_AdmPt.gfs',
+   'DATA'),
+  ('rasterio\\gdal_data\\jpfgdgml_BldA.gfs',
+   'e:\\Collab '
+   'Projek\\IT-Sensing-Prototype\\.venv\\Lib\\site-packages\\rasterio\\gdal_data\\jpfgdgml_BldA.gfs',
+   'DATA'),
+  ('rasterio\\gdal_data\\jpfgdgml_BldL.gfs',
+   'e:\\Collab '
+   'Projek\\IT-Sensing-Prototype\\.venv\\Lib\\site-packages\\rasterio\\gdal_data\\jpfgdgml_BldL.gfs',
+   'DATA'),
+  ('rasterio\\gdal_data\\jpfgdgml_Cntr.gfs',
+   'e:\\Collab '
+   'Projek\\IT-Sensing-Prototype\\.venv\\Lib\\site-packages\\rasterio\\gdal_data\\jpfgdgml_Cntr.gfs',
+   'DATA'),
+  ('rasterio\\gdal_data\\jpfgdgml_CommBdry.gfs',
+   'e:\\Collab '
+   'Projek\\IT-Sensing-Prototype\\.venv\\Lib\\site-packages\\rasterio\\gdal_data\\jpfgdgml_CommBdry.gfs',
+   'DATA'),
+  ('rasterio\\gdal_data\\jpfgdgml_CommPt.gfs',
+   'e:\\Collab '
+   'Projek\\IT-Sensing-Prototype\\.venv\\Lib\\site-packages\\rasterio\\gdal_data\\jpfgdgml_CommPt.gfs',
+   'DATA'),
+  ('rasterio\\gdal_data\\jpfgdgml_Cstline.gfs',
+   'e:\\Collab '
+   'Projek\\IT-Sensing-Prototype\\.venv\\Lib\\site-packages\\rasterio\\gdal_data\\jpfgdgml_Cstline.gfs',
+   'DATA'),
+  ('rasterio\\gdal_data\\jpfgdgml_ElevPt.gfs',
+   'e:\\Collab '
+   'Projek\\IT-Sensing-Prototype\\.venv\\Lib\\site-packages\\rasterio\\gdal_data\\jpfgdgml_ElevPt.gfs',
+   'DATA'),
+  ('rasterio\\gdal_data\\jpfgdgml_GCP.gfs',
+   'e:\\Collab '
+   'Projek\\IT-Sensing-Prototype\\.venv\\Lib\\site-packages\\rasterio\\gdal_data\\jpfgdgml_GCP.gfs',
+   'DATA'),
+  ('rasterio\\gdal_data\\jpfgdgml_LeveeEdge.gfs',
+   'e:\\Collab '
+   'Projek\\IT-Sensing-Prototype\\.venv\\Lib\\site-packages\\rasterio\\gdal_data\\jpfgdgml_LeveeEdge.gfs',
+   'DATA'),
+  ('rasterio\\gdal_data\\jpfgdgml_RailCL.gfs',
+   'e:\\Collab '
+   'Projek\\IT-Sensing-Prototype\\.venv\\Lib\\site-packages\\rasterio\\gdal_data\\jpfgdgml_RailCL.gfs',
+   'DATA'),
+  ('rasterio\\gdal_data\\jpfgdgml_RdASL.gfs',
+   'e:\\Collab '
+   'Projek\\IT-Sensing-Prototype\\.venv\\Lib\\site-packages\\rasterio\\gdal_data\\jpfgdgml_RdASL.gfs',
+   'DATA'),
+  ('rasterio\\gdal_data\\jpfgdgml_RdArea.gfs',
+   'e:\\Collab '
+   'Projek\\IT-Sensing-Prototype\\.venv\\Lib\\site-packages\\rasterio\\gdal_data\\jpfgdgml_RdArea.gfs',
+   'DATA'),
+  ('rasterio\\gdal_data\\jpfgdgml_RdCompt.gfs',
+   'e:\\Collab '
+   'Projek\\IT-Sensing-Prototype\\.venv\\Lib\\site-packages\\rasterio\\gdal_data\\jpfgdgml_RdCompt.gfs',
+   'DATA'),
+  ('rasterio\\gdal_data\\jpfgdgml_RdEdg.gfs',
+   'e:\\Collab '
+   'Projek\\IT-Sensing-Prototype\\.venv\\Lib\\site-packages\\rasterio\\gdal_data\\jpfgdgml_RdEdg.gfs',
+   'DATA'),
+  ('rasterio\\gdal_data\\jpfgdgml_RdMgtBdry.gfs',
+   'e:\\Collab '
+   'Projek\\IT-Sensing-Prototype\\.venv\\Lib\\site-packages\\rasterio\\gdal_data\\jpfgdgml_RdMgtBdry.gfs',
+   'DATA'),
+  ('rasterio\\gdal_data\\jpfgdgml_RdSgmtA.gfs',
+   'e:\\Collab '
+   'Projek\\IT-Sensing-Prototype\\.venv\\Lib\\site-packages\\rasterio\\gdal_data\\jpfgdgml_RdSgmtA.gfs',
+   'DATA'),
+  ('rasterio\\gdal_data\\jpfgdgml_RvrMgtBdry.gfs',
+   'e:\\Collab '
+   'Projek\\IT-Sensing-Prototype\\.venv\\Lib\\site-packages\\rasterio\\gdal_data\\jpfgdgml_RvrMgtBdry.gfs',
+   'DATA'),
+  ('rasterio\\gdal_data\\jpfgdgml_SBAPt.gfs',
+   'e:\\Collab '
+   'Projek\\IT-Sensing-Prototype\\.venv\\Lib\\site-packages\\rasterio\\gdal_data\\jpfgdgml_SBAPt.gfs',
+   'DATA'),
+  ('rasterio\\gdal_data\\jpfgdgml_SBArea.gfs',
+   'e:\\Collab '
+   'Projek\\IT-Sensing-Prototype\\.venv\\Lib\\site-packages\\rasterio\\gdal_data\\jpfgdgml_SBArea.gfs',
+   'DATA'),
+  ('rasterio\\gdal_data\\jpfgdgml_SBBdry.gfs',
+   'e:\\Collab '
+   'Projek\\IT-Sensing-Prototype\\.venv\\Lib\\site-packages\\rasterio\\gdal_data\\jpfgdgml_SBBdry.gfs',
+   'DATA'),
+  ('rasterio\\gdal_data\\jpfgdgml_WA.gfs',
+   'e:\\Collab '
+   'Projek\\IT-Sensing-Prototype\\.venv\\Lib\\site-packages\\rasterio\\gdal_data\\jpfgdgml_WA.gfs',
+   'DATA'),
+  ('rasterio\\gdal_data\\jpfgdgml_WL.gfs',
+   'e:\\Collab '
+   'Projek\\IT-Sensing-Prototype\\.venv\\Lib\\site-packages\\rasterio\\gdal_data\\jpfgdgml_WL.gfs',
+   'DATA'),
+  ('rasterio\\gdal_data\\jpfgdgml_WStrA.gfs',
+   'e:\\Collab '
+   'Projek\\IT-Sensing-Prototype\\.venv\\Lib\\site-packages\\rasterio\\gdal_data\\jpfgdgml_WStrA.gfs',
+   'DATA'),
+  ('rasterio\\gdal_data\\jpfgdgml_WStrL.gfs',
+   'e:\\Collab '
+   'Projek\\IT-Sensing-Prototype\\.venv\\Lib\\site-packages\\rasterio\\gdal_data\\jpfgdgml_WStrL.gfs',
+   'DATA'),
+  ('rasterio\\gdal_data\\leaflet_template.html',
+   'e:\\Collab '
+   'Projek\\IT-Sensing-Prototype\\.venv\\Lib\\site-packages\\rasterio\\gdal_data\\leaflet_template.html',
+   'DATA'),
+  ('rasterio\\gdal_data\\netcdf_config.xsd',
+   'e:\\Collab '
+   'Projek\\IT-Sensing-Prototype\\.venv\\Lib\\site-packages\\rasterio\\gdal_data\\netcdf_config.xsd',
+   'DATA'),
+  ('rasterio\\gdal_data\\nitf_spec.xml',
+   'e:\\Collab '
+   'Projek\\IT-Sensing-Prototype\\.venv\\Lib\\site-packages\\rasterio\\gdal_data\\nitf_spec.xml',
+   'DATA'),
+  ('rasterio\\gdal_data\\nitf_spec.xsd',
+   'e:\\Collab '
+   'Projek\\IT-Sensing-Prototype\\.venv\\Lib\\site-packages\\rasterio\\gdal_data\\nitf_spec.xsd',
+   'DATA'),
+  ('rasterio\\gdal_data\\ogr_fields_override.schema.json',
+   'e:\\Collab '
+   'Projek\\IT-Sensing-Prototype\\.venv\\Lib\\site-packages\\rasterio\\gdal_data\\ogr_fields_override.schema.json',
+   'DATA'),
+  ('rasterio\\gdal_data\\ogrinfo_output.schema.json',
+   'e:\\Collab '
+   'Projek\\IT-Sensing-Prototype\\.venv\\Lib\\site-packages\\rasterio\\gdal_data\\ogrinfo_output.schema.json',
+   'DATA'),
+  ('rasterio\\gdal_data\\ogrvrt.xsd',
+   'e:\\Collab '
+   'Projek\\IT-Sensing-Prototype\\.venv\\Lib\\site-packages\\rasterio\\gdal_data\\ogrvrt.xsd',
+   'DATA'),
+  ('rasterio\\gdal_data\\osmconf.ini',
+   'e:\\Collab '
+   'Projek\\IT-Sensing-Prototype\\.venv\\Lib\\site-packages\\rasterio\\gdal_data\\osmconf.ini',
+   'DATA'),
+  ('rasterio\\gdal_data\\ozi_datum.csv',
+   'e:\\Collab '
+   'Projek\\IT-Sensing-Prototype\\.venv\\Lib\\site-packages\\rasterio\\gdal_data\\ozi_datum.csv',
+   'DATA'),
+  ('rasterio\\gdal_data\\ozi_ellips.csv',
+   'e:\\Collab '
+   'Projek\\IT-Sensing-Prototype\\.venv\\Lib\\site-packages\\rasterio\\gdal_data\\ozi_ellips.csv',
+   'DATA'),
+  ('rasterio\\gdal_data\\pci_datum.txt',
+   'e:\\Collab '
+   'Projek\\IT-Sensing-Prototype\\.venv\\Lib\\site-packages\\rasterio\\gdal_data\\pci_datum.txt',
+   'DATA'),
+  ('rasterio\\gdal_data\\pci_ellips.txt',
+   'e:\\Collab '
+   'Projek\\IT-Sensing-Prototype\\.venv\\Lib\\site-packages\\rasterio\\gdal_data\\pci_ellips.txt',
+   'DATA'),
+  ('rasterio\\gdal_data\\pdfcomposition.xsd',
+   'e:\\Collab '
+   'Projek\\IT-Sensing-Prototype\\.venv\\Lib\\site-packages\\rasterio\\gdal_data\\pdfcomposition.xsd',
+   'DATA'),
+  ('rasterio\\gdal_data\\pds4_template.xml',
+   'e:\\Collab '
+   'Projek\\IT-Sensing-Prototype\\.venv\\Lib\\site-packages\\rasterio\\gdal_data\\pds4_template.xml',
+   'DATA'),
+  ('rasterio\\gdal_data\\plscenesconf.json',
+   'e:\\Collab '
+   'Projek\\IT-Sensing-Prototype\\.venv\\Lib\\site-packages\\rasterio\\gdal_data\\plscenesconf.json',
+   'DATA'),
+  ('rasterio\\gdal_data\\ruian_vf_ob_v1.gfs',
+   'e:\\Collab '
+   'Projek\\IT-Sensing-Prototype\\.venv\\Lib\\site-packages\\rasterio\\gdal_data\\ruian_vf_ob_v1.gfs',
+   'DATA'),
+  ('rasterio\\gdal_data\\ruian_vf_st_uvoh_v1.gfs',
+   'e:\\Collab '
+   'Projek\\IT-Sensing-Prototype\\.venv\\Lib\\site-packages\\rasterio\\gdal_data\\ruian_vf_st_uvoh_v1.gfs',
+   'DATA'),
+  ('rasterio\\gdal_data\\ruian_vf_st_v1.gfs',
+   'e:\\Collab '
+   'Projek\\IT-Sensing-Prototype\\.venv\\Lib\\site-packages\\rasterio\\gdal_data\\ruian_vf_st_v1.gfs',
+   'DATA'),
+  ('rasterio\\gdal_data\\ruian_vf_v1.gfs',
+   'e:\\Collab '
+   'Projek\\IT-Sensing-Prototype\\.venv\\Lib\\site-packages\\rasterio\\gdal_data\\ruian_vf_v1.gfs',
+   'DATA'),
+  ('rasterio\\gdal_data\\s57agencies.csv',
+   'e:\\Collab '
+   'Projek\\IT-Sensing-Prototype\\.venv\\Lib\\site-packages\\rasterio\\gdal_data\\s57agencies.csv',
+   'DATA'),
+  ('rasterio\\gdal_data\\s57attributes.csv',
+   'e:\\Collab '
+   'Projek\\IT-Sensing-Prototype\\.venv\\Lib\\site-packages\\rasterio\\gdal_data\\s57attributes.csv',
+   'DATA'),
+  ('rasterio\\gdal_data\\s57expectedinput.csv',
+   'e:\\Collab '
+   'Projek\\IT-Sensing-Prototype\\.venv\\Lib\\site-packages\\rasterio\\gdal_data\\s57expectedinput.csv',
+   'DATA'),
+  ('rasterio\\gdal_data\\s57objectclasses.csv',
+   'e:\\Collab '
+   'Projek\\IT-Sensing-Prototype\\.venv\\Lib\\site-packages\\rasterio\\gdal_data\\s57objectclasses.csv',
+   'DATA'),
+  ('rasterio\\gdal_data\\seed_2d.dgn',
+   'e:\\Collab '
+   'Projek\\IT-Sensing-Prototype\\.venv\\Lib\\site-packages\\rasterio\\gdal_data\\seed_2d.dgn',
+   'DATA'),
+  ('rasterio\\gdal_data\\seed_3d.dgn',
+   'e:\\Collab '
+   'Projek\\IT-Sensing-Prototype\\.venv\\Lib\\site-packages\\rasterio\\gdal_data\\seed_3d.dgn',
+   'DATA'),
+  ('rasterio\\gdal_data\\stateplane.csv',
+   'e:\\Collab '
+   'Projek\\IT-Sensing-Prototype\\.venv\\Lib\\site-packages\\rasterio\\gdal_data\\stateplane.csv',
+   'DATA'),
+  ('rasterio\\gdal_data\\template_tiles.mapml',
+   'e:\\Collab '
+   'Projek\\IT-Sensing-Prototype\\.venv\\Lib\\site-packages\\rasterio\\gdal_data\\template_tiles.mapml',
+   'DATA'),
+  ('rasterio\\gdal_data\\tms_LINZAntarticaMapTileGrid.json',
+   'e:\\Collab '
+   'Projek\\IT-Sensing-Prototype\\.venv\\Lib\\site-packages\\rasterio\\gdal_data\\tms_LINZAntarticaMapTileGrid.json',
+   'DATA'),
+  ('rasterio\\gdal_data\\tms_MapML_APSTILE.json',
+   'e:\\Collab '
+   'Projek\\IT-Sensing-Prototype\\.venv\\Lib\\site-packages\\rasterio\\gdal_data\\tms_MapML_APSTILE.json',
+   'DATA'),
+  ('rasterio\\gdal_data\\tms_MapML_CBMTILE.json',
+   'e:\\Collab '
+   'Projek\\IT-Sensing-Prototype\\.venv\\Lib\\site-packages\\rasterio\\gdal_data\\tms_MapML_CBMTILE.json',
+   'DATA'),
+  ('rasterio\\gdal_data\\tms_NZTM2000.json',
+   'e:\\Collab '
+   'Projek\\IT-Sensing-Prototype\\.venv\\Lib\\site-packages\\rasterio\\gdal_data\\tms_NZTM2000.json',
+   'DATA'),
+  ('rasterio\\gdal_data\\trailer.dxf',
+   'e:\\Collab '
+   'Projek\\IT-Sensing-Prototype\\.venv\\Lib\\site-packages\\rasterio\\gdal_data\\trailer.dxf',
+   'DATA'),
+  ('rasterio\\gdal_data\\usage',
+   'e:\\Collab '
+   'Projek\\IT-Sensing-Prototype\\.venv\\Lib\\site-packages\\rasterio\\gdal_data\\usage',
+   'DATA'),
+  ('rasterio\\gdal_data\\vcpkg-cmake-wrapper.cmake',
+   'e:\\Collab '
+   'Projek\\IT-Sensing-Prototype\\.venv\\Lib\\site-packages\\rasterio\\gdal_data\\vcpkg-cmake-wrapper.cmake',
+   'DATA'),
+  ('rasterio\\gdal_data\\vcpkg.spdx.json',
+   'e:\\Collab '
+   'Projek\\IT-Sensing-Prototype\\.venv\\Lib\\site-packages\\rasterio\\gdal_data\\vcpkg.spdx.json',
+   'DATA'),
+  ('rasterio\\gdal_data\\vcpkg_abi_info.txt',
+   'e:\\Collab '
+   'Projek\\IT-Sensing-Prototype\\.venv\\Lib\\site-packages\\rasterio\\gdal_data\\vcpkg_abi_info.txt',
+   'DATA'),
+  ('rasterio\\gdal_data\\vdv452.xml',
+   'e:\\Collab '
+   'Projek\\IT-Sensing-Prototype\\.venv\\Lib\\site-packages\\rasterio\\gdal_data\\vdv452.xml',
+   'DATA'),
+  ('rasterio\\gdal_data\\vdv452.xsd',
+   'e:\\Collab '
+   'Projek\\IT-Sensing-Prototype\\.venv\\Lib\\site-packages\\rasterio\\gdal_data\\vdv452.xsd',
+   'DATA'),
+  ('rasterio\\gdal_data\\vicar.json',
+   'e:\\Collab '
+   'Projek\\IT-Sensing-Prototype\\.venv\\Lib\\site-packages\\rasterio\\gdal_data\\vicar.json',
+   'DATA'),
+  ('rasterio\\io.py',
+   'e:\\Collab '
+   'Projek\\IT-Sensing-Prototype\\.venv\\Lib\\site-packages\\rasterio\\io.py',
+   'DATA'),
+  ('rasterio\\mask.py',
+   'e:\\Collab '
+   'Projek\\IT-Sensing-Prototype\\.venv\\Lib\\site-packages\\rasterio\\mask.py',
+   'DATA'),
+  ('rasterio\\merge.py',
+   'e:\\Collab '
+   'Projek\\IT-Sensing-Prototype\\.venv\\Lib\\site-packages\\rasterio\\merge.py',
+   'DATA'),
+  ('rasterio\\path.py',
+   'e:\\Collab '
+   'Projek\\IT-Sensing-Prototype\\.venv\\Lib\\site-packages\\rasterio\\path.py',
+   'DATA'),
+  ('rasterio\\plot.py',
+   'e:\\Collab '
+   'Projek\\IT-Sensing-Prototype\\.venv\\Lib\\site-packages\\rasterio\\plot.py',
+   'DATA'),
+  ('rasterio\\profiles.py',
+   'e:\\Collab '
+   'Projek\\IT-Sensing-Prototype\\.venv\\Lib\\site-packages\\rasterio\\profiles.py',
+   'DATA'),
+  ('rasterio\\proj_data\\CH',
+   'e:\\Collab '
+   'Projek\\IT-Sensing-Prototype\\.venv\\Lib\\site-packages\\rasterio\\proj_data\\CH',
+   'DATA'),
+  ('rasterio\\proj_data\\GL27',
+   'e:\\Collab '
+   'Projek\\IT-Sensing-Prototype\\.venv\\Lib\\site-packages\\rasterio\\proj_data\\GL27',
+   'DATA'),
+  ('rasterio\\proj_data\\ITRF2000',
+   'e:\\Collab '
+   'Projek\\IT-Sensing-Prototype\\.venv\\Lib\\site-packages\\rasterio\\proj_data\\ITRF2000',
+   'DATA'),
+  ('rasterio\\proj_data\\ITRF2008',
+   'e:\\Collab '
+   'Projek\\IT-Sensing-Prototype\\.venv\\Lib\\site-packages\\rasterio\\proj_data\\ITRF2008',
+   'DATA'),
+  ('rasterio\\proj_data\\ITRF2014',
+   'e:\\Collab '
+   'Projek\\IT-Sensing-Prototype\\.venv\\Lib\\site-packages\\rasterio\\proj_data\\ITRF2014',
+   'DATA'),
+  ('rasterio\\proj_data\\ITRF2020',
+   'e:\\Collab '
+   'Projek\\IT-Sensing-Prototype\\.venv\\Lib\\site-packages\\rasterio\\proj_data\\ITRF2020',
+   'DATA'),
+  ('rasterio\\proj_data\\copyright',
+   'e:\\Collab '
+   'Projek\\IT-Sensing-Prototype\\.venv\\Lib\\site-packages\\rasterio\\proj_data\\copyright',
+   'DATA'),
+  ('rasterio\\proj_data\\deformation_model.schema.json',
+   'e:\\Collab '
+   'Projek\\IT-Sensing-Prototype\\.venv\\Lib\\site-packages\\rasterio\\proj_data\\deformation_model.schema.json',
+   'DATA'),
+  ('rasterio\\proj_data\\nad.lst',
+   'e:\\Collab '
+   'Projek\\IT-Sensing-Prototype\\.venv\\Lib\\site-packages\\rasterio\\proj_data\\nad.lst',
+   'DATA'),
+  ('rasterio\\proj_data\\nad27',
+   'e:\\Collab '
+   'Projek\\IT-Sensing-Prototype\\.venv\\Lib\\site-packages\\rasterio\\proj_data\\nad27',
+   'DATA'),
+  ('rasterio\\proj_data\\nad83',
+   'e:\\Collab '
+   'Projek\\IT-Sensing-Prototype\\.venv\\Lib\\site-packages\\rasterio\\proj_data\\nad83',
+   'DATA'),
+  ('rasterio\\proj_data\\other.extra',
+   'e:\\Collab '
+   'Projek\\IT-Sensing-Prototype\\.venv\\Lib\\site-packages\\rasterio\\proj_data\\other.extra',
+   'DATA'),
+  ('rasterio\\proj_data\\proj-config-version.cmake',
+   'e:\\Collab '
+   'Projek\\IT-Sensing-Prototype\\.venv\\Lib\\site-packages\\rasterio\\proj_data\\proj-config-version.cmake',
+   'DATA'),
+  ('rasterio\\proj_data\\proj-config.cmake',
+   'e:\\Collab '
+   'Projek\\IT-Sensing-Prototype\\.venv\\Lib\\site-packages\\rasterio\\proj_data\\proj-config.cmake',
+   'DATA'),
+  ('rasterio\\proj_data\\proj-targets-debug.cmake',
+   'e:\\Collab '
+   'Projek\\IT-Sensing-Prototype\\.venv\\Lib\\site-packages\\rasterio\\proj_data\\proj-targets-debug.cmake',
+   'DATA'),
+  ('rasterio\\proj_data\\proj-targets-release.cmake',
+   'e:\\Collab '
+   'Projek\\IT-Sensing-Prototype\\.venv\\Lib\\site-packages\\rasterio\\proj_data\\proj-targets-release.cmake',
+   'DATA'),
+  ('rasterio\\proj_data\\proj-targets.cmake',
+   'e:\\Collab '
+   'Projek\\IT-Sensing-Prototype\\.venv\\Lib\\site-packages\\rasterio\\proj_data\\proj-targets.cmake',
+   'DATA'),
+  ('rasterio\\proj_data\\proj.db',
+   'e:\\Collab '
+   'Projek\\IT-Sensing-Prototype\\.venv\\Lib\\site-packages\\rasterio\\proj_data\\proj.db',
+   'DATA'),
+  ('rasterio\\proj_data\\proj.ini',
+   'e:\\Collab '
+   'Projek\\IT-Sensing-Prototype\\.venv\\Lib\\site-packages\\rasterio\\proj_data\\proj.ini',
+   'DATA'),
+  ('rasterio\\proj_data\\proj4-targets-debug.cmake',
+   'e:\\Collab '
+   'Projek\\IT-Sensing-Prototype\\.venv\\Lib\\site-packages\\rasterio\\proj_data\\proj4-targets-debug.cmake',
+   'DATA'),
+  ('rasterio\\proj_data\\proj4-targets-release.cmake',
+   'e:\\Collab '
+   'Projek\\IT-Sensing-Prototype\\.venv\\Lib\\site-packages\\rasterio\\proj_data\\proj4-targets-release.cmake',
+   'DATA'),
+  ('rasterio\\proj_data\\proj4-targets.cmake',
+   'e:\\Collab '
+   'Projek\\IT-Sensing-Prototype\\.venv\\Lib\\site-packages\\rasterio\\proj_data\\proj4-targets.cmake',
+   'DATA'),
+  ('rasterio\\proj_data\\projjson.schema.json',
+   'e:\\Collab '
+   'Projek\\IT-Sensing-Prototype\\.venv\\Lib\\site-packages\\rasterio\\proj_data\\projjson.schema.json',
+   'DATA'),
+  ('rasterio\\proj_data\\triangulation.schema.json',
+   'e:\\Collab '
+   'Projek\\IT-Sensing-Prototype\\.venv\\Lib\\site-packages\\rasterio\\proj_data\\triangulation.schema.json',
+   'DATA'),
+  ('rasterio\\proj_data\\usage',
+   'e:\\Collab '
+   'Projek\\IT-Sensing-Prototype\\.venv\\Lib\\site-packages\\rasterio\\proj_data\\usage',
+   'DATA'),
+  ('rasterio\\proj_data\\vcpkg.spdx.json',
+   'e:\\Collab '
+   'Projek\\IT-Sensing-Prototype\\.venv\\Lib\\site-packages\\rasterio\\proj_data\\vcpkg.spdx.json',
+   'DATA'),
+  ('rasterio\\proj_data\\vcpkg_abi_info.txt',
+   'e:\\Collab '
+   'Projek\\IT-Sensing-Prototype\\.venv\\Lib\\site-packages\\rasterio\\proj_data\\vcpkg_abi_info.txt',
+   'DATA'),
+  ('rasterio\\proj_data\\world',
+   'e:\\Collab '
+   'Projek\\IT-Sensing-Prototype\\.venv\\Lib\\site-packages\\rasterio\\proj_data\\world',
+   'DATA'),
+  ('rasterio\\rio\\__init__.py',
+   'e:\\Collab '
+   'Projek\\IT-Sensing-Prototype\\.venv\\Lib\\site-packages\\rasterio\\rio\\__init__.py',
+   'DATA'),
+  ('rasterio\\rio\\blocks.py',
+   'e:\\Collab '
+   'Projek\\IT-Sensing-Prototype\\.venv\\Lib\\site-packages\\rasterio\\rio\\blocks.py',
+   'DATA'),
+  ('rasterio\\rio\\bounds.py',
+   'e:\\Collab '
+   'Projek\\IT-Sensing-Prototype\\.venv\\Lib\\site-packages\\rasterio\\rio\\bounds.py',
+   'DATA'),
+  ('rasterio\\rio\\calc.py',
+   'e:\\Collab '
+   'Projek\\IT-Sensing-Prototype\\.venv\\Lib\\site-packages\\rasterio\\rio\\calc.py',
+   'DATA'),
+  ('rasterio\\rio\\clip.py',
+   'e:\\Collab '
+   'Projek\\IT-Sensing-Prototype\\.venv\\Lib\\site-packages\\rasterio\\rio\\clip.py',
+   'DATA'),
+  ('rasterio\\rio\\convert.py',
+   'e:\\Collab '
+   'Projek\\IT-Sensing-Prototype\\.venv\\Lib\\site-packages\\rasterio\\rio\\convert.py',
+   'DATA'),
+  ('rasterio\\rio\\create.py',
+   'e:\\Collab '
+   'Projek\\IT-Sensing-Prototype\\.venv\\Lib\\site-packages\\rasterio\\rio\\create.py',
+   'DATA'),
+  ('rasterio\\rio\\edit_info.py',
+   'e:\\Collab '
+   'Projek\\IT-Sensing-Prototype\\.venv\\Lib\\site-packages\\rasterio\\rio\\edit_info.py',
+   'DATA'),
+  ('rasterio\\rio\\env.py',
+   'e:\\Collab '
+   'Projek\\IT-Sensing-Prototype\\.venv\\Lib\\site-packages\\rasterio\\rio\\env.py',
+   'DATA'),
+  ('rasterio\\rio\\gcps.py',
+   'e:\\Collab '
+   'Projek\\IT-Sensing-Prototype\\.venv\\Lib\\site-packages\\rasterio\\rio\\gcps.py',
+   'DATA'),
+  ('rasterio\\rio\\helpers.py',
+   'e:\\Collab '
+   'Projek\\IT-Sensing-Prototype\\.venv\\Lib\\site-packages\\rasterio\\rio\\helpers.py',
+   'DATA'),
+  ('rasterio\\rio\\info.py',
+   'e:\\Collab '
+   'Projek\\IT-Sensing-Prototype\\.venv\\Lib\\site-packages\\rasterio\\rio\\info.py',
+   'DATA'),
+  ('rasterio\\rio\\insp.py',
+   'e:\\Collab '
+   'Projek\\IT-Sensing-Prototype\\.venv\\Lib\\site-packages\\rasterio\\rio\\insp.py',
+   'DATA'),
+  ('rasterio\\rio\\main.py',
+   'e:\\Collab '
+   'Projek\\IT-Sensing-Prototype\\.venv\\Lib\\site-packages\\rasterio\\rio\\main.py',
+   'DATA'),
+  ('rasterio\\rio\\mask.py',
+   'e:\\Collab '
+   'Projek\\IT-Sensing-Prototype\\.venv\\Lib\\site-packages\\rasterio\\rio\\mask.py',
+   'DATA'),
+  ('rasterio\\rio\\merge.py',
+   'e:\\Collab '
+   'Projek\\IT-Sensing-Prototype\\.venv\\Lib\\site-packages\\rasterio\\rio\\merge.py',
+   'DATA'),
+  ('rasterio\\rio\\options.py',
+   'e:\\Collab '
+   'Projek\\IT-Sensing-Prototype\\.venv\\Lib\\site-packages\\rasterio\\rio\\options.py',
+   'DATA'),
+  ('rasterio\\rio\\overview.py',
+   'e:\\Collab '
+   'Projek\\IT-Sensing-Prototype\\.venv\\Lib\\site-packages\\rasterio\\rio\\overview.py',
+   'DATA'),
+  ('rasterio\\rio\\rasterize.py',
+   'e:\\Collab '
+   'Projek\\IT-Sensing-Prototype\\.venv\\Lib\\site-packages\\rasterio\\rio\\rasterize.py',
+   'DATA'),
+  ('rasterio\\rio\\rm.py',
+   'e:\\Collab '
+   'Projek\\IT-Sensing-Prototype\\.venv\\Lib\\site-packages\\rasterio\\rio\\rm.py',
+   'DATA'),
+  ('rasterio\\rio\\sample.py',
+   'e:\\Collab '
+   'Projek\\IT-Sensing-Prototype\\.venv\\Lib\\site-packages\\rasterio\\rio\\sample.py',
+   'DATA'),
+  ('rasterio\\rio\\shapes.py',
+   'e:\\Collab '
+   'Projek\\IT-Sensing-Prototype\\.venv\\Lib\\site-packages\\rasterio\\rio\\shapes.py',
+   'DATA'),
+  ('rasterio\\rio\\stack.py',
+   'e:\\Collab '
+   'Projek\\IT-Sensing-Prototype\\.venv\\Lib\\site-packages\\rasterio\\rio\\stack.py',
+   'DATA'),
+  ('rasterio\\rio\\transform.py',
+   'e:\\Collab '
+   'Projek\\IT-Sensing-Prototype\\.venv\\Lib\\site-packages\\rasterio\\rio\\transform.py',
+   'DATA'),
+  ('rasterio\\rio\\warp.py',
+   'e:\\Collab '
+   'Projek\\IT-Sensing-Prototype\\.venv\\Lib\\site-packages\\rasterio\\rio\\warp.py',
+   'DATA'),
+  ('rasterio\\rpc.py',
+   'e:\\Collab '
+   'Projek\\IT-Sensing-Prototype\\.venv\\Lib\\site-packages\\rasterio\\rpc.py',
+   'DATA'),
+  ('rasterio\\sample.py',
+   'e:\\Collab '
+   'Projek\\IT-Sensing-Prototype\\.venv\\Lib\\site-packages\\rasterio\\sample.py',
+   'DATA'),
+  ('rasterio\\session.py',
+   'e:\\Collab '
+   'Projek\\IT-Sensing-Prototype\\.venv\\Lib\\site-packages\\rasterio\\session.py',
+   'DATA'),
+  ('rasterio\\shutil.c',
+   'e:\\Collab '
+   'Projek\\IT-Sensing-Prototype\\.venv\\Lib\\site-packages\\rasterio\\shutil.c',
+   'DATA'),
+  ('rasterio\\shutil.pyx',
+   'e:\\Collab '
+   'Projek\\IT-Sensing-Prototype\\.venv\\Lib\\site-packages\\rasterio\\shutil.pyx',
+   'DATA'),
+  ('rasterio\\stack.py',
+   'e:\\Collab '
+   'Projek\\IT-Sensing-Prototype\\.venv\\Lib\\site-packages\\rasterio\\stack.py',
+   'DATA'),
+  ('rasterio\\tools.py',
+   'e:\\Collab '
+   'Projek\\IT-Sensing-Prototype\\.venv\\Lib\\site-packages\\rasterio\\tools.py',
+   'DATA'),
+  ('rasterio\\transform.py',
+   'e:\\Collab '
+   'Projek\\IT-Sensing-Prototype\\.venv\\Lib\\site-packages\\rasterio\\transform.py',
+   'DATA'),
+  ('rasterio\\vrt.py',
+   'e:\\Collab '
+   'Projek\\IT-Sensing-Prototype\\.venv\\Lib\\site-packages\\rasterio\\vrt.py',
+   'DATA'),
+  ('rasterio\\warp.py',
+   'e:\\Collab '
+   'Projek\\IT-Sensing-Prototype\\.venv\\Lib\\site-packages\\rasterio\\warp.py',
+   'DATA'),
+  ('rasterio\\windows.py',
+   'e:\\Collab '
+   'Projek\\IT-Sensing-Prototype\\.venv\\Lib\\site-packages\\rasterio\\windows.py',
+   'DATA'),
+  ('setuptools\\_vendor\\importlib_metadata-8.0.0.dist-info\\RECORD',
+   'e:\\Collab '
+   'Projek\\IT-Sensing-Prototype\\.venv\\Lib\\site-packages\\setuptools\\_vendor\\importlib_metadata-8.0.0.dist-info\\RECORD',
+   'DATA'),
+  ('setuptools\\_vendor\\importlib_metadata-8.0.0.dist-info\\REQUESTED',
+   'e:\\Collab '
+   'Projek\\IT-Sensing-Prototype\\.venv\\Lib\\site-packages\\setuptools\\_vendor\\importlib_metadata-8.0.0.dist-info\\REQUESTED',
+   'DATA'),
+  ('setuptools\\_vendor\\importlib_metadata-8.0.0.dist-info\\INSTALLER',
+   'e:\\Collab '
+   'Projek\\IT-Sensing-Prototype\\.venv\\Lib\\site-packages\\setuptools\\_vendor\\importlib_metadata-8.0.0.dist-info\\INSTALLER',
+   'DATA'),
+  ('setuptools\\_vendor\\importlib_metadata-8.0.0.dist-info\\LICENSE',
+   'e:\\Collab '
+   'Projek\\IT-Sensing-Prototype\\.venv\\Lib\\site-packages\\setuptools\\_vendor\\importlib_metadata-8.0.0.dist-info\\LICENSE',
+   'DATA'),
+  ('setuptools\\_vendor\\importlib_metadata-8.0.0.dist-info\\WHEEL',
+   'e:\\Collab '
+   'Projek\\IT-Sensing-Prototype\\.venv\\Lib\\site-packages\\setuptools\\_vendor\\importlib_metadata-8.0.0.dist-info\\WHEEL',
+   'DATA'),
+  ('setuptools\\_vendor\\importlib_metadata-8.0.0.dist-info\\top_level.txt',
+   'e:\\Collab '
+   'Projek\\IT-Sensing-Prototype\\.venv\\Lib\\site-packages\\setuptools\\_vendor\\importlib_metadata-8.0.0.dist-info\\top_level.txt',
+   'DATA'),
+  ('setuptools\\_vendor\\importlib_metadata-8.0.0.dist-info\\METADATA',
+   'e:\\Collab '
+   'Projek\\IT-Sensing-Prototype\\.venv\\Lib\\site-packages\\setuptools\\_vendor\\importlib_metadata-8.0.0.dist-info\\METADATA',
+   'DATA'),
+  ('setuptools\\_vendor\\jaraco\\text\\Lorem ipsum.txt',
+   'e:\\Collab '
+   'Projek\\IT-Sensing-Prototype\\.venv\\Lib\\site-packages\\setuptools\\_vendor\\jaraco\\text\\Lorem '
+   'ipsum.txt',
+   'DATA'),
+  ('numpy-2.4.1.dist-info\\METADATA',
+   'e:\\Collab '
+   'Projek\\IT-Sensing-Prototype\\.venv\\Lib\\site-packages\\numpy-2.4.1.dist-info\\METADATA',
+   'DATA'),
+  ('click-8.3.1.dist-info\\licenses\\LICENSE.txt',
+   'e:\\Collab '
+   'Projek\\IT-Sensing-Prototype\\.venv\\Lib\\site-packages\\click-8.3.1.dist-info\\licenses\\LICENSE.txt',
+   'DATA'),
+  ('click-8.3.1.dist-info\\WHEEL',
+   'e:\\Collab '
+   'Projek\\IT-Sensing-Prototype\\.venv\\Lib\\site-packages\\click-8.3.1.dist-info\\WHEEL',
+   'DATA'),
+  ('numpy-2.4.1.dist-info\\licenses\\numpy\\random\\src\\mt19937\\LICENSE.md',
+   'e:\\Collab '
+   'Projek\\IT-Sensing-Prototype\\.venv\\Lib\\site-packages\\numpy-2.4.1.dist-info\\licenses\\numpy\\random\\src\\mt19937\\LICENSE.md',
+   'DATA'),
+  ('numpy-2.4.1.dist-info\\licenses\\numpy\\random\\LICENSE.md',
+   'e:\\Collab '
+   'Projek\\IT-Sensing-Prototype\\.venv\\Lib\\site-packages\\numpy-2.4.1.dist-info\\licenses\\numpy\\random\\LICENSE.md',
+   'DATA'),
+  ('click-8.3.1.dist-info\\RECORD',
+   'e:\\Collab '
+   'Projek\\IT-Sensing-Prototype\\.venv\\Lib\\site-packages\\click-8.3.1.dist-info\\RECORD',
+   'DATA'),
+  ('numpy-2.4.1.dist-info\\licenses\\numpy\\fft\\pocketfft\\LICENSE.md',
+   'e:\\Collab '
+   'Projek\\IT-Sensing-Prototype\\.venv\\Lib\\site-packages\\numpy-2.4.1.dist-info\\licenses\\numpy\\fft\\pocketfft\\LICENSE.md',
+   'DATA'),
+  ('numpy-2.4.1.dist-info\\licenses\\numpy\\linalg\\lapack_lite\\LICENSE.txt',
+   'e:\\Collab '
+   'Projek\\IT-Sensing-Prototype\\.venv\\Lib\\site-packages\\numpy-2.4.1.dist-info\\licenses\\numpy\\linalg\\lapack_lite\\LICENSE.txt',
+   'DATA'),
+  ('numpy-2.4.1.dist-info\\licenses\\numpy\\_core\\src\\highway\\LICENSE',
+   'e:\\Collab '
+   'Projek\\IT-Sensing-Prototype\\.venv\\Lib\\site-packages\\numpy-2.4.1.dist-info\\licenses\\numpy\\_core\\src\\highway\\LICENSE',
+   'DATA'),
+  ('click-8.3.1.dist-info\\INSTALLER',
+   'e:\\Collab '
+   'Projek\\IT-Sensing-Prototype\\.venv\\Lib\\site-packages\\click-8.3.1.dist-info\\INSTALLER',
+   'DATA'),
+  ('numpy-2.4.1.dist-info\\DELVEWHEEL',
+   'e:\\Collab '
+   'Projek\\IT-Sensing-Prototype\\.venv\\Lib\\site-packages\\numpy-2.4.1.dist-info\\DELVEWHEEL',
+   'DATA'),
+  ('numpy-2.4.1.dist-info\\licenses\\numpy\\_core\\src\\umath\\svml\\LICENSE',
+   'e:\\Collab '
+   'Projek\\IT-Sensing-Prototype\\.venv\\Lib\\site-packages\\numpy-2.4.1.dist-info\\licenses\\numpy\\_core\\src\\umath\\svml\\LICENSE',
+   'DATA'),
+  ('numpy-2.4.1.dist-info\\licenses\\numpy\\_core\\src\\multiarray\\dragon4_LICENSE.txt',
+   'e:\\Collab '
+   'Projek\\IT-Sensing-Prototype\\.venv\\Lib\\site-packages\\numpy-2.4.1.dist-info\\licenses\\numpy\\_core\\src\\multiarray\\dragon4_LICENSE.txt',
+   'DATA'),
+  ('numpy-2.4.1.dist-info\\REQUESTED',
+   'e:\\Collab '
+   'Projek\\IT-Sensing-Prototype\\.venv\\Lib\\site-packages\\numpy-2.4.1.dist-info\\REQUESTED',
+   'DATA'),
+  ('numpy-2.4.1.dist-info\\licenses\\numpy\\random\\src\\distributions\\LICENSE.md',
+   'e:\\Collab '
+   'Projek\\IT-Sensing-Prototype\\.venv\\Lib\\site-packages\\numpy-2.4.1.dist-info\\licenses\\numpy\\random\\src\\distributions\\LICENSE.md',
+   'DATA'),
+  ('numpy-2.4.1.dist-info\\INSTALLER',
+   'e:\\Collab '
+   'Projek\\IT-Sensing-Prototype\\.venv\\Lib\\site-packages\\numpy-2.4.1.dist-info\\INSTALLER',
+   'DATA'),
+  ('numpy-2.4.1.dist-info\\licenses\\numpy\\_core\\include\\numpy\\libdivide\\LICENSE.txt',
+   'e:\\Collab '
+   'Projek\\IT-Sensing-Prototype\\.venv\\Lib\\site-packages\\numpy-2.4.1.dist-info\\licenses\\numpy\\_core\\include\\numpy\\libdivide\\LICENSE.txt',
+   'DATA'),
+  ('numpy-2.4.1.dist-info\\licenses\\numpy\\random\\src\\splitmix64\\LICENSE.md',
+   'e:\\Collab '
+   'Projek\\IT-Sensing-Prototype\\.venv\\Lib\\site-packages\\numpy-2.4.1.dist-info\\licenses\\numpy\\random\\src\\splitmix64\\LICENSE.md',
+   'DATA'),
+  ('numpy-2.4.1.dist-info\\licenses\\LICENSE.txt',
+   'e:\\Collab '
+   'Projek\\IT-Sensing-Prototype\\.venv\\Lib\\site-packages\\numpy-2.4.1.dist-info\\licenses\\LICENSE.txt',
+   'DATA'),
+  ('click-8.3.1.dist-info\\METADATA',
+   'e:\\Collab '
+   'Projek\\IT-Sensing-Prototype\\.venv\\Lib\\site-packages\\click-8.3.1.dist-info\\METADATA',
+   'DATA'),
+  ('numpy-2.4.1.dist-info\\WHEEL',
+   'e:\\Collab '
+   'Projek\\IT-Sensing-Prototype\\.venv\\Lib\\site-packages\\numpy-2.4.1.dist-info\\WHEEL',
+   'DATA'),
+  ('attrs-25.4.0.dist-info\\WHEEL',
+   'e:\\Collab '
+   'Projek\\IT-Sensing-Prototype\\.venv\\Lib\\site-packages\\attrs-25.4.0.dist-info\\WHEEL',
+   'DATA'),
+  ('numpy-2.4.1.dist-info\\licenses\\numpy\\random\\src\\pcg64\\LICENSE.md',
+   'e:\\Collab '
+   'Projek\\IT-Sensing-Prototype\\.venv\\Lib\\site-packages\\numpy-2.4.1.dist-info\\licenses\\numpy\\random\\src\\pcg64\\LICENSE.md',
+   'DATA'),
+  ('numpy-2.4.1.dist-info\\RECORD',
+   'e:\\Collab '
+   'Projek\\IT-Sensing-Prototype\\.venv\\Lib\\site-packages\\numpy-2.4.1.dist-info\\RECORD',
+   'DATA'),
+  ('attrs-25.4.0.dist-info\\METADATA',
+   'e:\\Collab '
+   'Projek\\IT-Sensing-Prototype\\.venv\\Lib\\site-packages\\attrs-25.4.0.dist-info\\METADATA',
+   'DATA'),
+  ('attrs-25.4.0.dist-info\\licenses\\LICENSE',
+   'e:\\Collab '
+   'Projek\\IT-Sensing-Prototype\\.venv\\Lib\\site-packages\\attrs-25.4.0.dist-info\\licenses\\LICENSE',
+   'DATA'),
+  ('numpy-2.4.1.dist-info\\licenses\\numpy\\_core\\src\\npysort\\x86-simd-sort\\LICENSE.md',
+   'e:\\Collab '
+   'Projek\\IT-Sensing-Prototype\\.venv\\Lib\\site-packages\\numpy-2.4.1.dist-info\\licenses\\numpy\\_core\\src\\npysort\\x86-simd-sort\\LICENSE.md',
+   'DATA'),
+  ('attrs-25.4.0.dist-info\\RECORD',
+   'e:\\Collab '
+   'Projek\\IT-Sensing-Prototype\\.venv\\Lib\\site-packages\\attrs-25.4.0.dist-info\\RECORD',
+   'DATA'),
+  ('numpy-2.4.1.dist-info\\entry_points.txt',
+   'e:\\Collab '
+   'Projek\\IT-Sensing-Prototype\\.venv\\Lib\\site-packages\\numpy-2.4.1.dist-info\\entry_points.txt',
+   'DATA'),
+  ('attrs-25.4.0.dist-info\\INSTALLER',
+   'e:\\Collab '
+   'Projek\\IT-Sensing-Prototype\\.venv\\Lib\\site-packages\\attrs-25.4.0.dist-info\\INSTALLER',
+   'DATA'),
+  ('numpy-2.4.1.dist-info\\licenses\\numpy\\_core\\src\\common\\pythoncapi-compat\\COPYING',
+   'e:\\Collab '
+   'Projek\\IT-Sensing-Prototype\\.venv\\Lib\\site-packages\\numpy-2.4.1.dist-info\\licenses\\numpy\\_core\\src\\common\\pythoncapi-compat\\COPYING',
+   'DATA'),
+  ('numpy-2.4.1.dist-info\\licenses\\numpy\\random\\src\\philox\\LICENSE.md',
+   'e:\\Collab '
+   'Projek\\IT-Sensing-Prototype\\.venv\\Lib\\site-packages\\numpy-2.4.1.dist-info\\licenses\\numpy\\random\\src\\philox\\LICENSE.md',
+   'DATA'),
+  ('numpy-2.4.1.dist-info\\licenses\\numpy\\ma\\LICENSE',
+   'e:\\Collab '
+   'Projek\\IT-Sensing-Prototype\\.venv\\Lib\\site-packages\\numpy-2.4.1.dist-info\\licenses\\numpy\\ma\\LICENSE',
+   'DATA'),
+  ('numpy-2.4.1.dist-info\\licenses\\numpy\\random\\src\\sfc64\\LICENSE.md',
+   'e:\\Collab '
+   'Projek\\IT-Sensing-Prototype\\.venv\\Lib\\site-packages\\numpy-2.4.1.dist-info\\licenses\\numpy\\random\\src\\sfc64\\LICENSE.md',
+   'DATA'),
+  ('base_library.zip',
+   'E:\\Collab '
+   'Projek\\IT-Sensing-Prototype\\Assets\\StreamingAssets\\Backend\\build\\composite2_standalone\\base_library.zip',
+   'DATA')],
+ [],
+ False,
+ False,
+ 1768789901,
+ [('run.exe',
+   'e:\\Collab '
+   'Projek\\IT-Sensing-Prototype\\.venv\\Lib\\site-packages\\PyInstaller\\bootloader\\Windows-64bit-intel\\run.exe',
+   'EXECUTABLE')],
+ 'C:\\Users\\HP\\AppData\\Local\\Programs\\Python\\Python313\\python313.dll')

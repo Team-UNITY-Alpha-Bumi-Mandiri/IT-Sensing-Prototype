@@ -22,7 +22,7 @@ class Data():
         
         self.folder_output = f'{self.output_folder_name}'
         if not os.path.exists(self.folder_output):
-            os.makedirs(self.folder_output)
+            os.makedirs(self.folder_output, exist_ok=True)
 
         self.filename = f'{self.prefix_name}_{self.algorithm}_{self.ymdhms}.tif'
         self.output_final_path = os.path.join(self.folder_output, self.filename)

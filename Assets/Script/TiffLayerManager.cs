@@ -103,12 +103,13 @@ public class TiffLayerManager : MonoBehaviour
     //   west/east   - Longitude bounds (derajat)
     //   isPreview   - True jika ini preview sementara (tidak disimpan ke project)
     //   clearExisting - True untuk hapus layer sebelumnya
-    public void LoadPngOverlay(string pngPath, double north, double south, double west, double east, bool isPreview = false, bool clearExisting = true)
+    public void LoadPngOverlay(string pngPath, double north, double south, double west, double east, bool isPreview = false, bool clearExisting = true, string customLayerName = "")
     {
         if (!File.Exists(pngPath)) { Debug.LogError($"[TiffLayerManager] PNG tidak ditemukan: {pngPath}"); return; }
 
         // Tentukan nama layer
-        string layerName = isPreview ? "PREVIEW_SATELIT" : Path.GetFileNameWithoutExtension(pngPath);
+        string layerName = isPreview ? "PREVIEW_SATELIT" : 
+                          (!string.IsNullOrEmpty(customLayerName) ? customLayerName : Path.GetFileNameWithoutExtension(pngPath));
         
         // Hapus preview lama jika ada
         if (layerName == "PREVIEW_SATELIT") RemoveLayer("PREVIEW_SATELIT");
@@ -607,24 +608,25 @@ public class TiffLayerManager : MonoBehaviour
         {
             if (pngPath.Contains("temp")) continue;
             
-            string originalName = Path.GetFileNameWithoutExtension(pngPath);
+            // Tentukan layer name (konsisten dengan GeeDownloadController)
+            string layerName = Path.GetFileNameWithoutExtension(pngPath);
+            string parentDir = Path.GetFileName(Path.GetDirectoryName(pngPath));
+            
+            // Cek subfolder (tanggal)
+            if (!string.Equals(Path.GetFullPath(Path.GetDirectoryName(pngPath)).TrimEnd('\\', '/'), 
+                               Path.GetFullPath(targetDir).TrimEnd('\\', '/'), 
+                               System.StringComparison.OrdinalIgnoreCase))
+            {
+                layerName = parentDir;
+            }
+            
+            string originalName = layerName; // Gunakan ini sebagai identifier layer
             
             // LOGIKA PERSISTENCE:
             // 1. Jika layer ini sudah ada di PropertyPanel (key exists) -> Load (mungkin renamed atau tidak)
             // 2. Jika layer ini TIDAK ada di PropertyPanel -> 
             //    - Cek apakah ini file baru? (belum pernah diload sebelumnya)
             //    - ATAU apakah ini file lama yang sudah didelete user?
-            //    
-            // Masalahnya: Kita tidak tahu apakah file ini "baru didownload" atau "sudah didelete".
-            // Solusi: Kita asumsikan file di disk yang TIDAK ada di properties adalah file yang SUDAH DIHAPUS oleh user (soft delete di UI, hard persistence di disk).
-            // JADI KITA SKIP LOAD jika tidak ada di properties.
-            // TAPI: Untuk pertama kali load (fresh project), properties kosong.
-            
-            // REVISI LOGIKA:
-            // - Jika properties masih kosong/null -> Ini load pertama kali -> Load semua found files & add to properties.
-            // - Jika properties TIDAK kosong ->
-            //   - Load HANYA jika nama layer ada di properties.
-            //   - Jika tidak ada, anggap sudah didelete user (SKIP).
             
             bool shouldLoad = false;
 
@@ -635,12 +637,8 @@ public class TiffLayerManager : MonoBehaviour
             }
             else
             {
-                // Kasus B: Project sudah punya properties -> Cek eksistensi
-                // Tapi file di disk namanya "originalName".
-                // Jika user me-rename layer di UI, key di properties berubah jadi "newName".
-                // File fisik juga harusnya ikut ter-rename via RenameLayer().
-                // Jadi jika nama file tidak ada di dict properties, berarti benar-benar deleted.
-                
+                // Kasus B: Cek eksistensi di properties
+                // Kita gunakan originalName (subfolder name) sebagai key awal
                 if (currentProps.ContainsKey(originalName))
                 {
                     shouldLoad = true;
@@ -652,7 +650,7 @@ public class TiffLayerManager : MonoBehaviour
                 // Cek apakah sudah diload di memory
                 if (!layers.Exists(l => l.name == originalName))
                 {
-                    LoadPngOverlay(pngPath, n, s, w, e, false, false);
+                    LoadPngOverlay(pngPath, n, s, w, e, false, false, originalName);
                 }
             }
         }
@@ -667,19 +665,26 @@ public class TiffLayerManager : MonoBehaviour
         var layer = layers.Find(l => l.name == name);
         if (layer != null)
         {
-            // Hapus file fisik jika diminta
+            // Hapus FOLDER fisik jika diminta
             if (deleteFile && !string.IsNullOrEmpty(layer.path) && File.Exists(layer.path))
             {
                 try
                 {
                     string dir = Path.GetDirectoryName(layer.path);
-                    string baseName = Path.GetFileNameWithoutExtension(layer.path);
-                    foreach (var f in Directory.GetFiles(dir, baseName + ".*"))
-                        File.Delete(f);
+                    // Cek apakah nama folder sama dengan nama layer (validasi extra safety)
+                    if (Path.GetFileName(dir) == name)
+                    {
+                        // Hapus folder beserta isinya
+                        Directory.Delete(dir, true);
+
+                        // Hapus meta file folder juga
+                        string metaPath = dir + ".meta";
+                        if (File.Exists(metaPath)) File.Delete(metaPath);
+                    }
                 }
                 catch (System.Exception ex)
                 {
-                    Debug.LogError($"[TiffLayerManager] Delete failed: {ex.Message}");
+                    Debug.LogError($"[TiffLayerManager] Delete folder failed: {ex.Message}");
                 }
             }
 
@@ -696,31 +701,45 @@ public class TiffLayerManager : MonoBehaviour
         }
     }
 
-    // Rename layer (termasuk file fisik)
+    // Rename layer (termasuk folder fisik)
     public void RenameLayer(string oldName, string newName)
     {
         var layer = layers.Find(l => l.name == oldName);
         if (layer == null) return;
 
-        // Rename file fisik
+        // Rename FOLDER fisik
         if (!string.IsNullOrEmpty(layer.path) && File.Exists(layer.path))
         {
             try
             {
-                string dir = Path.GetDirectoryName(layer.path);
-                foreach (var f in Directory.GetFiles(dir, Path.GetFileNameWithoutExtension(layer.path) + ".*"))
+                string oldDir = Path.GetDirectoryName(layer.path);
+                // Cek apakah nama folder sama dengan nama layer (validasi extra)
+                if (Path.GetFileName(oldDir) == oldName)
                 {
-                    string newPath = Path.Combine(dir, newName + Path.GetExtension(f));
-                    if (!File.Exists(newPath))
+                    string parentDir = Path.GetDirectoryName(oldDir); // Folder di atasnya (downloaded_bands/ProjectName)
+                    string newDir = Path.Combine(parentDir, newName);
+
+                    if (!Directory.Exists(newDir))
                     {
-                        File.Move(f, newPath);
-                        if (f == layer.path) layer.path = newPath;
+                        Directory.Move(oldDir, newDir);
+                        
+                        // Rename .meta file folder jika ada
+                        string oldMeta = oldDir + ".meta";
+                        string newMeta = newDir + ".meta";
+                        if (File.Exists(oldMeta) && !File.Exists(newMeta))
+                        {
+                            File.Move(oldMeta, newMeta);
+                        }
+                        
+                        // Update path layer ke lokasi baru
+                        string fileName = Path.GetFileName(layer.path);
+                        layer.path = Path.Combine(newDir, fileName);
                     }
                 }
             }
             catch (System.Exception ex)
             {
-                Debug.LogError($"[TiffLayerManager] Rename failed: {ex.Message}");
+                Debug.LogError($"[TiffLayerManager] Rename folder failed: {ex.Message}");
             }
         }
 

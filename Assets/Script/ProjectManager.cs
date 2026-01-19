@@ -298,6 +298,23 @@ public class ProjectManager : MonoBehaviour
         if (current == null || string.IsNullOrEmpty(renameProjectInput?.text)) return;
         if (current.name == renameProjectInput.text) return;
 
+        // Rename folder backend jika ada (termasuk .meta)
+        string oldBackendPath = Path.Combine(Application.streamingAssetsPath, "Backend", "downloaded_bands", current.name);
+        string newBackendPath = Path.Combine(Application.streamingAssetsPath, "Backend", "downloaded_bands", renameProjectInput.text);
+        
+        if (Directory.Exists(oldBackendPath) && !Directory.Exists(newBackendPath))
+        {
+            try
+            {
+                Directory.Move(oldBackendPath, newBackendPath);
+                
+                string oldMeta = oldBackendPath + ".meta";
+                string newMeta = newBackendPath + ".meta";
+                if (File.Exists(oldMeta) && !File.Exists(newMeta)) File.Move(oldMeta, newMeta);
+            }
+            catch (System.Exception e) { Debug.LogError($"[ProjectManager] Rename backend folder failed: {e.Message}"); }
+        }
+
         current.name = renameProjectInput.text;
         Save();
         SetupDropdown();
@@ -325,6 +342,18 @@ public class ProjectManager : MonoBehaviour
 #endif
             }
             catch (System.Exception e) { Debug.LogWarning($"[ProjectManager] Delete TIFF failed: {e.Message}"); }
+        }
+
+        // Hapus folder backend jika ada (termasuk .meta)
+        string backendPath = Path.Combine(Application.streamingAssetsPath, "Backend", "downloaded_bands", current.name);
+        if (Directory.Exists(backendPath))
+        {
+            try 
+            {
+                Directory.Delete(backendPath, true);
+                if (File.Exists(backendPath + ".meta")) File.Delete(backendPath + ".meta");
+            }
+            catch (System.Exception e) { Debug.LogError($"[ProjectManager] Delete backend folder failed: {e.Message}"); }
         }
 
         projects.Remove(current);

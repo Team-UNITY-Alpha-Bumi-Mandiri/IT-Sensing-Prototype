@@ -366,9 +366,23 @@ public class GeeDownloadController : MonoBehaviour
         foreach (string pngPath in files)
         {
             if (pngPath.Contains("temp")) continue;
-            tiffLayerManager?.LoadPngOverlay(pngPath, curNorth, curSouth, curWest, curEast, false, false);
 
+            // Default layer name dari nama file
             string layerName = Path.GetFileNameWithoutExtension(pngPath);
+            
+            // Cek apakah ada di subfolder (misal folder tanggal)
+            // Jika ya, gunakan nama subfolder sebagai nama layer (User Request: 1 folder = 1 layer)
+            string parentDir = Path.GetFileName(Path.GetDirectoryName(pngPath));
+             if (!string.Equals(Path.GetFullPath(Path.GetDirectoryName(pngPath)).TrimEnd('\\', '/'), 
+                               Path.GetFullPath(targetDir).TrimEnd('\\', '/'), 
+                               System.StringComparison.OrdinalIgnoreCase))
+            {
+                layerName = parentDir;
+            }
+
+            // Load PNG dengan nama layer custom
+            tiffLayerManager?.LoadPngOverlay(pngPath, curNorth, curSouth, curWest, curEast, false, false, layerName);
+
             projectManager?.AddProperty(layerName, true);
             projectManager?.Save();
         }

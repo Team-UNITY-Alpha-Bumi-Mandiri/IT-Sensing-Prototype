@@ -834,6 +834,15 @@ public class TiffLayerManager : MonoBehaviour
         {
             existing.SetActive(true);
             UpdateOverlayPosition(existing);
+
+            // Apply enhancement material jika ada
+            RawImage existingRaw = existing.GetComponent<RawImage>();
+            if (existingRaw.material != enhanceMat)
+            {
+                existingRaw.material = Instantiate(enhanceMat);
+            }
+                enhanceTool.AssignValues(existing, layer.name);
+
             return;
         }
 
@@ -848,10 +857,6 @@ public class TiffLayerManager : MonoBehaviour
 
         UpdateOverlayPosition(overlay);
         overlays.Add(overlay);
-
-        // Apply enhancement material jika ada
-        if (enhanceMat != null) img.material = enhanceMat;
-        enhanceTool?.AssignValues(overlay, layer.name);
     }
 
     // Buat overlay object (tapi inactive - untuk preload saat load project)
@@ -880,9 +885,6 @@ public class TiffLayerManager : MonoBehaviour
 
         UpdateOverlayPosition(overlay);
         overlays.Add(overlay);
-
-        if (enhanceMat != null) img.material = enhanceMat;
-        enhanceTool?.AssignValues(overlay, layer.name);
 
         // Default inactive, SyncWithProject yang akan nyalakan jika perlu
         overlay.SetActive(false);

@@ -15,8 +15,7 @@ public class EnhancementTool : MonoBehaviour
         Debug.Log("AssignValues called; " + layer + "; " + layerNm);
         if (layer != null)
         {
-            RawImage layerImage;
-            layerImage = layer.GetComponent<RawImage>();
+            RawImage layerImage = layer.GetComponent<RawImage>();
             mat = layerImage.material;
         }
 

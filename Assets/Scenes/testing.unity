@@ -3903,7 +3903,7 @@ PrefabInstance:
       objectReference: {fileID: 21300000, guid: 209fdef325a975e4e9ef9a5b627a2576, type: 3}
     - target: {fileID: 4802526497360693480, guid: 21587b1268d42944396dff8fdd6c3c76, type: 3}
       propertyPath: m_Name
-      value: RasterButton (10)
+      value: Layer Stacking
       objectReference: {fileID: 0}
     - target: {fileID: 5648696230068327533, guid: 21587b1268d42944396dff8fdd6c3c76, type: 3}
       propertyPath: m_Pivot.x
@@ -4096,7 +4096,7 @@ PrefabInstance:
       objectReference: {fileID: 21300000, guid: 3c82024640041c04ea5414fce9d1fc99, type: 3}
     - target: {fileID: 2681854597908937245, guid: ef2e0e8967ae6e042b94c788e388a610, type: 3}
       propertyPath: m_Name
-      value: CurButton (2)
+      value: Log
       objectReference: {fileID: 0}
     - target: {fileID: 3139992941876235230, guid: ef2e0e8967ae6e042b94c788e388a610, type: 3}
       propertyPath: m_Pivot.x
@@ -6877,7 +6877,7 @@ PrefabInstance:
       objectReference: {fileID: 21300000, guid: 6e82f2f7a1205444299826d0a4cc11e8, type: 3}
     - target: {fileID: 6629106939558189335, guid: d2b6fb3b6c36db44c858b0b24b4d1be5, type: 3}
       propertyPath: m_Name
-      value: MeaButton (1)
+      value: Area Measurement
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
@@ -8449,7 +8449,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 3662048539725624350, guid: 85d3bc7cfa84fe045b204a96a6da4d29, type: 3}
       propertyPath: m_Name
-      value: AdvButton (3)
+      value: Analysis
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
@@ -9359,7 +9359,7 @@ PrefabInstance:
       objectReference: {fileID: 21300000, guid: 96b42e5b30ef509458827b6105019ac4, type: 3}
     - target: {fileID: 2681854597908937245, guid: ef2e0e8967ae6e042b94c788e388a610, type: 3}
       propertyPath: m_Name
-      value: CurButton
+      value: Info
       objectReference: {fileID: 0}
     - target: {fileID: 3139992941876235230, guid: ef2e0e8967ae6e042b94c788e388a610, type: 3}
       propertyPath: m_Pivot.x
@@ -11496,81 +11496,6 @@ RectTransform:
   m_CorrespondingSourceObject: {fileID: 6737174747512826286, guid: 783b4a1dcf2eaa742b874c759526f13b, type: 3}
   m_PrefabInstance: {fileID: 2071293255}
   m_PrefabAsset: {fileID: 0}
---- !u!1 &265180714
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 265180715}
-  - component: {fileID: 265180717}
-  - component: {fileID: 265180716}
-  m_Layer: 5
-  m_Name: iiggg (1)
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 0
---- !u!224 &265180715
-RectTransform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 265180714}
-  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
-  m_Children: []
-  m_Father: {fileID: 541563507}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 0.5, y: 0.5}
-  m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: -434.3981, y: 191.96388}
-  m_SizeDelta: {x: 70.0241, y: 70.0241}
-  m_Pivot: {x: 0.5, y: 0.5}
---- !u!114 &265180716
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 265180714}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: fe87c0e1cc204ed48ad3b37840f39efc, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Image
-  m_Material: {fileID: 0}
-  m_Color: {r: 1, g: 1, b: 1, a: 1}
-  m_RaycastTarget: 1
-  m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
-  m_Maskable: 1
-  m_OnCullStateChanged:
-    m_PersistentCalls:
-      m_Calls: []
-  m_Sprite: {fileID: 5941485200532349135, guid: da08f335d2ca9194c93b1b336a380543, type: 3}
-  m_Type: 0
-  m_PreserveAspect: 0
-  m_FillCenter: 1
-  m_FillMethod: 4
-  m_FillAmount: 1
-  m_FillClockwise: 1
-  m_FillOrigin: 0
-  m_UseSpriteMesh: 0
-  m_PixelsPerUnitMultiplier: 1
---- !u!222 &265180717
-CanvasRenderer:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 265180714}
-  m_CullTransparentMesh: 1
 --- !u!1 &265389476
 GameObject:
   m_ObjectHideFlags: 0
@@ -12697,7 +12622,7 @@ PrefabInstance:
       objectReference: {fileID: 21300000, guid: b708327688f5b0049a205ebb7f714554, type: 3}
     - target: {fileID: 2681854597908937245, guid: ef2e0e8967ae6e042b94c788e388a610, type: 3}
       propertyPath: m_Name
-      value: CurButton (1)
+      value: Drag
       objectReference: {fileID: 0}
     - target: {fileID: 3139992941876235230, guid: ef2e0e8967ae6e042b94c788e388a610, type: 3}
       propertyPath: m_Pivot.x
@@ -12980,7 +12905,7 @@ PrefabInstance:
       objectReference: {fileID: 21300000, guid: e0350c9d94dbdf8418820214d0671905, type: 3}
     - target: {fileID: 4802526497360693480, guid: 21587b1268d42944396dff8fdd6c3c76, type: 3}
       propertyPath: m_Name
-      value: RasterButton (2)
+      value: Enhancement
       objectReference: {fileID: 0}
     - target: {fileID: 5648696230068327533, guid: 21587b1268d42944396dff8fdd6c3c76, type: 3}
       propertyPath: m_Pivot.x
@@ -18648,7 +18573,7 @@ PrefabInstance:
       objectReference: {fileID: 21300000, guid: 19e5742aa3323484182f89a8ad08f438, type: 3}
     - target: {fileID: 4802526497360693480, guid: 21587b1268d42944396dff8fdd6c3c76, type: 3}
       propertyPath: m_Name
-      value: RasterButton
+      value: Create View
       objectReference: {fileID: 0}
     - target: {fileID: 5648696230068327533, guid: 21587b1268d42944396dff8fdd6c3c76, type: 3}
       propertyPath: m_Pivot.x
@@ -21085,7 +21010,7 @@ PrefabInstance:
       objectReference: {fileID: 21300000, guid: 65e7a7f8d40b80f4fb5e53ea14b664bf, type: 3}
     - target: {fileID: 6197941615329575327, guid: 3c1c31b90a56acc47b612e9ceb34d166, type: 3}
       propertyPath: m_Name
-      value: DrawingButton (1)
+      value: Draw Line
       objectReference: {fileID: 0}
     - target: {fileID: 6819465632491145134, guid: 3c1c31b90a56acc47b612e9ceb34d166, type: 3}
       propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.data[0].m_Target
@@ -22938,9 +22863,6 @@ RectTransform:
   - {fileID: 1528899944}
   - {fileID: 1343921821}
   - {fileID: 174744530}
-  - {fileID: 1428764303}
-  - {fileID: 265180715}
-  - {fileID: 1202791795}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
@@ -26778,7 +26700,7 @@ PrefabInstance:
       objectReference: {fileID: 21300000, guid: 47a4b324c55fd4a4c8d57ce037c857d0, type: 3}
     - target: {fileID: 4802526497360693480, guid: 21587b1268d42944396dff8fdd6c3c76, type: 3}
       propertyPath: m_Name
-      value: RasterButton (3)
+      value: Raster Fusion
       objectReference: {fileID: 0}
     - target: {fileID: 5648696230068327533, guid: 21587b1268d42944396dff8fdd6c3c76, type: 3}
       propertyPath: m_Pivot.x
@@ -30971,7 +30893,7 @@ PrefabInstance:
       objectReference: {fileID: 21300000, guid: 41c0cad9685cd0143804e6959af4a441, type: 3}
     - target: {fileID: 3213711951962469165, guid: 7031550211e3412488309f0d74651ac2, type: 3}
       propertyPath: m_Name
-      value: PubButton
+      value: Print
       objectReference: {fileID: 0}
     - target: {fileID: 4981603443933174318, guid: 7031550211e3412488309f0d74651ac2, type: 3}
       propertyPath: m_Pivot.x
@@ -31857,7 +31779,7 @@ PrefabInstance:
       objectReference: {fileID: 21300000, guid: ebed983ac486fb04db5ee8d415e6070f, type: 3}
     - target: {fileID: 3213711951962469165, guid: 7031550211e3412488309f0d74651ac2, type: 3}
       propertyPath: m_Name
-      value: PubButton (1)
+      value: Share Maps
       objectReference: {fileID: 0}
     - target: {fileID: 4981603443933174318, guid: 7031550211e3412488309f0d74651ac2, type: 3}
       propertyPath: m_Pivot.x
@@ -32041,7 +31963,7 @@ PrefabInstance:
     m_Modifications:
     - target: {fileID: 616931801147364081, guid: eb7391e74888e0e47bd12d055072d317, type: 3}
       propertyPath: m_Name
-      value: DataButton (2)
+      value: Upload Files
       objectReference: {fileID: 0}
     - target: {fileID: 2126683334707075997, guid: eb7391e74888e0e47bd12d055072d317, type: 3}
       propertyPath: m_Type
@@ -34568,7 +34490,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 3662048539725624350, guid: 85d3bc7cfa84fe045b204a96a6da4d29, type: 3}
       propertyPath: m_Name
-      value: AdvButton (2)
+      value: Split View
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
@@ -49437,7 +49359,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!224 &1179465679
 RectTransform:
   m_ObjectHideFlags: 0
@@ -50305,81 +50227,6 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1197383701}
   m_CullTransparentMesh: 1
---- !u!1 &1202791794
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 1202791795}
-  - component: {fileID: 1202791797}
-  - component: {fileID: 1202791796}
-  m_Layer: 5
-  m_Name: iiggg (2)
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 0
---- !u!224 &1202791795
-RectTransform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1202791794}
-  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
-  m_Children: []
-  m_Father: {fileID: 541563507}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 0.5, y: 0.5}
-  m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: -389.58252, y: 91.829414}
-  m_SizeDelta: {x: 70.0241, y: 70.0241}
-  m_Pivot: {x: 0.5, y: 0.5}
---- !u!114 &1202791796
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1202791794}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: fe87c0e1cc204ed48ad3b37840f39efc, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Image
-  m_Material: {fileID: 0}
-  m_Color: {r: 1, g: 1, b: 1, a: 1}
-  m_RaycastTarget: 1
-  m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
-  m_Maskable: 1
-  m_OnCullStateChanged:
-    m_PersistentCalls:
-      m_Calls: []
-  m_Sprite: {fileID: 4788702752208398118, guid: 34508650a503b644887be1550cbaa32c, type: 3}
-  m_Type: 0
-  m_PreserveAspect: 0
-  m_FillCenter: 1
-  m_FillMethod: 4
-  m_FillAmount: 1
-  m_FillClockwise: 1
-  m_FillOrigin: 0
-  m_UseSpriteMesh: 0
-  m_PixelsPerUnitMultiplier: 1
---- !u!222 &1202791797
-CanvasRenderer:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1202791794}
-  m_CullTransparentMesh: 1
 --- !u!1 &1204036683
 GameObject:
   m_ObjectHideFlags: 0
@@ -51174,7 +51021,7 @@ PrefabInstance:
       objectReference: {fileID: 21300000, guid: 99ec964c2e62c5447a0c103097318b42, type: 3}
     - target: {fileID: 6197941615329575327, guid: 3c1c31b90a56acc47b612e9ceb34d166, type: 3}
       propertyPath: m_Name
-      value: DrawingButton
+      value: Draw Point
       objectReference: {fileID: 0}
     - target: {fileID: 6819465632491145134, guid: 3c1c31b90a56acc47b612e9ceb34d166, type: 3}
       propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.data[0].m_Target
@@ -56293,7 +56140,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 6629106939558189335, guid: d2b6fb3b6c36db44c858b0b24b4d1be5, type: 3}
       propertyPath: m_Name
-      value: MeaButton
+      value: Distance Measurement
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
@@ -58643,7 +58490,7 @@ PrefabInstance:
       objectReference: {fileID: 21300000, guid: 99cf2fc82fd6955448fef3efcc8f9e54, type: 3}
     - target: {fileID: 4802526497360693480, guid: 21587b1268d42944396dff8fdd6c3c76, type: 3}
       propertyPath: m_Name
-      value: RasterButton (1)
+      value: Composite
       objectReference: {fileID: 0}
     - target: {fileID: 5648696230068327533, guid: 21587b1268d42944396dff8fdd6c3c76, type: 3}
       propertyPath: m_Pivot.x
@@ -61214,81 +61061,6 @@ PrefabInstance:
     m_AddedGameObjects: []
     m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 21587b1268d42944396dff8fdd6c3c76, type: 3}
---- !u!1 &1428764302
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 1428764303}
-  - component: {fileID: 1428764305}
-  - component: {fileID: 1428764304}
-  m_Layer: 5
-  m_Name: iiggg
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 0
---- !u!224 &1428764303
-RectTransform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1428764302}
-  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
-  m_Children: []
-  m_Father: {fileID: 541563507}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 0.5, y: 0.5}
-  m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: -439.99994, y: 297}
-  m_SizeDelta: {x: 70.0241, y: 70.0241}
-  m_Pivot: {x: 0.5, y: 0.5}
---- !u!114 &1428764304
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1428764302}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: fe87c0e1cc204ed48ad3b37840f39efc, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Image
-  m_Material: {fileID: 0}
-  m_Color: {r: 1, g: 1, b: 1, a: 1}
-  m_RaycastTarget: 1
-  m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
-  m_Maskable: 1
-  m_OnCullStateChanged:
-    m_PersistentCalls:
-      m_Calls: []
-  m_Sprite: {fileID: -4620719462383769233, guid: 4cc91837e6164e04c98ee2c2763bf28a, type: 3}
-  m_Type: 0
-  m_PreserveAspect: 0
-  m_FillCenter: 1
-  m_FillMethod: 4
-  m_FillAmount: 1
-  m_FillClockwise: 1
-  m_FillOrigin: 0
-  m_UseSpriteMesh: 0
-  m_PixelsPerUnitMultiplier: 1
---- !u!222 &1428764305
-CanvasRenderer:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1428764302}
-  m_CullTransparentMesh: 1
 --- !u!1 &1429969350
 GameObject:
   m_ObjectHideFlags: 0
@@ -64366,7 +64138,7 @@ GameObject:
   - component: {fileID: 1513148706}
   - component: {fileID: 1513148708}
   m_Layer: 5
-  m_Name: Toolbar Atas (1)
+  m_Name: Toolbar Atas
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -64909,7 +64681,7 @@ PrefabInstance:
       objectReference: {fileID: 21300000, guid: c502b8d131225b449bc4d22fd75c228a, type: 3}
     - target: {fileID: 6197941615329575327, guid: 3c1c31b90a56acc47b612e9ceb34d166, type: 3}
       propertyPath: m_Name
-      value: DrawingButton (2)
+      value: Draw Poly
       objectReference: {fileID: 0}
     - target: {fileID: 6819465632491145134, guid: 3c1c31b90a56acc47b612e9ceb34d166, type: 3}
       propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.data[0].m_Target
@@ -68734,7 +68506,7 @@ PrefabInstance:
     m_Modifications:
     - target: {fileID: 616931801147364081, guid: eb7391e74888e0e47bd12d055072d317, type: 3}
       propertyPath: m_Name
-      value: DataButton (1)
+      value: Upload Shapefile
       objectReference: {fileID: 0}
     - target: {fileID: 2126683334707075997, guid: eb7391e74888e0e47bd12d055072d317, type: 3}
       propertyPath: m_Type
@@ -70594,7 +70366,7 @@ PrefabInstance:
     m_Modifications:
     - target: {fileID: 616931801147364081, guid: eb7391e74888e0e47bd12d055072d317, type: 3}
       propertyPath: m_Name
-      value: DataButton
+      value: Upload Raster
       objectReference: {fileID: 0}
     - target: {fileID: 3368359590053076146, guid: eb7391e74888e0e47bd12d055072d317, type: 3}
       propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.data[0].m_Target
@@ -72283,7 +72055,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 3662048539725624350, guid: 85d3bc7cfa84fe045b204a96a6da4d29, type: 3}
       propertyPath: m_Name
-      value: AdvButton (1)
+      value: Animation
       objectReference: {fileID: 0}
     - target: {fileID: 7434117605939046402, guid: 85d3bc7cfa84fe045b204a96a6da4d29, type: 3}
       propertyPath: m_TargetGraphic
@@ -73876,7 +73648,7 @@ PrefabInstance:
       objectReference: {fileID: 21300000, guid: e1b4e328b2aabb14798e9d4268413a17, type: 3}
     - target: {fileID: 4802526497360693480, guid: 21587b1268d42944396dff8fdd6c3c76, type: 3}
       propertyPath: m_Name
-      value: RasterButton (5)
+      value: Raster Modeller
       objectReference: {fileID: 0}
     - target: {fileID: 5648696230068327533, guid: 21587b1268d42944396dff8fdd6c3c76, type: 3}
       propertyPath: m_Pivot.x
@@ -74768,6 +74540,7 @@ Transform:
   - {fileID: 297485542}
   - {fileID: 1992073857}
   - {fileID: 2145443576}
+  - {fileID: 1782685019}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1726817443
@@ -77308,6 +77081,53 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1782210380}
   m_CullTransparentMesh: 1
+--- !u!1 &1782685018
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1782685019}
+  - component: {fileID: 1782685020}
+  m_Layer: 0
+  m_Name: Tooltip
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &1782685019
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1782685018}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 1726405246}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1782685020
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1782685018}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7495cc0f5ffb75b449b7072923810aa3, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::UI_Tooltip
+  tooltipPref: {fileID: 1661775789998192714, guid: 1494cc0d0a11fb048b79a63ac5ca07a8, type: 3}
+  tooltipParent: {fileID: 1911869167}
+  toolbarAtas: {fileID: 1513148705}
 --- !u!1 &1786626959
 GameObject:
   m_ObjectHideFlags: 0
@@ -77852,7 +77672,7 @@ PrefabInstance:
       objectReference: {fileID: 21300000, guid: ac84e50e588249a4ea0a9a3c4f7b4d45, type: 3}
     - target: {fileID: 4802526497360693480, guid: 21587b1268d42944396dff8fdd6c3c76, type: 3}
       propertyPath: m_Name
-      value: RasterButton (6)
+      value: Clasification
       objectReference: {fileID: 0}
     - target: {fileID: 5648696230068327533, guid: 21587b1268d42944396dff8fdd6c3c76, type: 3}
       propertyPath: m_Pivot.x
@@ -78902,10 +78722,10 @@ RectTransform:
   - {fileID: 1418735829}
   m_Father: {fileID: 2105009200}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 0, y: 0}
-  m_AnchorMax: {x: 0, y: 0}
-  m_AnchoredPosition: {x: 0, y: 0}
-  m_SizeDelta: {x: 0, y: 0}
+  m_AnchorMin: {x: 0, y: 1}
+  m_AnchorMax: {x: 0, y: 1}
+  m_AnchoredPosition: {x: 80, y: -16}
+  m_SizeDelta: {x: 150, y: 22}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1829777261
 MonoBehaviour:
@@ -79449,7 +79269,7 @@ PrefabInstance:
       objectReference: {fileID: 21300000, guid: 0551f38a0c4ace94c87c7656edc01682, type: 3}
     - target: {fileID: 4802526497360693480, guid: 21587b1268d42944396dff8fdd6c3c76, type: 3}
       propertyPath: m_Name
-      value: RasterButton (7)
+      value: Raster Calculator
       objectReference: {fileID: 0}
     - target: {fileID: 5648696230068327533, guid: 21587b1268d42944396dff8fdd6c3c76, type: 3}
       propertyPath: m_Pivot.x
@@ -81895,7 +81715,7 @@ PrefabInstance:
       objectReference: {fileID: 21300000, guid: bb3d77224f24f2e4d8292039b9dac806, type: 3}
     - target: {fileID: 4802526497360693480, guid: 21587b1268d42944396dff8fdd6c3c76, type: 3}
       propertyPath: m_Name
-      value: RasterButton (9)
+      value: Raster Style
       objectReference: {fileID: 0}
     - target: {fileID: 5648696230068327533, guid: 21587b1268d42944396dff8fdd6c3c76, type: 3}
       propertyPath: m_Pivot.x
@@ -83049,7 +82869,7 @@ PrefabInstance:
       objectReference: {fileID: 21300000, guid: 92ae79a2005f2954d8cae68db707f231, type: 3}
     - target: {fileID: 4802526497360693480, guid: 21587b1268d42944396dff8fdd6c3c76, type: 3}
       propertyPath: m_Name
-      value: RasterButton (4)
+      value: ROI Tools
       objectReference: {fileID: 0}
     - target: {fileID: 5648696230068327533, guid: 21587b1268d42944396dff8fdd6c3c76, type: 3}
       propertyPath: m_Pivot.x
@@ -87931,7 +87751,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 3662048539725624350, guid: 85d3bc7cfa84fe045b204a96a6da4d29, type: 3}
       propertyPath: m_Name
-      value: AdvButton
+      value: 3D View
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
@@ -92003,7 +91823,7 @@ PrefabInstance:
       objectReference: {fileID: 21300000, guid: a464f42c3d65a444fa40d0f1ef4fbebb, type: 3}
     - target: {fileID: 4802526497360693480, guid: 21587b1268d42944396dff8fdd6c3c76, type: 3}
       propertyPath: m_Name
-      value: RasterButton (8)
+      value: Raster Transform
       objectReference: {fileID: 0}
     - target: {fileID: 5648696230068327533, guid: 21587b1268d42944396dff8fdd6c3c76, type: 3}
       propertyPath: m_Pivot.x
@@ -92304,7 +92124,7 @@ RectTransform:
   m_AnchorMin: {x: 0, y: 1}
   m_AnchorMax: {x: 1, y: 1}
   m_AnchoredPosition: {x: 0.000015258789, y: -21.752478}
-  m_SizeDelta: {x: -1.58, y: 0}
+  m_SizeDelta: {x: -1.58, y: 32}
   m_Pivot: {x: 0.5, y: 1}
 --- !u!114 &2105009201
 MonoBehaviour:

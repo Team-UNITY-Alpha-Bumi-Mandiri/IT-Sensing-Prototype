@@ -6,23 +6,23 @@ using UnityEngine.UI;
 
 public class UI_Tooltip : MonoBehaviour
 {
-    public GameObject tooltipPref, tooltipParent, toolbarAtas;
+    public GameObject tooltipPref, tooltipParent;
     GameObject tooltipInst;
-    string objName;
+    public string objName;
     Vector2 mouseLastPos, tooltipOffset;
     float pause = .5f;
     float mouseLastMovement;
-    bool isMoving;
+    bool isMoving, isTippable;
 
     // Start is called once before the first execution of Update after the MonoBehaviour is created
     void Start()
     {
         mouseLastPos = Input.mousePosition;
-        tooltipOffset = new Vector2(30, -30);
+        tooltipOffset = new Vector2(20, -20);
     }
 
     // Update is called once per frame
-    void Update()
+    void LateUpdate()
     {
         Vector2 mouseCurrentPos = Input.mousePosition;
 
@@ -33,9 +33,15 @@ public class UI_Tooltip : MonoBehaviour
         EventSystem.current.RaycastAll(eventData, results);
 
         //get object name
-        if (results.Count!=0&& results[0].gameObject.layer == 5 && results[0].gameObject.GetComponentInParent<Button>()!=null)
+        foreach (RaycastResult r in results)
         {
-            objName = results[0].gameObject.transform.parent.gameObject.name;
+            GameObject go = r.gameObject;
+            if (go.layer == 5 && go.CompareTag("ToolButton"))
+            {
+                objName = r.gameObject.name;
+                isTippable = true;
+                //  Debug.Log("OBJECT= "+objName);
+            }
         }
 
         //mouse starts moving
@@ -48,6 +54,7 @@ public class UI_Tooltip : MonoBehaviour
 
                 if (tooltipInst != null)
                     Destroy(tooltipInst);
+                isTippable = false;
             }
         }
         else
@@ -56,21 +63,35 @@ public class UI_Tooltip : MonoBehaviour
             {
                 isMoving = false;
 
-                GameObject parentOfParent = results[0].gameObject.transform.parent.gameObject.transform.parent.gameObject.transform.parent.gameObject   ;
-              //  Debug.Log("going? "+parentOfParent+";;; object is = " + results[0]);
-                if (parentOfParent == toolbarAtas)
+                if (isTippable)
                 {
-                    Vector2 tooltipPos = mouseCurrentPos + tooltipOffset;
-                    OnMouseStoppedMoving(objName, tooltipPos);
+                    OnMouseStoppedMoving(objName, mouseCurrentPos);
                 }
             }
         }
         mouseLastPos = mouseCurrentPos;
     }
 
-    void OnMouseStoppedMoving(string name, Vector2 offset)
+    void OnMouseStoppedMoving(string name, Vector2 mousePos)
     {
-        tooltipInst = Instantiate(tooltipPref, offset, Quaternion.identity, tooltipParent.transform);
+        tooltipInst = Instantiate(tooltipPref, mousePos, Quaternion.identity, tooltipParent.transform);
         tooltipInst.GetComponentInChildren<TMP_Text>().text = name;
+
+        RectTransform tipRt = tooltipInst.GetComponent<RectTransform>();
+        //  float tipWidth = tooltipInst.GetComponent<RectTransform>().sizeDelta.x;
+        float offsetX;
+        // Debug.Log("WIDTH = " + tipWidth);
+
+        if (Input.mousePosition.x < 1720)
+        {
+            tipRt.pivot = new Vector2(-1, 1);
+        }
+        else
+        {
+            tipRt.pivot = new Vector2(1, 1);
+            tooltipOffset = new Vector2(-1 * tooltipOffset.x, tooltipOffset.y);
+        }
+
+        tooltipInst.transform.position = mousePos + tooltipOffset;
     }
 }

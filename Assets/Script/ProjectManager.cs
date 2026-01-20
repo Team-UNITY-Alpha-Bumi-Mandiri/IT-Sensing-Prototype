@@ -29,6 +29,7 @@ public class ProjectManager : MonoBehaviour
     public TMP_InputField newProjectNameInput;      // Input nama project baru
     public Button createProjectButton;              // Tombol buat project
     public Button deleteProjectButton;              // Tombol hapus project
+    public Button focusProjectButton;               // Tombol fokus ke project aktif [NEW]
 
     [Header("Rename UI")]
     public TMP_InputField renameProjectInput;       // Input rename project
@@ -114,6 +115,7 @@ public class ProjectManager : MonoBehaviour
         createProjectButton?.onClick.AddListener(StartCreate);
         deleteProjectButton?.onClick.AddListener(Delete);
         renameProjectButton?.onClick.AddListener(Rename);
+        focusProjectButton?.onClick.AddListener(FocusCurrentProject);
 
         // Setup PropertyPanel listener
         // Setup PropertyPanel listener
@@ -252,7 +254,7 @@ public class ProjectManager : MonoBehaviour
         if (renameProjectInput != null) renameProjectInput.text = proj.name;
 
         // Navigasi ke lokasi project
-        mapController?.GoToLocation(proj.lat, proj.lon, proj.zoom);
+        FocusCurrentProject();
 
         // Sembunyikan semua visual dulu
         drawTool?.ForceHideAllVisuals();
@@ -287,6 +289,16 @@ public class ProjectManager : MonoBehaviour
 
         // Update Autoplay dropdown
         autoplayTool?.UpdateDropdownOptions();
+    }
+
+    // ============================================================
+    // FOCUS - Center map to project
+    // ============================================================
+
+    void FocusCurrentProject()
+    {
+        if (current == null || mapController == null) return;
+        mapController.GoToLocation(current.lat, current.lon, current.zoom);
     }
 
     // ============================================================

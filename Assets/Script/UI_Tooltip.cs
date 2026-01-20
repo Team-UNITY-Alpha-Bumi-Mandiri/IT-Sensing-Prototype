@@ -22,10 +22,34 @@ public class UI_Tooltip : MonoBehaviour
     }
 
     // Update is called once per frame
-    void LateUpdate()
+    void Update()
     {
         Vector2 mouseCurrentPos = Input.mousePosition;
 
+        //mouse starts moving
+        if (mouseCurrentPos != mouseLastPos)
+        {
+            mouseLastMovement = Time.time;
+            if (!isMoving)
+            {
+                isMoving = true;
+                isTippable = false;
+                if (tooltipInst != null) Destroy(tooltipInst);
+            }
+        }
+        else
+        {
+            if (isMoving && Time.time - mouseLastMovement > pause)
+            {
+                isMoving = false;
+                OnMouseStoppedMoving(mouseCurrentPos);
+            }
+        }
+        mouseLastPos = mouseCurrentPos;
+    }
+
+    void OnMouseStoppedMoving(Vector2 pos)
+    {
         //raycasting
         var eventData = new PointerEventData(EventSystem.current);
         eventData.position = Input.mousePosition;
@@ -38,60 +62,31 @@ public class UI_Tooltip : MonoBehaviour
             GameObject go = r.gameObject;
             if (go.layer == 5 && go.CompareTag("ToolButton"))
             {
-                objName = r.gameObject.name;
+                name = r.gameObject.name;
                 isTippable = true;
-                //  Debug.Log("OBJECT= "+objName);
             }
         }
 
-        //mouse starts moving
-        if (mouseCurrentPos != mouseLastPos)
+        if (isTippable)
         {
-            mouseLastMovement = Time.time;
-            if (!isMoving)
+            tooltipInst = Instantiate(tooltipPref, pos, Quaternion.identity, tooltipParent.transform);
+            tooltipInst.GetComponentInChildren<TMP_Text>().text = name;
+
+            RectTransform tipRt = tooltipInst.GetComponent<RectTransform>();
+            Vector2 offset;
+
+            if (Input.mousePosition.x < 1720)
             {
-                isMoving = true;
-
-                if (tooltipInst != null)
-                    Destroy(tooltipInst);
-                isTippable = false;
+                tipRt.pivot = new Vector2(0, 1);
+                offset = tooltipOffset;
             }
-        }
-        else
-        {
-            if (isMoving && Time.time - mouseLastMovement > pause)
+            else
             {
-                isMoving = false;
-
-                if (isTippable)
-                {
-                    OnMouseStoppedMoving(objName, mouseCurrentPos);
-                }
+                tipRt.pivot = new Vector2(1, 1);
+                offset = new Vector2(-1 * tooltipOffset.x, tooltipOffset.y);
             }
+
+            tooltipInst.transform.position = pos + offset;
         }
-        mouseLastPos = mouseCurrentPos;
-    }
-
-    void OnMouseStoppedMoving(string name, Vector2 mousePos)
-    {
-        tooltipInst = Instantiate(tooltipPref, mousePos, Quaternion.identity, tooltipParent.transform);
-        tooltipInst.GetComponentInChildren<TMP_Text>().text = name;
-
-        RectTransform tipRt = tooltipInst.GetComponent<RectTransform>();
-        //  float tipWidth = tooltipInst.GetComponent<RectTransform>().sizeDelta.x;
-        float offsetX;
-        // Debug.Log("WIDTH = " + tipWidth);
-
-        if (Input.mousePosition.x < 1720)
-        {
-            tipRt.pivot = new Vector2(-1, 1);
-        }
-        else
-        {
-            tipRt.pivot = new Vector2(1, 1);
-            tooltipOffset = new Vector2(-1 * tooltipOffset.x, tooltipOffset.y);
-        }
-
-        tooltipInst.transform.position = mousePos + tooltipOffset;
     }
 }

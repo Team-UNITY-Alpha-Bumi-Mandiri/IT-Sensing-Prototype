@@ -54108,6 +54108,10 @@ PrefabInstance:
       propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.data[1].m_Arguments.m_BoolArgument
       value: 1
       objectReference: {fileID: 0}
+    - target: {fileID: 6819465632491145134, guid: 3c1c31b90a56acc47b612e9ceb34d166, type: 3}
+      propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.data[2].m_Arguments.m_BoolArgument
+      value: 0
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
@@ -59240,7 +59244,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 1, y: 1}
-  m_AnchoredPosition: {x: -29, y: -3.400093}
+  m_AnchoredPosition: {x: -29, y: -3.4000854}
   m_SizeDelta: {x: -191.73999, y: 3.599998}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1335333229
@@ -63397,7 +63401,7 @@ MonoBehaviour:
   drawTool: {fileID: 1971986123}
   layerInfoText: {fileID: 957010010}
   projectManager: {fileID: 1285994912}
-  activeColor: {r: 0.17692411, g: 0.43871412, b: 0.94716984, a: 1}
+  activeColor: {r: 0.5, g: 1, b: 0.5, a: 1}
 --- !u!224 &1403431277 stripped
 RectTransform:
   m_CorrespondingSourceObject: {fileID: 6966334111194969842, guid: eb7391e74888e0e47bd12d055072d317, type: 3}
@@ -70144,7 +70148,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 1, y: 1}
-  m_AnchoredPosition: {x: 61, y: -5.0000076}
+  m_AnchoredPosition: {x: 61, y: -5}
   m_SizeDelta: {x: -103.5802, y: -17}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1544118448
@@ -89746,7 +89750,7 @@ MonoBehaviour:
   drawTool: {fileID: 1971986123}
   layerInfoText: {fileID: 429986105}
   projectManager: {fileID: 1285994912}
-  activeColor: {r: 0.18039216, g: 0.4392157, b: 0.9490196, a: 1}
+  activeColor: {r: 0.20964757, g: 0.24841441, b: 0.735849, a: 1}
 --- !u!1 &1956973817
 GameObject:
   m_ObjectHideFlags: 0
@@ -96167,7 +96171,7 @@ MonoBehaviour:
   drawTool: {fileID: 1971986123}
   layerInfoText: {fileID: 782774582}
   projectManager: {fileID: 1285994912}
-  activeColor: {r: 0.18039216, g: 0.4392157, b: 0.9490196, a: 1}
+  activeColor: {r: 0.5, g: 1, b: 0.5, a: 1}
 --- !u!1 &2085585861
 GameObject:
   m_ObjectHideFlags: 0

@@ -22,10 +22,17 @@ public class DrawModeButton : MonoBehaviour
     
     Button _btn;  // Referensi ke Button component
 
+    [Header("Visual")]
+    public Color activeColor = new Color(0.5f, 1f, 0.5f);
+    private Color originalNormalColor;
+
     void Start()
     {
         if (TryGetComponent(out _btn))
+        {
             _btn.onClick.AddListener(OnClick);
+            originalNormalColor = _btn.colors.normalColor;
+        }
         
         // Auto-find ProjectManager jika tidak di-assign
         if (projectManager == null)
@@ -84,5 +91,16 @@ public class DrawModeButton : MonoBehaviour
             drawTool.DeactivateMode(mode);
             drawTool.currentDrawingLayer = "";
         }
+    }
+
+    void LateUpdate()
+    {
+        if (_btn == null) return;
+        
+        bool isActive = drawTool.IsModeActive(mode);
+        var colors = _btn.colors;
+        colors.normalColor = isActive ? activeColor : originalNormalColor;
+        colors.selectedColor = isActive ? activeColor : originalNormalColor;
+        _btn.colors = colors;
     }
 }

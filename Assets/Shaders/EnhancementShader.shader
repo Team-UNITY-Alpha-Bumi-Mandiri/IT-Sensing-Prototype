@@ -6,6 +6,18 @@ Shader "UI/ContrastBrightnessSaturation"
         _Contrast ("Contrast", Range(0, 2)) = 1
         _Brightness ("Brightness", Range(-1, 1)) = 0
         _Saturation ("Saturation", Range(0, 2)) = 1
+
+        // --- UI Masking support ---
+        _StencilComp ("Stencil Comparison", Float) = 8
+        _Stencil ("Stencil ID", Float) = 0
+        _StencilOp ("Stencil Operation", Float) = 0
+        _StencilWriteMask ("Stencil Write Mask", Float) = 255
+        _StencilReadMask ("Stencil Read Mask", Float) = 255
+        _ColorMask ("Color Mask", Float) = 15
+        
+        //UI masking : Decoupled
+        _ClipRect ("Clip Rect (World)", Vector) = (0,0,0,0)
+        _UseClip ("Use Rect Mask", Float) = 0
     }
 
     SubShader
@@ -18,11 +30,22 @@ Shader "UI/ContrastBrightnessSaturation"
             "PreviewType"="Plane"
             "CanUseSpriteAtlas"="True"
         }
+        
+    Stencil //SplitView masking
+    {
+        Ref [_Stencil]
+        Comp [_StencilComp]
+        Pass [_StencilOp]
+        ReadMask [_StencilReadMask]
+        WriteMask [_StencilWriteMask]
+    }
 
         Cull Off
         Lighting Off
         ZWrite Off
+        ZTest [unity_GUIZTestMode] //SplitView masking
         Blend SrcAlpha OneMinusSrcAlpha
+        ColorMask [_ColorMask]  //SplitView masking
 
         Pass
         {
@@ -43,6 +66,8 @@ Shader "UI/ContrastBrightnessSaturation"
                 float4 vertex : SV_POSITION;
                 float2 uv : TEXCOORD0;
                 float4 color : COLOR;
+                float4 worldPos : TEXCOORD1; //decoupled mask
+
             };
 
             sampler2D _MainTex;
@@ -50,6 +75,8 @@ Shader "UI/ContrastBrightnessSaturation"
             float _Contrast;
             float _Brightness;
             float _Saturation;
+              float4 _ClipRect; //decoupled mask; xMin, yMin, xMax, yMax (world)
+              float _UseClip;
 
             v2f vert (appdata v)
             {
@@ -57,11 +84,24 @@ Shader "UI/ContrastBrightnessSaturation"
                 o.vertex = UnityObjectToClipPos(v.vertex);
                 o.uv = TRANSFORM_TEX(v.uv, _MainTex);
                 o.color = v.color;
+                 o.worldPos = mul(unity_ObjectToWorld, v.vertex); //decoupled mask
                 return o;
             }
 
             fixed4 frag (v2f i) : SV_Target
             {
+                // --- Rectangular clip ---
+                if (_UseClip > 0.5)
+                {
+                    if (i.worldPos.x < _ClipRect.x ||
+                        i.worldPos.y < _ClipRect.y ||
+                        i.worldPos.x > _ClipRect.z ||
+                        i.worldPos.y > _ClipRect.w)
+                    {
+                        discard;
+                    }
+                }
+
                 fixed4 col = tex2D(_MainTex, i.uv) * i.color;
 
                 // Contrast

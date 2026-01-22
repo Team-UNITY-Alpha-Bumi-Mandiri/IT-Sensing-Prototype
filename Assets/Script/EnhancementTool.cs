@@ -12,7 +12,7 @@ public class EnhancementTool : MonoBehaviour
 
     public void AssignValues(GameObject layer, string layerNm)
     {
-        Debug.Log("AssignValues called; " + layer + "; " + layerNm);
+    //    Debug.Log("AssignValues called; " + layer + "; " + layerNm);
         if (layer != null)
         {
             RawImage layerImage = layer.GetComponent<RawImage>();

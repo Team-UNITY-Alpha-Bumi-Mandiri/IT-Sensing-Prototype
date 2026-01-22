@@ -1,9 +1,10 @@
-using UnityEngine;
-using UnityEngine.UI;
-using TMPro;
+using BitMiracle.LibTiff.Classic;
 using System.Collections.Generic;
 using System.IO;
-using BitMiracle.LibTiff.Classic;
+using TMPro;
+using UnityEngine;
+using UnityEngine.UI;
+using static UnityEditor.Experimental.GraphView.GraphView;
 
 // ============================================================
 // TiffLayerManager - Manager untuk GeoTIFF dan PNG Overlay
@@ -27,7 +28,7 @@ public class TiffLayerManager : MonoBehaviour
     public float overlayOpacity = 1f;               // Opacity default overlay
     public List<string> customBandNames;            // Nama band custom dari Inspector
 
-    [Header("Enhancement")]
+    [Header("Other Tools")]
     public EnhancementTool enhanceTool;             // Tool enhancement (brightness, contrast, dll)
     public Material enhanceMat;                     // Material untuk enhancement shader
 
@@ -876,6 +877,12 @@ public class TiffLayerManager : MonoBehaviour
 
         UpdateOverlayPosition(overlay);
         overlays.Add(overlay);
+    }
+
+    public GameObject SelectLayerGameobject(string overlayName)
+    {
+        var existing = overlays.Find(o => o != null && o.name == overlayName);
+        return existing;
     }
 
     // Buat overlay object (tapi inactive - untuk preload saat load project)

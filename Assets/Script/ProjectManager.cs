@@ -37,6 +37,7 @@ public class ProjectManager : MonoBehaviour
 
     [Header("Other Tools")]
     public AutoplayTool autoplayTool;               // Tool autoplay untuk refresh dropdown
+    public SplitViewTool splitViewTool;  //Split View tool - refresh dropdown
 
     // Event saat project dengan TIFF diload (dipanggil oleh TiffLayerManager)
     public UnityEvent<string> onTiffProjectLoaded;
@@ -287,8 +288,9 @@ public class ProjectManager : MonoBehaviour
         // Update PropertyPanel
         propertyPanel?.ShowProperties(proj.GetProps());
 
-        // Update Autoplay dropdown
+        // Update Other Tools dropdown
         autoplayTool?.UpdateDropdownOptions();
+        splitViewTool?.UpdateDropdownOptions();        
     }
 
     // ============================================================

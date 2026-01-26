@@ -1,11 +1,13 @@
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
+using UnityEngine.XR;
 using static UnityEditor.Experimental.GraphView.GraphView;
 
 public class SplitViewTool : MonoBehaviour
 {
+    [Header("Data")]
     public TiffLayerManager tiffManager;
     public ProjectManager projectManager;
     public TMP_Dropdown dropdownLeft, dropdownRight;
@@ -13,15 +15,55 @@ public class SplitViewTool : MonoBehaviour
     string layerNameLeft, layerNameRight;
     GameObject instLeft, instRight;
 
+    [Header("Toolbar")]
+    public GameObject divider;
     public RectTransform layerManager, masker;
-  public GameObject divider; //staticer can be removed, masker repurposed
     Vector4 lastRect;
+
+    [Header("Masking")]
     public Slider sliceSlider;
+    public GameObject sliderHandle;
+    Vector3[] corners = new Vector3[4];
+
+    [Header("Testing")]
+    public GameObject testImage1;
+    public GameObject testImage2;
+
+    static readonly int MaskRectID = Shader.PropertyToID("_MaskRect");
+    bool maskingActive;
 
     void Start()
     {
-        layerManager=layerManager.GetComponent<RectTransform>();
-        masker=masker.GetComponent<RectTransform>();
+        layerManager = layerManager.GetComponent<RectTransform>();
+        masker = masker.GetComponent<RectTransform>();
+
+        //testing
+        instLeft = testImage1;
+        instRight = testImage2;
+    }
+
+    void LateUpdate()
+    {
+        if (maskingActive)
+        {
+            RawImage layerLeftImage = instLeft.GetComponent<RawImage>();
+            RectTransform maskRect = masker.GetComponent<RectTransform>();
+
+            //Masking
+            if (!maskRect || !layerLeftImage)
+                return;
+
+            Vector3[] corners = new Vector3[4];
+            maskRect.GetWorldCorners(corners);
+
+            Vector2 min = RectTransformUtility.WorldToScreenPoint(null, corners[0]);
+            Vector2 max = RectTransformUtility.WorldToScreenPoint(null, corners[2]);
+
+            layerLeftImage.material.SetVector(
+                MaskRectID,
+                new Vector4(min.x, min.y, max.x, max.y)
+            );
+        }
     }
 
     public void UpdateDropdownOptions()
@@ -53,55 +95,48 @@ public class SplitViewTool : MonoBehaviour
         instLeft = tiffManager.SelectLayerGameobject(layerNameLeft);
         instRight = tiffManager.SelectLayerGameobject(layerNameRight);
 
-     //  instLeft.SetActive(true);
-     //   instRight.SetActive(true);
-
         instRight.transform.SetAsLastSibling();
         instLeft.transform.SetAsLastSibling();
 
         EnableMask(true);
+        divider.SetActive(true);
+        sliceSlider.gameObject.SetActive(true);
     }
 
     public void SplitviewCancel()
     {
-        Destroy(instLeft);
-        Destroy(instRight);
+        tiffManager.OnPropertyToggleExternal(layerNameLeft, false);
+        tiffManager.OnPropertyToggleExternal(layerNameRight, false);
 
         EnableMask(false);
+        divider.SetActive(false);
+        sliceSlider.gameObject.SetActive(false);
     }
 
     public void EnableMask(bool enabled)
     {
-        //     if (!image || !image.material) return;
         RawImage layerLeftImage = instLeft.GetComponent<RawImage>();
-        layerLeftImage.material.SetFloat("_UseClip", enabled ? 1f : 0f);
+        if (enabled)
+            layerLeftImage.material.EnableKeyword("UI_MASK");
+        else
+            layerLeftImage.material.DisableKeyword("UI_MASK");
+
+        maskingActive = enabled;
     }
 
     public void SplitviewDragging()
     {
-        float maxWidth = layerManager.rect.size.x;
-        float maskSize = sliceSlider.value;
-        masker.sizeDelta = new Vector2(maskSize * maxWidth, layerManager.sizeDelta.y);
-
         RawImage layerLeftImage = instLeft.GetComponent<RawImage>();
         RectTransform maskRect = masker.GetComponent<RectTransform>();
 
-        //   if (!maskRect || !layerLeftImage || !layerLeftImage.material) return;
-        Vector3[] corners = new Vector3[4];
-        maskRect.GetWorldCorners(corners);
+        //==> Using sliderHandle-to-sliderParent ratio to use with mask-to-layerManager ratio
+        Vector2 sourcePos = sliderHandle.transform.localPosition;
+        RectTransform sliderRt = sliceSlider.GetComponent<RectTransform>();
+        float sliderWidth = sliderRt.rect.size.x;
+        float sourceRatio = sourcePos.x / sliderWidth;
+        float containerWidth = layerManager.rect.size.x;
+        maskRect.sizeDelta = new Vector2(sourceRatio * containerWidth + containerWidth / 2, layerManager.rect.size.y);
 
-        Vector4 clipRect = new Vector4(
-            corners[0].x, // minX
-            corners[0].y, // minY
-            corners[2].x, // maxX
-            corners[2].y  // maxY
-        );
-
-        // Avoid redundant material updates
-        if (clipRect != lastRect)
-        {
-            layerLeftImage.material.SetVector("_ClipRect", clipRect);
-            lastRect = clipRect;
-        }
+        divider.transform.localPosition = new Vector2(sourcePos.x, divider.transform.localPosition.y);
     }
 }

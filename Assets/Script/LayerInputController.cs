@@ -64,7 +64,7 @@ public class LayerInputController : MonoBehaviour
         targetLayerLabel.text = "Layer : " + layerNameInput.text;
         
         // Tambah property ke project (default ON)
-        projectManager?.AddProperty(layerNameInput.text, true);
+        projectManager?.AddProperty(layerNameInput.text, true, false);
         
         Debug.Log($"[LayerInputController] Layer dibuat: {layerNameInput.text}");
     }

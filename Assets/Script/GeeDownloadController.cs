@@ -383,7 +383,7 @@ public class GeeDownloadController : MonoBehaviour
             // Load PNG dengan nama layer custom
             tiffLayerManager?.LoadPngOverlay(pngPath, curNorth, curSouth, curWest, curEast, false, false, layerName);
 
-            projectManager?.AddProperty(layerName, true);
+            projectManager?.AddProperty(layerName, true, false);
             projectManager?.Save();
         }
 

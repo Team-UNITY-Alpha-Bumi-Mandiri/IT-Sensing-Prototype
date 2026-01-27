@@ -32,13 +32,13 @@ public class OverlayToggleController : MonoBehaviour
         projectManager.Save();
 
         // Refresh UI panel
-        propertyPanel?.ShowProperties(proj.GetProps());
+        propertyPanel?.ShowPropertiesWithType(proj.GetProps());
 
         // Sync visibility ke layer manager
         if (tiffLayerManager != null)
         {
             foreach (var kv in proj.GetProps())
-                tiffLayerManager.OnPropertyToggleExternal(kv.Key, kv.Value);
+                tiffLayerManager.OnPropertyToggleExternal(kv.Key, kv.Value.value);
         }
 
         Debug.Log($"[OverlayToggleController] Set all = {value}");
@@ -57,7 +57,7 @@ public class OverlayToggleController : MonoBehaviour
         prop.value = value;
         projectManager.Save();
 
-        propertyPanel?.ShowProperties(proj.GetProps());
+        propertyPanel?.ShowPropertiesWithType(proj.GetProps());
         tiffLayerManager?.OnPropertyToggleExternal(name, value);
     }
 }

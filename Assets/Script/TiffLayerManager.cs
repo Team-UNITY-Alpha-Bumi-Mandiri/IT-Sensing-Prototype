@@ -769,11 +769,11 @@ public class TiffLayerManager : MonoBehaviour
 
             // Tambah property jika belum ada
             if (!props.ContainsKey(layer.name))
-                projectManager.AddProperty(layer.name, false);
+                projectManager.AddProperty(layer.name, false, false);
             else
             {
                 // Sync visibility dari project properties
-                layer.isVisible = props[layer.name];
+                layer.isVisible = props[layer.name].value;
                 if (layer.isVisible) ShowLayerOnMap(layer);
                 else HideLayerFromMap(layer);
             }

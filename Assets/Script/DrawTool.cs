@@ -38,7 +38,7 @@ public class DrawTool : MonoBehaviour
     public string texturePath = "Assets/Image Map/mapa del mundo pixel art.jpg";
     public string currentDrawingLayer = "";     // Layer untuk drawing yang sedang aktif
 
-    public enum DrawMode { Point, Line, Polygon, Delete }
+    public enum DrawMode { Point, Line, Polygon, Delete, Edit }
 
     // Events
     public UnityEvent<DrawObject> onDrawComplete;  // Dipanggil saat drawing selesai
@@ -62,6 +62,11 @@ public class DrawTool : MonoBehaviour
     DrawObject activeObj;                               // Objek yang sedang digambar
     GameObject ghost, tooltip;                          // Helper visual
     TMP_Text tooltipText;
+
+    // Edit Mode State
+    List<DrawObject> editObjs = new List<DrawObject>();
+    int dragVertexIndex = -1;
+    DrawObject dragObj = null;
 
     // Struktur data objek gambar
     [System.Serializable]
@@ -120,11 +125,24 @@ public class DrawTool : MonoBehaviour
         
         UpdateTooltip(mousePos);
 
-        // Klik kiri: tambah titik atau delete
+        // Klik kiri: tambah titik, delete, atau start drag vertex
         if (Mouse.current.leftButton.wasPressedThisFrame)
         {
             if (mode == DrawMode.Delete) TryDelete(mousePos);
+            else if (mode == DrawMode.Edit) TryStartVertexDrag(mousePos);
             else AddPoint(mapController.ScreenToLatLon(mousePos), mousePos);
+        }
+        
+        // Update drag vertex saat Edit Mode
+        if (mode == DrawMode.Edit && dragObj != null)
+        {
+            UpdateVertexDrag(mousePos);
+        }
+        
+        // Release drag
+        if (Mouse.current.leftButton.wasReleasedThisFrame && dragObj != null)
+        {
+            EndVertexDrag();
         }
 
         // Klik kanan: undo
@@ -382,7 +400,7 @@ public class DrawTool : MonoBehaviour
     // Update tooltip
     void UpdateTooltip(Vector2 mousePos)
     {
-        if (tooltip == null || mode == DrawMode.Point)
+        if (tooltip == null || (mode != DrawMode.Line && mode != DrawMode.Polygon))
         {
             if (tooltip != null) tooltip.SetActive(false);
             return;
@@ -423,6 +441,8 @@ public class DrawTool : MonoBehaviour
     {
         for (int i = allObjs.Count - 1; i >= 0; i--)
         {
+            if (!string.IsNullOrEmpty(currentDrawingLayer) && allObjs[i].layerName != currentDrawingLayer)
+                continue;
             if (!HitTest(allObjs[i], mousePos)) continue;
             onObjectDeleted?.Invoke(allObjs[i]);
             if (allObjs[i].rootObj != null) Destroy(allObjs[i].rootObj);
@@ -598,5 +618,92 @@ public class DrawTool : MonoBehaviour
             allObjs.Remove(obj);
         }
         Debug.Log($"[DrawTool] Deleted layer {layerName} ({toRemove.Count} objects)");
+    }
+
+    public void EditLayer(string layerName)
+    {
+        editObjs = allObjs.FindAll(x => x.layerName == layerName);
+        foreach (var obj in editObjs)
+            Rebuild(obj, true);  // Tampilkan vertex
+    }
+
+    public void CancelEditLayer()
+    {
+        dragObj = null;
+        dragVertexIndex = -1;
+        foreach (var obj in editObjs)
+            Rebuild(obj, false);  // Sembunyikan vertex
+        editObjs.Clear();
+    }
+
+    // Mulai drag vertex terdekat
+    void TryStartVertexDrag(Vector2 mousePos)
+    {
+        foreach (var obj in editObjs)
+        {
+            for (int i = 0; i < obj.coordinates.Count; i++)
+            {
+                Vector2 vertexScreen = GeoToScreen(obj.coordinates[i]);
+                if (Vector2.Distance(mousePos, vertexScreen) < snapDist)
+                {
+                    dragObj = obj;
+                    dragVertexIndex = i;
+                    Debug.Log($"[DrawTool] Started dragging vertex {i}");
+                    return;
+                }
+            }
+        }
+    }
+
+    // Update posisi vertex saat drag
+    void UpdateVertexDrag(Vector2 mousePos)
+    {
+        if (dragObj == null || dragVertexIndex < 0) return;
+        
+        Vector2 latLon = mapController.ScreenToLatLon(mousePos);
+        dragObj.coordinates[dragVertexIndex] = latLon;
+        
+        // Rebuild visual
+        Rebuild(dragObj, true);
+    }
+
+    // Selesai drag vertex
+    void EndVertexDrag()
+    {
+        if (dragObj != null)
+        {
+            onDrawComplete?.Invoke(dragObj);
+            Debug.Log("[DrawTool] Finished dragging vertex");
+        }
+        dragObj = null;
+        dragVertexIndex = -1;
+    }
+
+    public void DeactivateAllModes()
+    {
+        // Cancel edit jika sedang edit
+        if (IsModeActive(DrawMode.Edit))
+        {
+            CancelEditLayer();
+        }
+        
+        // Cancel drawing jika sedang drawing
+        if (isDrawing)
+        {
+            Cancel();
+        }
+        
+        // Deactivate semua mode satu per satu
+        DeactivateMode(DrawMode.Polygon);
+        DeactivateMode(DrawMode.Point);
+        DeactivateMode(DrawMode.Line);
+        DeactivateMode(DrawMode.Delete);
+        DeactivateMode(DrawMode.Edit);
+        
+        // Reset state
+        isActive = false;
+        currentDrawingLayer = "";
+        dragObj = null;
+        dragVertexIndex = -1;
     }
 }

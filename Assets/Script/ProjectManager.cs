@@ -57,7 +57,8 @@ public class ProjectManager : MonoBehaviour
     {
         public string key;
         public bool value;
-        public PropertyEntry(string k, bool v) { key = k; value = v; }
+        public bool isDrawing;
+        public PropertyEntry(string k, bool v, bool drawing = false) { key = k; value = v; isDrawing = drawing; }
     }
 
     // Drawing object yang diserialisasi
@@ -83,18 +84,24 @@ public class ProjectManager : MonoBehaviour
         public List<SerializedDrawObject> drawings = new();  // Drawings dalam project
 
         // Convert properties ke Dictionary
-        public Dictionary<string, bool> GetProps()
+        public Dictionary<string, PropertyPanel.PropertyInfo> GetProps()
         {
-            var dict = new Dictionary<string, bool>();
-            properties?.ForEach(p => dict[p.key] = p.value);
+            var dict = new Dictionary<string, PropertyPanel.PropertyInfo>();
+            if (properties != null)
+            {
+                foreach (var p in properties)
+                {
+                    dict[p.key] = new PropertyPanel.PropertyInfo(p.value, p.isDrawing);
+                }
+            }
             return dict;
         }
 
         // Set properties dari Dictionary
-        public void SetProps(Dictionary<string, bool> dict)
+        public void SetProps(Dictionary<string, PropertyPanel.PropertyInfo> dict)
         {
             properties = new List<PropertyEntry>();
-            foreach (var kv in dict) properties.Add(new PropertyEntry(kv.Key, kv.Value));
+            foreach (var kv in dict) properties.Add(new PropertyEntry(kv.Key, kv.Value.value, kv.Value.isDrawing));
         }
     }
 
@@ -184,6 +191,15 @@ public class ProjectManager : MonoBehaviour
                 id = obj.id, type = obj.type, layerName = obj.layerName,
                 coordinates = new List<Vector2>(obj.coordinates), useTexture = obj.useTexture
             });
+
+            var props = current.GetProps();
+            if (props.ContainsKey(obj.layerName))
+            {
+                bool currentVal = props[obj.layerName].value;
+                props[obj.layerName] = new PropertyPanel.PropertyInfo(currentVal, true);
+                current.SetProps(props);
+                propertyPanel?.ShowPropertiesWithType(props);
+            }
             Save();
             return;
         }
@@ -223,7 +239,7 @@ public class ProjectManager : MonoBehaviour
         current = proj;
         if (renameProjectInput != null) renameProjectInput.text = proj.name;
         newProjectNameInput.text = "";
-        propertyPanel?.ShowProperties(proj.GetProps());
+        propertyPanel?.ShowPropertiesWithType(proj.GetProps());
     }
 
     // Buat project otomatis (untuk hasil sharpening, dll)
@@ -280,13 +296,13 @@ public class ProjectManager : MonoBehaviour
 
         // Set layer visibility
         var props = proj.GetProps();
-        foreach (var kv in props) drawTool?.SetLayerVisibility(kv.Key, kv.Value);
+        foreach (var kv in props) drawTool?.SetLayerVisibility(kv.Key, kv.Value.value);
 
         // Notify TiffLayerManager
         onTiffProjectLoaded?.Invoke(proj.tiffPath ?? "");
 
         // Update PropertyPanel
-        propertyPanel?.ShowProperties(proj.GetProps());
+        propertyPanel?.ShowPropertiesWithType(proj.GetProps());
 
         // Update Other Tools dropdown
         autoplayTool?.UpdateDropdownOptions();
@@ -388,16 +404,16 @@ public class ProjectManager : MonoBehaviour
     // ============================================================
 
     // Tambah property baru
-    public void AddProperty(string name, bool value = false)
+    public void AddProperty(string name, bool value = false, bool isDrawing = false)
     {
         if (current == null) return;
         var dict = current.GetProps();
         if (dict.ContainsKey(name)) return;
 
-        dict[name] = value;
+        dict[name] = new PropertyPanel.PropertyInfo(value, isDrawing);
         current.SetProps(dict);
         Save();
-        propertyPanel?.ShowProperties(dict);
+        propertyPanel?.ShowPropertiesWithType(dict);
     }
 
     // Hapus property
@@ -410,7 +426,7 @@ public class ProjectManager : MonoBehaviour
         dict.Remove(name);
         current.SetProps(dict);
         Save();
-        propertyPanel?.ShowProperties(dict);
+        propertyPanel?.ShowPropertiesWithType(dict);
     }
 
     // Callback saat property berubah dari panel
@@ -418,7 +434,12 @@ public class ProjectManager : MonoBehaviour
     {
         if (current == null) return;
         var dict = current.GetProps();
-        dict[name] = value;
+
+        if (dict.ContainsKey(name))
+        {
+            bool wasDrawing = dict[name].isDrawing;
+            dict[name] = new PropertyPanel.PropertyInfo(value, wasDrawing);
+        }
         current.SetProps(dict);
         Save();
         drawTool?.SetLayerVisibility(name, value);
@@ -439,7 +460,16 @@ public class ProjectManager : MonoBehaviour
 
         // Hapus dari project props
         var dict = current.GetProps();
-        if (dict.ContainsKey(name)) { dict.Remove(name); current.SetProps(dict); Save(); }
+        if (dict.ContainsKey(name)) 
+        { 
+            dict.Remove(name); current.SetProps(dict); Save();
+        }
+
+        if (current.drawings != null)
+        {
+            current.drawings.RemoveAll(d => d.layerName == name);
+            Save();
+        }
 
         // Hapus layer dan drawing
         tiffLayerManager?.RemoveLayer(name, true);
@@ -457,8 +487,16 @@ public class ProjectManager : MonoBehaviour
         dict[newName] = dict[oldName];
         dict.Remove(oldName);
         current.SetProps(dict);
-        Save();
 
+        if (current.drawings != null)
+        {
+            foreach (var drawing in current.drawings)
+            {
+                if (drawing.layerName == oldName) drawing.layerName = newName;
+            }
+        }
+
+        Save();
         tiffLayerManager?.RenameLayer(oldName, newName);
         drawTool?.RenameLayer(oldName, newName);
     }
@@ -488,7 +526,7 @@ public class ProjectManager : MonoBehaviour
             if (!visible) { drawTool.ShowDrawing(d.id, false); continue; }
 
             // Jika visible=true, cek apakah layer drawing aktif
-            bool layerActive = string.IsNullOrEmpty(d.layerName) || !props.ContainsKey(d.layerName) || props[d.layerName];
+            bool layerActive = string.IsNullOrEmpty(d.layerName) || !props.ContainsKey(d.layerName) || props[d.layerName].value;
             if (layerActive) drawTool.ShowDrawing(d.id, true);
         }
     }

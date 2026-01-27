@@ -20,6 +20,7 @@ public class SimpleMapController_Baru : MonoBehaviour
     public MapStyle currentStyle = MapStyle.OSM;
 
     public MeasureTool2 measureToolRef;
+    public DrawTool drawTool;
 
     [Header("Input Settings")]
     public bool isInputEnabled = true;
@@ -97,7 +98,8 @@ public class SimpleMapController_Baru : MonoBehaviour
             else if (scroll < 0) ChangeZoom(-1);
         }
 
-        if (Mouse.current.leftButton.wasPressedThisFrame && IsMouseInArea())
+        bool isEditing = drawTool != null && drawTool.IsModeActive(DrawTool.DrawMode.Edit);
+        if (Mouse.current.leftButton.wasPressedThisFrame && IsMouseInArea() && !isEditing)
         {
             isDragging = true;
             lastMousePos = Mouse.current.position.ReadValue();
@@ -407,5 +409,16 @@ public class SimpleMapController_Baru : MonoBehaviour
         double finalLat = latRad * 180.0 / Math.PI;
 
         return new Vector2((float)finalLat, (float)finalLon);
+    }
+
+    public Vector2 LocalPositionToLatLon(Vector2 localPos)
+    {
+        double lonPerPixel = 360.0 / (256 * Math.Pow(2, zoom));
+        double latPerPixel = lonPerPixel;
+        
+        double lon = longitude + (localPos.x * lonPerPixel);
+        double lat = latitude - (localPos.y * latPerPixel);
+        
+        return new Vector2((float)lat, (float)lon);
     }
 }

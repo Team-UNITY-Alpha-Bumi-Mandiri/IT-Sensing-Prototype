@@ -30,7 +30,7 @@ public class TiffLayerManager : MonoBehaviour
 
     [Header("Other Tools")]
     public EnhancementTool enhanceTool;             // Tool enhancement (brightness, contrast, dll)
-    public Material enhanceMat;                     // Material untuk enhancement shader
+    public Material layerMat;                     // Material untuk enhancement shader
 
     // Data internal
     public List<LayerData> layers = new();                      // Layer aktif saat ini
@@ -857,9 +857,9 @@ public class TiffLayerManager : MonoBehaviour
 
             // Apply enhancement material jika ada
             RawImage existingRaw = existing.GetComponent<RawImage>();
-            if (existingRaw.material != enhanceMat)
+            if (existingRaw.material != layerMat)
             {
-                existingRaw.material = Instantiate(enhanceMat);
+                existingRaw.material = Instantiate(layerMat);
             }
                 enhanceTool.AssignValues(existing, layer.name);
 

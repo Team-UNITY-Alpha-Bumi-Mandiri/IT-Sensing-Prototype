@@ -70,6 +70,12 @@ public class MapCursorButton : MonoBehaviour
         }
         return true;
     }
+
+    public void AllowToDragExternal(bool inputState)
+    {
+        mapController.isInputEnabled = inputState;
+    }
+
     void OnButtonClicked()
     {
         isActive = !isActive;

@@ -25,10 +25,6 @@ public class SplitViewTool : MonoBehaviour
     public GameObject sliderHandle;
     Vector3[] corners = new Vector3[4];
 
-    [Header("Testing")]
-    public GameObject testImage1;
-    public GameObject testImage2;
-
     static readonly int MaskRectID = Shader.PropertyToID("_MaskRect");
     bool maskingActive;
 
@@ -36,10 +32,6 @@ public class SplitViewTool : MonoBehaviour
     {
         layerManager = layerManager.GetComponent<RectTransform>();
         masker = masker.GetComponent<RectTransform>();
-
-        //testing
-        instLeft = testImage1;
-        instRight = testImage2;
     }
 
     void LateUpdate()
@@ -86,7 +78,7 @@ public class SplitViewTool : MonoBehaviour
         }
     }
 
-    public void SplitviewApply()
+    public void Splitview_Apply()
     {
         layerNameLeft = dropdownLeft.options[dropdownLeft.value].text;
         layerNameRight = dropdownRight.options[dropdownRight.value].text;
@@ -103,12 +95,15 @@ public class SplitViewTool : MonoBehaviour
         sliceSlider.gameObject.SetActive(true);
     }
 
-    public void SplitviewCancel()
+    public void Splitview_Cancel()
     {
-        tiffManager.OnPropertyToggleExternal(layerNameLeft, false);
-        tiffManager.OnPropertyToggleExternal(layerNameRight, false);
+        if (instLeft != null)
+        {
+            EnableMask(false);
+            tiffManager.OnPropertyToggleExternal(layerNameLeft, false);
+            tiffManager.OnPropertyToggleExternal(layerNameRight, false);
+        }
 
-        EnableMask(false);
         divider.SetActive(false);
         sliceSlider.gameObject.SetActive(false);
     }
@@ -124,7 +119,7 @@ public class SplitViewTool : MonoBehaviour
         maskingActive = enabled;
     }
 
-    public void SplitviewDragging()
+    public void Splitview_Dragging()
     {
         RawImage layerLeftImage = instLeft.GetComponent<RawImage>();
         RectTransform maskRect = masker.GetComponent<RectTransform>();

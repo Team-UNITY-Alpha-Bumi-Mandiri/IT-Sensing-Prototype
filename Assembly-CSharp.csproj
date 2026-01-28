@@ -115,6 +115,7 @@
     <Compile Include="Assets\Script\TiffLayerManager.cs" />
     <Compile Include="Assets\UI\Script\SlippyGoogleMap_Real.cs" />
     <Compile Include="Assets\UI\Script Uji Coba\Prefetcher.cs" />
+    <Compile Include="Assets\Script\PrintTool.cs" />
     <Compile Include="Assets\Script\FileBrowserHelper.cs" />
     <Compile Include="Assets\TextMesh Pro\Examples &amp; Extras\Scripts\TMP_ExampleScript_01.cs" />
     <Compile Include="Assets\TextMesh Pro\Examples &amp; Extras\Scripts\TMPro_InstructionOverlay.cs" />

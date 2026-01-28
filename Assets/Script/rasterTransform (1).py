@@ -22,7 +22,7 @@ class Data():
         
         self.folder_output = f'{self.output_folder_name}'
         if not os.path.exists(self.folder_output):
-            os.makedirs(self.folder_output, exist_ok=True)
+            os.makedirs(self.folder_output)
 
         self.filename = f'{self.prefix_name}_{self.algorithm}_{self.ymdhms}.tif'
         self.output_final_path = os.path.join(self.folder_output, self.filename)
@@ -299,12 +299,16 @@ def create_preview_png(tif_path, png_path, algo, max_size=1024):
                 # Default to Grayscale (No Colormap)
                 # img_array is already suitable for grayscale image creation
             
-            # Resize if too large
+            # Resize to HD (e.g. 2048px) to make pixels visible (Pixelated)
+            # User request: "HD tapi pixelated"
+            target_size = 2048
             h, w = img_array.shape[:2]
-            if max(h, w) > max_size:
-                scale = max_size / max(h, w)
-                new_h, new_w = int(h * scale), int(w * scale)
-                img_array = cv2.resize(img_array, (new_w, new_h))
+            
+            scale = target_size / max(h, w)
+            new_h, new_w = int(h * scale), int(w * scale)
+            
+            # Use INTER_NEAREST to keep pixelated look (Sharp squares)
+            img_array = cv2.resize(img_array, (new_w, new_h), interpolation=cv2.INTER_NEAREST)
             
             # Save
             if algo == 'TCI':

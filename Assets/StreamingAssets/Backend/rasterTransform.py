@@ -33,8 +33,6 @@ class Data():
 
         self.status = 'running'
         self.messages = 'Initializing...'
-        self.min_val = 0.0
-        self.max_val = 0.0
 
     def set_ymdhms(self):
         self.now = datetime.now()
@@ -82,9 +80,7 @@ class Data():
             'path': self.output_final_path if self.status == 'success' else None,
             'preview_png': self.png_filename if self.status == 'success' else None,
             'bounds': bounds if bounds else {},
-            'algo': self.algorithm,
-            'min_val': self.min_val,
-            'max_val': self.max_val
+            'algo': self.algorithm
         }
         print(json.dumps(result))
 
@@ -236,10 +232,6 @@ class Data():
 
                 # Update Profile
                 if self.algorithm != 'TCI':
-                    # Calculate Min/Max for single band
-                    self.min_val = float(np.min(output_data))
-                    self.max_val = float(np.max(output_data))
-
                     # Single band output for indices
                     profile.update(
                         dtype=rasterio.float32,

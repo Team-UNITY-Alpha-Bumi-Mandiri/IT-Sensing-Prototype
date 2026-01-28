@@ -30,6 +30,9 @@ public class TiffLayerManager : MonoBehaviour
     [Header("Enhancement")]
     public EnhancementTool enhanceTool;             // Tool enhancement (brightness, contrast, dll)
     public Material enhanceMat;                     // Material untuk enhancement shader
+    public Shader colorRampShader;                  // Shader baru untuk Color Ramp
+    public ColorPickerUI colorPicker;               // UI untuk memilih warna
+    public LegendController legendController;       // Controller legend
 
     // Data internal
     public List<LayerData> layers = new();                      // Layer aktif saat ini
@@ -54,6 +57,11 @@ public class TiffLayerManager : MonoBehaviour
         public string path;         // Path file fisik (untuk rename/delete)
         public Texture2D texture;   // Texture hasil load
         public bool isVisible;      // Status visibility
+        public float minVal, maxVal; // Range nilai data
+        public Gradient currentGradient; // Gradient aktif (null = grayscale)
+        public bool isSingleBand;
+        public float[] rawData;      // Data normalized 0-1 untuk coloring
+        public int width, height;
     }
 
     // ============================================================
@@ -64,7 +72,23 @@ public class TiffLayerManager : MonoBehaviour
     {
         // Subscribe ke event PropertyPanel dan ProjectManager
         propertyPanel?.onPropertyChanged.AddListener(OnPropertyToggle);
+        propertyPanel?.onListRefreshed.AddListener(OnPropertyPanelRefreshed); // [NEW] Sync UI saat panel refresh
         projectManager?.onTiffProjectLoaded.AddListener(OnTiffProjectLoaded);
+        
+        // Inisialisasi Shader Gradient
+        if (colorRampShader == null) colorRampShader = Shader.Find("Unlit/Texture"); // Fallback
+        
+        // Auto-find LegendController jika belum diassign
+        if (legendController == null) legendController = FindObjectOfType<LegendController>();
+        
+        // Auto-find ColorPickerUI jika belum diassign
+        if (colorPicker == null) colorPicker = FindObjectOfType<ColorPickerUI>();
+
+        // Subscribe color picker request
+        if (legendController != null)
+        {
+            legendController.onColorPickerRequest = OnLegendColorPickerRequest;
+        }
         
         // Pastikan container selalu aktif
         if (overlayContainer != null) overlayContainer.gameObject.SetActive(true);
@@ -96,6 +120,9 @@ public class TiffLayerManager : MonoBehaviour
     // PNG OVERLAY - Load PNG dengan bounds geografis manual
     // ============================================================
 
+    [System.Serializable]
+    public class LayerMeta { public float min_val; public float max_val; public bool is_single_band; }
+
     // Load PNG sebagai overlay dengan koordinat geografis
     // Params:
     //   pngPath     - Path ke file PNG
@@ -103,8 +130,27 @@ public class TiffLayerManager : MonoBehaviour
     //   west/east   - Longitude bounds (derajat)
     //   isPreview   - True jika ini preview sementara (tidak disimpan ke project)
     //   clearExisting - True untuk hapus layer sebelumnya
-    public void LoadPngOverlay(string pngPath, double north, double south, double west, double east, bool isPreview = false, bool clearExisting = true, string customLayerName = "")
+    //   isSingleBand - True jika ini adalah layer single band (NDVI, etc)
+    //   realMin/realMax - Range nilai asli data (jika ada)
+    public void LoadPngOverlay(string pngPath, double north, double south, double west, double east, bool isPreview = false, bool clearExisting = true, string customLayerName = "", bool isSingleBand = false, float realMin = 0, float realMax = 0)
     {
+        // Try load metadata from sidecar if defaults
+        if (Mathf.Abs(realMin) < 0.0001f && Mathf.Abs(realMax) < 0.0001f)
+        {
+             string jsonPath = pngPath + ".json";
+             if (!File.Exists(jsonPath)) jsonPath = Path.ChangeExtension(pngPath, ".json");
+             if (File.Exists(jsonPath))
+             {
+                 try {
+                     var meta = JsonUtility.FromJson<LayerMeta>(File.ReadAllText(jsonPath));
+                     realMin = meta.min_val;
+                     realMax = meta.max_val;
+                     isSingleBand = meta.is_single_band;
+                     Debug.Log($"[TiffLayerManager] Loaded metadata from {jsonPath}: Min={realMin}, Max={realMax}, SingleBand={isSingleBand}");
+                 } catch {}
+             }
+        }
+
         if (!File.Exists(pngPath)) { Debug.LogError($"[TiffLayerManager] PNG tidak ditemukan: {pngPath}"); return; }
 
         // Tentukan nama layer
@@ -120,7 +166,8 @@ public class TiffLayerManager : MonoBehaviour
 
         // Load texture dari file
         byte[] fileData = File.ReadAllBytes(pngPath);
-        var tex = new Texture2D(2, 2, TextureFormat.RGBA32, false);
+        // [IMPORTANT] Use Linear texture for scientific data to avoid sRGB->Linear conversion in GetPixels()
+        var tex = new Texture2D(2, 2, TextureFormat.RGBA32, false, true);
         
         if (!tex.LoadImage(fileData)) return;
 
@@ -129,19 +176,91 @@ public class TiffLayerManager : MonoBehaviour
         tex.filterMode = FilterMode.Bilinear;
         tex.Apply();
 
-        // Simpan bounds geografis
-        geoMaxLat = north; geoMinLat = south;
-        geoMinLon = west; geoMaxLon = east;
-        imageWidth = tex.width; imageHeight = tex.height;
-        hasGeoData = true;
+        // Extract raw data (normalized 0-1 from grayscale)
+            var pixels = tex.GetPixels();
+            var rawData = new float[pixels.Length];
+            
+            // Gunakan range asli dari Python jika tersedia
+            bool useRealRange = Mathf.Abs(realMax - realMin) > 0.0001f;
+            float calcMin = float.MaxValue;
+            float calcMax = float.MinValue;
 
-        // Buat layer data
-        var newLayer = new LayerData { name = layerName, texture = tex, isVisible = true, path = pngPath };
-        layers.Add(newLayer);
+            for(int i=0; i<pixels.Length; i++) 
+            {
+                float val = pixels[i].r;
+                rawData[i] = val;
+                
+                if (!useRealRange)
+                {
+                    if (val < calcMin) calcMin = val;
+                    if (val > calcMax) calcMax = val;
+                }
+            }
 
-        // Tampilkan di peta
-        if (isPreview) ShowLayerOnMap(newLayer);
-        else { ForceCreateOverlayObject(newLayer); SyncWithProject(); }
+            float finalMin = useRealRange ? realMin : calcMin;
+            float finalMax = useRealRange ? realMax : calcMax;
+
+            // Safety check
+            if (finalMin > finalMax) { finalMin = 0; finalMax = 1; }
+            if (Mathf.Approximately(finalMin, finalMax)) { finalMax = finalMin + 0.01f; }
+
+            // Simpan bounds geografis
+            geoMaxLat = north; geoMinLat = south;
+            geoMinLon = west; geoMaxLon = east;
+            imageWidth = tex.width; imageHeight = tex.height;
+            hasGeoData = true;
+
+            // Buat layer data
+            var newLayer = new LayerData { 
+                name = layerName, 
+                texture = tex, 
+                isVisible = true, 
+                path = pngPath, 
+                isSingleBand = isSingleBand,
+                rawData = rawData,
+                minVal = finalMin,
+                maxVal = finalMax,
+                width = tex.width,
+                height = tex.height
+            };
+
+            // Assign default gradient for single band layers
+            if (isSingleBand)
+            {
+                if (GradientManager.Instance == null) GradientManager.Instance = FindObjectOfType<GradientManager>();
+                
+                if (GradientManager.Instance != null)
+                {
+                    if (layerName.ToUpper().Contains("NDVI")) 
+                        newLayer.currentGradient = GradientManager.Instance.GetGradient("NDVI");
+                    else if (layerName.ToUpper().Contains("THERMAL"))
+                        newLayer.currentGradient = GradientManager.Instance.GetGradient("Thermal");
+                    else
+                        newLayer.currentGradient = GradientManager.Instance.GetGradient("Grayscale");
+                }
+                else
+                {
+                    Debug.LogWarning("[TiffLayerManager] GradientManager Instance not found!");
+                }
+            }
+
+            Debug.Log($"[TiffLayerManager] Loaded Layer: {layerName}, isSingleBand: {isSingleBand}, Range: {finalMin}-{finalMax}");
+            layers.Add(newLayer);
+
+            // Tampilkan di peta
+            if (isPreview) ShowLayerOnMap(newLayer);
+            else 
+            { 
+                ForceCreateOverlayObject(newLayer); 
+                SyncWithProject(); 
+                SetupLayerUI(newLayer);
+
+                // Apply gradient awal jika ada
+                if (newLayer.currentGradient != null)
+                {
+                    ApplyGradientToLayer(newLayer, newLayer.currentGradient);
+                }
+            }
 
         // Navigasi ke lokasi overlay
         if (mapController != null)
@@ -359,6 +478,88 @@ public class TiffLayerManager : MonoBehaviour
         return "";
     }
 
+    // Helper to get min/max from a single band TIFF without creating layers
+    public bool GetSingleBandMinMax(string path, out float min, out float max)
+    {
+        min = 0; max = 0;
+        if (!File.Exists(path)) return false;
+
+        using (Tiff tiff = Tiff.Open(path, "r"))
+        {
+            if (tiff == null) return false;
+
+            int w = tiff.GetField(TiffTag.IMAGEWIDTH)[0].ToInt();
+            int h = tiff.GetField(TiffTag.IMAGELENGTH)[0].ToInt();
+            int bits = tiff.GetField(TiffTag.BITSPERSAMPLE)?[0].ToInt() ?? 8;
+            bool isTiled = tiff.IsTiled();
+            
+            float minVal = float.MaxValue;
+            float maxVal = float.MinValue;
+            bool anyVal = false;
+
+            if (isTiled)
+            {
+                 int tileW = tiff.GetField(TiffTag.TILEWIDTH)[0].ToInt();
+                 int tileH = tiff.GetField(TiffTag.TILELENGTH)[0].ToInt();
+                 int tileSize = tiff.TileSize();
+                 byte[] buf = new byte[tileSize];
+                 
+                 for (int y = 0; y < h; y += tileH)
+                 {
+                     for (int x = 0; x < w; x += tileW)
+                     {
+                         tiff.ReadTile(buf, 0, x, y, 0, 0);
+                         int actualTileW = System.Math.Min(tileW, w - x);
+                         int actualTileH = System.Math.Min(tileH, h - y);
+                         
+                         for (int ty = 0; ty < actualTileH; ty++)
+                         {
+                             for (int tx = 0; tx < actualTileW; tx++)
+                             {
+                                 float val = ReadPixelValue(buf, ty * tileW + tx, bits, tileSize);
+                                 // Ignore extreme values if needed (like NaN or -9999)
+                                 // But ReadPixelValue returns 0 for NaN usually? No, ToSingle can return NaN.
+                                 if (!float.IsNaN(val) && !float.IsInfinity(val))
+                                 {
+                                     if (val < minVal) minVal = val;
+                                     if (val > maxVal) maxVal = val;
+                                     anyVal = true;
+                                 }
+                             }
+                         }
+                     }
+                 }
+            }
+            else
+            {
+                int scanSize = tiff.ScanlineSize();
+                byte[] buf = new byte[scanSize];
+                for (int y = 0; y < h; y++)
+                {
+                    tiff.ReadScanline(buf, y);
+                    for (int x = 0; x < w; x++)
+                    {
+                        float val = ReadPixelValue(buf, x, bits, scanSize);
+                        if (!float.IsNaN(val) && !float.IsInfinity(val))
+                        {
+                            if (val < minVal) minVal = val;
+                            if (val > maxVal) maxVal = val;
+                            anyVal = true;
+                        }
+                    }
+                }
+            }
+            
+            if (anyVal)
+            {
+                min = minVal;
+                max = maxVal;
+                return true;
+            }
+        }
+        return false;
+    }
+
     // ============================================================
     // GEOTIFF PARSING - Baca koordinat geografis dari tag TIFF
     // ============================================================
@@ -479,6 +680,7 @@ public class TiffLayerManager : MonoBehaviour
     {
         var tex = new Texture2D(w, h, TextureFormat.RGBA32, false);
         var pixels = new Color[w * h];
+        var rawData = new float[w * h];
         float range = max - min;
         if (range < 0.0001f) range = 1f;
 
@@ -490,12 +692,25 @@ public class TiffLayerManager : MonoBehaviour
                 // Flip Y karena TIFF origin di top-left, texture di bottom-left
                 float val = Mathf.Clamp01((bandData[ch][(h - 1 - y) * w + x] - min) / range);
                 pixels[y * w + x] = new Color(val, val, val, 1f);
+                rawData[y * w + x] = val;
             }
         }
 
         tex.SetPixels(pixels);
         tex.Apply();
-        layers.Add(new LayerData { name = name, texture = tex, isVisible = false });
+        var newLayer = new LayerData { 
+            name = name, 
+            texture = tex, 
+            isVisible = false, 
+            minVal = min, 
+            maxVal = max, 
+            isSingleBand = true,
+            rawData = rawData,
+            width = w,
+            height = h
+        };
+        layers.Add(newLayer);
+        SetupLayerUI(newLayer);
     }
 
     // Buat layer RGB composite dari 3 band pertama
@@ -525,7 +740,9 @@ public class TiffLayerManager : MonoBehaviour
 
         tex.SetPixels(pixels);
         tex.Apply();
-        layers.Add(new LayerData { name = name, texture = tex, isVisible = false });
+        var newLayer = new LayerData { name = name, texture = tex, isVisible = false, isSingleBand = false };
+        layers.Add(newLayer);
+        SetupLayerUI(newLayer);
     }
 
     // ============================================================
@@ -561,7 +778,12 @@ public class TiffLayerManager : MonoBehaviour
                         if (c.y > e) e = c.y; // Lon is y? ProjectManager uses x=lat, y=lon
                         if (c.y < w) w = c.y;
                     }
-                    LoadPngOverlay(path, n, s, w, e, false, true);
+                    
+                    // Determine single band status from filename (safe assumption for this project)
+                    bool isTCI = Path.GetFileName(path).Contains("_TCI_") || Path.GetFileName(path).Contains("TrueColor");
+                    bool isSingleBand = !isTCI;
+                    
+                    LoadPngOverlay(path, n, s, w, e, false, true, "", isSingleBand);
                 }
                 else
                 {
@@ -650,7 +872,11 @@ public class TiffLayerManager : MonoBehaviour
                 // Cek apakah sudah diload di memory
                 if (!layers.Exists(l => l.name == originalName))
                 {
-                    LoadPngOverlay(pngPath, n, s, w, e, false, false, originalName);
+                    // Determine single band status from filename
+                    bool isTCI = Path.GetFileName(pngPath).Contains("_TCI_") || Path.GetFileName(pngPath).Contains("TrueColor");
+                    bool isSingleBand = !isTCI;
+                    
+                    LoadPngOverlay(pngPath, n, s, w, e, false, false, originalName, isSingleBand);
                 }
             }
         }
@@ -777,6 +1003,12 @@ public class TiffLayerManager : MonoBehaviour
                 else HideLayerFromMap(layer);
             }
         }
+
+        // Re-setup UI (legend button) karena PropertyPanel di-refresh setiap kali AddProperty dipanggil
+        foreach (var layer in layers)
+        {
+            SetupLayerUI(layer);
+        }
     }
 
     // Hapus path dari cache (dipanggil saat delete project)
@@ -811,6 +1043,12 @@ public class TiffLayerManager : MonoBehaviour
         var props = new Dictionary<string, bool>();
         foreach (var l in layers) props[l.name] = l.isVisible;
         propertyPanel.ShowProperties(props);
+
+        // Re-setup UI
+        foreach (var layer in layers)
+        {
+            SetupLayerUI(layer);
+        }
     }
 
     // Toggle visibility layer
@@ -840,6 +1078,16 @@ public class TiffLayerManager : MonoBehaviour
 
     // Wrapper dari OverlayToggleController / AutoplayTool (sudah update ProjectManager di sana)
     public void OnPropertyToggleExternal(string name, bool value) => SetLayerVisibility(name, value, false);
+
+    // [NEW] Callback saat PropertyPanel selesai refresh list
+    void OnPropertyPanelRefreshed()
+    {
+        Debug.Log("[TiffLayerManager] PropertyPanel refreshed. Re-applying UI setup for all layers.");
+        foreach (var layer in layers)
+        {
+            SetupLayerUI(layer);
+        }
+    }
 
     // Tampilkan layer di peta sebagai RawImage overlay
     void ShowLayerOnMap(LayerData layer)
@@ -943,5 +1191,161 @@ public class TiffLayerManager : MonoBehaviour
         foreach (var o in overlays)
             if (o != null && o.activeSelf)
                 UpdateOverlayPosition(o);
+    }
+
+    // Helper untuk mencari nama gradient (agak lambat tapi aman)
+    string GetGradientName(Gradient g)
+    {
+        foreach(var p in GradientManager.Instance.presets)
+        {
+            if (p.gradient == g) return p.name;
+        }
+        return "Grayscale";
+    }
+
+    // Setup UI (Tombol Plus) untuk layer
+    void SetupLayerUI(LayerData layer)
+    {
+        if (propertyPanel == null) return;
+        
+        // Ensure property exists
+        if (!propertyPanel.HasProperty(layer.name))
+        {
+            propertyPanel.AddProperty(layer.name, layer.isVisible);
+        }
+
+        var item = propertyPanel.GetItem(layer.name);
+        
+        if (item == null)
+        {
+            Debug.LogWarning($"[TiffLayerManager] Could not find PropertyToggleItem for {layer.name}");
+            return;
+        }
+        
+        Debug.Log($"[TiffLayerManager] SetupLayerUI for {layer.name}. isSingleBand: {layer.isSingleBand}");
+
+        item.SetupLegend(layer.isSingleBand, () => {
+                Debug.Log($"[TiffLayerManager] Legend Callback Executed for {layer.name}");
+                
+                // Robustness check: Try to find LegendController if null
+                if (legendController == null) 
+                {
+                    legendController = FindObjectOfType<LegendController>();
+                    if (legendController != null) Debug.Log("[TiffLayerManager] LegendController found via FindObjectOfType inside callback.");
+                }
+
+                if (legendController != null)
+                {
+                    legendController.Setup(layer.name, layer.minVal, layer.maxVal, layer.currentGradient);
+                    
+                    // Assign callback for color picker
+                    legendController.onColorPickerRequest = OnLegendColorPickerRequest;
+
+                    // Force expand if closed
+                    if (!legendController.isExpanded) legendController.ToggleExpand();
+                }
+                else
+                {
+                    Debug.LogError("[TiffLayerManager] LegendController is NULL! Make sure LegendController exists in the scene.");
+                }
+            });
+    }
+
+    // Callback saat user klik color picker di Legend
+    void OnLegendColorPickerRequest(string layerName)
+    {
+        Debug.Log($"[TiffLayerManager] Color Picker Requested for {layerName}");
+        var layer = layers.Find(l => l.name == layerName);
+        
+        if (colorPicker == null) colorPicker = FindObjectOfType<ColorPickerUI>(); // Try find again
+
+        if (layer != null && colorPicker != null)
+        {
+            colorPicker.Show(layer.currentGradient, (newGrad) => {
+                layer.currentGradient = newGrad;
+                if (legendController != null) legendController.UpdateGradientVisual(newGrad);
+                ApplyGradientToLayer(layer, newGrad);
+            });
+        }
+        else
+        {
+            Debug.LogError($"[TiffLayerManager] Cannot show ColorPicker. LayerFound: {layer!=null}, ColorPickerFound: {colorPicker!=null}");
+        }
+    }
+
+    // Apply gradient ke layer texture
+    void ApplyGradientToLayer(LayerData layer, Gradient grad)
+    {
+        if (layer.texture == null || layer.rawData == null) return;
+
+        var pixels = layer.texture.GetPixels();
+        
+        // Determine coloring mode
+        bool useAbsoluteRange = false;
+        float absMin = -1f;
+        float absMax = 1f;
+
+        string uName = layer.name.ToUpper();
+        if (uName.Contains("NDVI") || uName.Contains("NDWI") || uName.Contains("NDTI") || uName.Contains("GNDVI"))
+        {
+            useAbsoluteRange = true;
+            absMin = -1f;
+            absMax = 1f;
+        }
+
+        // Check for zero range fallback
+        if (Mathf.Abs(layer.maxVal - layer.minVal) < 0.0001f)
+        {
+             if (useAbsoluteRange) 
+             { 
+                 layer.minVal = -1f; 
+                 layer.maxVal = 1f; 
+                 Debug.LogWarning($"[TiffLayerManager] Layer {layer.name} has 0 min/max. Fallback to -1/1."); 
+             }
+             else 
+             { 
+                 layer.maxVal = layer.minVal + 1f; 
+                 Debug.LogWarning($"[TiffLayerManager] Layer {layer.name} has 0 min/max. Fallback Max to Min+1."); 
+             }
+        }
+
+        Debug.Log($"[TiffLayerManager] Applying Gradient to {layer.name}. Mode: {(useAbsoluteRange ? "Absolute" : "Relative")}. Min: {layer.minVal}, Max: {layer.maxVal}");
+
+        // Debug sample
+        int centerIdx = pixels.Length / 2;
+        if (centerIdx < layer.rawData.Length) {
+             float val = layer.rawData[centerIdx];
+             float originalVal = val * (layer.maxVal - layer.minVal) + layer.minVal;
+             float t_debug = useAbsoluteRange ? Mathf.Clamp01((originalVal - absMin) / (absMax - absMin)) : val;
+             Debug.Log($"[Gradient Debug] Center Pixel: Raw={val:F4}, Orig={originalVal:F4}, t={t_debug:F4}");
+        }
+
+        // Gunakan rawData agar coloring akurat dan bisa diganti-ganti
+        for (int i = 0; i < layer.rawData.Length && i < pixels.Length; i++)
+        {
+            float val = layer.rawData[i]; // Ini adalah nilai 0-1 relatif terhadap Min/Max layer
+            float t = val;
+
+            if (useAbsoluteRange)
+            {
+                // Recover nilai asli
+                float originalVal = val * (layer.maxVal - layer.minVal) + layer.minVal;
+                
+                // Map ke range absolute (-1 sampai 1)
+                t = Mathf.Clamp01((originalVal - absMin) / (absMax - absMin));
+            }
+
+            if (grad != null)
+            {
+                Color c = grad.Evaluate(t);
+                pixels[i] = new Color(c.r, c.g, c.b, 1f);
+            }
+            else
+            {
+                pixels[i] = new Color(val, val, val, 1f);
+            }
+        }
+        layer.texture.SetPixels(pixels);
+        layer.texture.Apply();
     }
 }

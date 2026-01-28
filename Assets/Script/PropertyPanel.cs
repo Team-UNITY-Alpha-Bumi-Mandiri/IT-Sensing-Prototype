@@ -24,6 +24,7 @@ public class PropertyPanel : MonoBehaviour
     public UnityEvent<string, bool> onPropertyChanged;      // (name, value)
     public UnityEvent<string, string> onPropertyRenamed;    // (oldName, newName)
     public UnityEvent<string> onPropertyDeleted;            // (name)
+    public UnityEvent onListRefreshed;                      // [NEW] Event saat list di-refresh
 
     Dictionary<string, bool> props = new Dictionary<string, bool>();  // Data property
     List<PropertyToggleItem> items = new List<PropertyToggleItem>();  // Referensi item UI
@@ -69,6 +70,8 @@ public class PropertyPanel : MonoBehaviour
                 items.Add(item);
             }
         }
+        
+        onListRefreshed?.Invoke();
         StartCoroutine(RebuildLayout());
     }
 
@@ -108,6 +111,17 @@ public class PropertyPanel : MonoBehaviour
         props.Remove(name);
         onPropertyDeleted?.Invoke(name);
         RefreshList();
+    }
+
+    // Dapatkan item UI berdasarkan nama
+    public PropertyToggleItem GetItem(string name)
+    {
+        return items.Find(x => x.PropertyName == name);
+    }
+
+    public bool HasProperty(string name)
+    {
+        return props.ContainsKey(name);
     }
 
     // Dapatkan properties saat ini

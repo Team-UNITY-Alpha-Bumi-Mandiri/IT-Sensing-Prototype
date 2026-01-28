@@ -23,7 +23,7 @@ public class RasterTransformController : MonoBehaviour
     private string currentInputPath = "";
     private string backendFolder;
     private string outputBaseFolder;
-    private string exeName = "rasterTransform.exe";
+    private string exeName = "rasterTransform.py"; // Menggunakan script python langsung untuk fleksibilitas
 
     // List algoritma sesuai gambar/request
     private readonly List<string> algorithmList = new List<string>
@@ -126,35 +126,41 @@ public class RasterTransformController : MonoBehaviour
             textStatus.color = Color.yellow;
         }
 
-        string fullExePath = Path.Combine(backendFolder, exeName);
+        string scriptPath = Path.Combine(backendFolder, exeName);
         string cleanInput = inputPath.Replace("\\", "/");
         
-        // --- LOGIC DETEKSI PYTHON ENVIRONMENT (Copied from CompositeManager) ---
-        // Cek apakah ada virtual environment di project root (.venv)
-        // string projectRoot = Directory.GetParent(Application.dataPath).FullName;
-        // string venvPython = Path.Combine(projectRoot, ".venv", "Scripts", "python.exe");
+        // --- LOGIC DETEKSI PYTHON ENVIRONMENT ---
+        string projectRoot = Directory.GetParent(Application.dataPath).FullName;
+        string venvPython = Path.Combine(projectRoot, ".venv", "Scripts", "python.exe");
+        string pythonExe = "python";
 
-        // if (File.Exists(venvPython))
-        // {
-        //     fullExePath = venvPython;
-        //     UnityEngine.Debug.Log($"[RasterTransform] Using venv python: {fullExePath}");
-        // }
-        // else
-        // {
-        //     fullExePath = "python"; // Asumsi python ada di PATH global
-        // }
+        if (File.Exists(venvPython))
+        {
+            pythonExe = venvPython;
+            UnityEngine.Debug.Log($"[RasterTransform] Using venv python: {pythonExe}");
+        }
 
         // Arguments: "script_path" -n "name" --algo algo --input "input"
-        // args = $"\"{scriptPath}\" -n \"{outputName}\" --algo {algo} --input \"{cleanInput}\"";
-        string args = $"-n \"{outputName}\" --algo {algo} --input \"{cleanInput}\"";
+        // DETEKSI APAKAH EXE ATAU SCRIPT
+        string fileName, arguments;
+        if (scriptPath.EndsWith(".exe", System.StringComparison.OrdinalIgnoreCase))
+        {
+            fileName = scriptPath;
+            arguments = $"-n \"{outputName}\" --algo {algo} --input \"{cleanInput}\"";
+        }
+        else
+        {
+            fileName = pythonExe;
+            arguments = $"\"{scriptPath}\" -n \"{outputName}\" --algo {algo} --input \"{cleanInput}\"";
+        }
 
-        UnityEngine.Debug.Log($"[RasterTransform] Running: {fullExePath} {args}");
+        UnityEngine.Debug.Log($"[RasterTransform] Running: {fileName} {arguments}");
 
         string result = await Task.Run(() =>
         {
             ProcessStartInfo startInfo = new ProcessStartInfo();
-            startInfo.FileName = fullExePath;
-            startInfo.Arguments = args;
+            startInfo.FileName = fileName;
+            startInfo.Arguments = arguments;
             startInfo.UseShellExecute = false;
             startInfo.RedirectStandardOutput = true;
             startInfo.RedirectStandardError = true;
@@ -255,7 +261,24 @@ public class RasterTransformController : MonoBehaviour
                 {
                     string preview = successResponse != null ? successResponse.preview_png : null;
                     RasterBounds bounds = successResponse != null ? successResponse.bounds : null;
-                    LoadToMap(fullPath, preview, bounds);
+                    float min = successResponse != null ? successResponse.min_val : 0;
+                    float max = successResponse != null ? successResponse.max_val : 0;
+
+                    // Jika min/max 0 (karena tidak direturn python), coba baca dari TIFF
+                    string algo = successResponse?.algo;
+                    bool isSingleBand = !string.IsNullOrEmpty(algo) && algo != "TCI";
+
+                    if (isSingleBand && Mathf.Approximately(min, 0) && Mathf.Approximately(max, 0))
+                    {
+                        if (layerManager != null && layerManager.GetSingleBandMinMax(fullPath, out float tMin, out float tMax))
+                        {
+                            min = tMin;
+                            max = tMax;
+                            UnityEngine.Debug.Log($"[RasterTransformController] Calculated Min/Max from TIFF: {min} - {max}");
+                        }
+                    }
+                    
+                    LoadToMap(fullPath, preview, bounds, successResponse?.algo, min, max);
                     return;
                 }
             }
@@ -291,6 +314,9 @@ public class RasterTransformController : MonoBehaviour
         public string path;
         public string preview_png;
         public RasterBounds bounds;
+        public string algo;
+        public float min_val;
+        public float max_val;
     }
 
     [System.Serializable]
@@ -302,7 +328,7 @@ public class RasterTransformController : MonoBehaviour
         public double east;
     }
 
-    private void LoadToMap(string filePath, string pngPath = null, RasterBounds bounds = null)
+    private void LoadToMap(string filePath, string pngPath = null, RasterBounds bounds = null, string algo = "", float min = 0, float max = 0)
     {
         if (layerManager == null) return;
 
@@ -310,6 +336,35 @@ public class RasterTransformController : MonoBehaviour
         UnityEngine.Debug.Log($"[RasterTransformController] Input TIFF: {filePath}");
         UnityEngine.Debug.Log($"[RasterTransformController] Input PNG: {pngPath}");
         UnityEngine.Debug.Log($"[RasterTransformController] Has Bounds: {(bounds != null)}");
+        UnityEngine.Debug.Log($"[RasterTransformController] Algo: {algo}");
+        UnityEngine.Debug.Log($"[RasterTransformController] Range: {min} - {max}");
+
+        // Determine isSingleBand based on algorithm
+        bool isSingleBand = !string.IsNullOrEmpty(algo) && algo != "TCI";
+
+        // Fallback detection if algo is missing (e.g. JSON parse fail)
+        if (string.IsNullOrEmpty(algo))
+        {
+            string fname = Path.GetFileName(filePath).ToUpper();
+            if (fname.Contains("TCI") || fname.Contains("TRUECOLOR"))
+            {
+                isSingleBand = false;
+            }
+            else
+            {
+                // Check known indices
+                string[] knownIndices = new string[] { "NDVI", "NDTI", "NDBI", "NGRDI", "RVI", "SAVI", "EVI", "GNDVI", "ARVI", "MSAVI", "CLGREEN", "NDWI", "TVI" };
+                foreach(var idx in knownIndices) 
+                {
+                    if (fname.Contains(idx)) 
+                    {
+                        isSingleBand = true;
+                        break;
+                    }
+                }
+            }
+            UnityEngine.Debug.Log($"[RasterTransformController] Algo missing, inferred isSingleBand: {isSingleBand} from {fname}");
+        }
 
         // PRIORITAS 1: Load PNG jika ada (karena sudah diwarnai/visualized)
         if (!string.IsNullOrEmpty(pngPath) && bounds != null)
@@ -345,10 +400,6 @@ public class RasterTransformController : MonoBehaviour
                 
                 // Coba cari di folder TRANSFORM/NamaOutput
                 string outputFolderName = Path.GetFileNameWithoutExtension(pngPath).Replace("_preview", ""); 
-                // Asumsi nama folder = nama file tanpa _preview (berdasarkan script python)
-                // Python: self.output_folder_name = os.path.join(self.base_folder, self.prefix_name)
-                // Tapi nama file PNG panjang: {prefix}_{algo}_{time}_preview.png
-                // Folder output python: TRANSFORM/{prefix}
                 
                 // Cara paling aman: Cari recursive file dengan nama tersebut di folder Backend
                 string[] foundFiles = Directory.GetFiles(backendFolder, Path.GetFileName(pngPath), SearchOption.AllDirectories);
@@ -365,11 +416,22 @@ public class RasterTransformController : MonoBehaviour
             if (pngExists)
             {
                 UnityEngine.Debug.Log($"[RasterTransformController] DECISION: LOADING PNG PREVIEW");
-                layerManager.LoadPngOverlay(fullPngPath, bounds.north, bounds.south, bounds.west, bounds.east);
-                
-                // Buka folder
-                // string folder = Path.GetDirectoryName(fullPngPath);
-                // Process.Start("explorer.exe", folder);
+
+                // Save metadata to sidecar JSON for persistence (agar min/max dan isSingleBand tersimpan saat reload project)
+                if (isSingleBand && (min != 0 || max != 0))
+                {
+                    try {
+                        string metaPath = fullPngPath + ".json";
+                        string json = $"{{\"min_val\":{min}, \"max_val\":{max}, \"is_single_band\":true}}";
+                        File.WriteAllText(metaPath, json);
+                        UnityEngine.Debug.Log($"[RasterTransformController] Saved metadata to {metaPath}");
+                    } catch (System.Exception ex) {
+                        UnityEngine.Debug.LogWarning($"[RasterTransformController] Failed to save metadata: {ex.Message}");
+                    }
+                }
+
+                // Pass defaults + isSingleBand (arg ke-9)
+                layerManager.LoadPngOverlay(fullPngPath, bounds.north, bounds.south, bounds.west, bounds.east, false, true, "", isSingleBand, min, max);
                 
                 // Register ke Project Manager (menggunakan nama PNG)
                 if (projectManager != null)

@@ -692,11 +692,6 @@ public class DrawTool : MonoBehaviour
     // Selesai drag vertex
     void EndVertexDrag()
     {
-        if (dragObj != null)
-        {
-            onDrawComplete?.Invoke(dragObj);
-            Debug.Log("[DrawTool] Finished dragging vertex");
-        }
         dragObj = null;
         dragVertexIndex = -1;
     }
@@ -817,7 +812,6 @@ public class DrawTool : MonoBehaviour
         {
             allObjs.Add(obj);
             Rebuild(obj, false);
-            onDrawComplete?.Invoke(obj);
         }
 
         ClearCutLine();
@@ -966,5 +960,13 @@ public class DrawTool : MonoBehaviour
             if (v != null) Destroy(v);
         cutVisuals.Clear();
         cutPoints.Clear();
+    }
+
+    public void SaveAllChanges()
+    {
+        foreach (var obj in allObjs)
+        {
+            onDrawComplete?.Invoke(obj);
+        }
     }
 }

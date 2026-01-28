@@ -38,7 +38,7 @@ public class DrawTool : MonoBehaviour
     public string texturePath = "Assets/Image Map/mapa del mundo pixel art.jpg";
     public string currentDrawingLayer = "";     // Layer untuk drawing yang sedang aktif
 
-    public enum DrawMode { Point, Line, Polygon, Delete, Edit }
+    public enum DrawMode { Point, Line, Polygon, Delete, Edit, Cut }
 
     // Events
     public UnityEvent<DrawObject> onDrawComplete;  // Dipanggil saat drawing selesai
@@ -67,6 +67,11 @@ public class DrawTool : MonoBehaviour
     List<DrawObject> editObjs = new List<DrawObject>();
     int dragVertexIndex = -1;
     DrawObject dragObj = null;
+
+    // Cut Mode State
+    List<Vector2> cutPoints = new List<Vector2>();
+    List<GameObject> cutVisuals = new List<GameObject>();
+    float lastClickTime = 0f;
 
     // Struktur data objek gambar
     [System.Serializable]
@@ -125,12 +130,21 @@ public class DrawTool : MonoBehaviour
         
         UpdateTooltip(mousePos);
 
-        // Klik kiri: tambah titik, delete, atau start drag vertex
+        // Klik kiri: tambah titik, delete, cut, atau start drag vertex
         if (Mouse.current.leftButton.wasPressedThisFrame)
         {
-            if (mode == DrawMode.Delete) TryDelete(mousePos);
+            // Cek double click untuk Cut mode
+            if (mode == DrawMode.Cut && cutPoints.Count >= 2 && Time.time - lastClickTime < 0.3f)
+            {
+                FinishCut();
+                lastClickTime = 0f;
+            }
+            else if (mode == DrawMode.Delete) TryDelete(mousePos);
             else if (mode == DrawMode.Edit) TryStartVertexDrag(mousePos);
+            else if (mode == DrawMode.Cut) AddCutPoint(mapController.ScreenToLatLon(mousePos), mousePos);
             else AddPoint(mapController.ScreenToLatLon(mousePos), mousePos);
+            
+            lastClickTime = Time.time;
         }
         
         // Update drag vertex saat Edit Mode
@@ -145,11 +159,19 @@ public class DrawTool : MonoBehaviour
             EndVertexDrag();
         }
 
-        // Klik kanan: undo
-        if (Mouse.current.rightButton.wasPressedThisFrame) Undo();
+        // Klik kanan: undo atau cancel cut
+        if (Mouse.current.rightButton.wasPressedThisFrame)
+        {
+            if (mode == DrawMode.Cut && cutPoints.Count > 0) ClearCutLine();
+            else Undo();
+        }
 
         // ESC: batal
-        if (Keyboard.current?.escapeKey.wasPressedThisFrame == true && isDrawing) Cancel();
+        if (Keyboard.current?.escapeKey.wasPressedThisFrame == true)
+        {
+            if (mode == DrawMode.Cut) ClearCutLine();
+            else if (isDrawing) Cancel();
+        }
     }
 
     // ============================================================
@@ -693,17 +715,256 @@ public class DrawTool : MonoBehaviour
             Cancel();
         }
         
+        // Clear cut line jika ada
+        ClearCutLine();
+        
         // Deactivate semua mode satu per satu
         DeactivateMode(DrawMode.Polygon);
         DeactivateMode(DrawMode.Point);
         DeactivateMode(DrawMode.Line);
         DeactivateMode(DrawMode.Delete);
         DeactivateMode(DrawMode.Edit);
+        DeactivateMode(DrawMode.Cut);
         
         // Reset state
         isActive = false;
         currentDrawingLayer = "";
         dragObj = null;
         dragVertexIndex = -1;
+    }
+
+    // ============================================================
+    // CUT MODE
+    // ============================================================
+
+    // Tambah titik ke cut line
+    void AddCutPoint(Vector2 latLon, Vector2 screenPos)
+    {
+        cutPoints.Add(latLon);
+        
+        // Spawn visual marker (warna merah)
+        var marker = Instantiate(vertexPointPrefab, container);
+        marker.GetComponent<RectTransform>().anchoredPosition = MapLoc(latLon);
+        var markerImg = marker.GetComponent<Image>();
+        if (markerImg != null) markerImg.color = Color.red;
+        cutVisuals.Add(marker);
+        
+        // Spawn line ke titik sebelumnya
+        if (cutPoints.Count > 1)
+        {
+            var line = Instantiate(lineSegmentPrefab, container);
+            SetLineRect(line.GetComponent<RectTransform>(), cutPoints[cutPoints.Count - 2], latLon);
+            var lineImg = line.GetComponent<Image>();
+            if (lineImg != null) lineImg.color = Color.red;
+            cutVisuals.Add(line);
+        }
+    }
+
+    // Selesaikan cut dan insert vertex di titik intersect
+    void FinishCut()
+    {
+        List<DrawObject> toRemove = new List<DrawObject>();
+        List<DrawObject> toAdd = new List<DrawObject>();
+        foreach (var obj in allObjs)
+        {
+            if (!string.IsNullOrEmpty(currentDrawingLayer) && obj.layerName != currentDrawingLayer) continue;
+            
+            List<(int segmentIndex, Vector2 point)> intersections = new List<(int, Vector2)>();
+
+            int segmentCount = obj.coordinates.Count;
+            if (obj.type == DrawMode.Line) segmentCount--;
+
+            for (int i = 0; i < segmentCount; i++)
+            {
+                int next = (i + 1) % obj.coordinates.Count;
+                Vector2 p1 = obj.coordinates[i];
+                Vector2 p2 = obj.coordinates[next];
+                
+                for (int j = 0; j < cutPoints.Count - 1; j++)
+                {
+                    if (LineIntersect(p1, p2, cutPoints[j], cutPoints[j + 1], out Vector2 intersection))
+                    {
+                        intersections.Add((i, intersection));
+                    }
+                }
+            }
+
+            if (intersections.Count < 2)
+            {
+                continue;
+            }
+
+            var int1 = intersections[0];
+            var int2 = intersections[1];
+
+            if (obj.type == DrawMode.Polygon)
+            {
+                SplitPolygon(obj, int1, int2, toRemove, toAdd);
+            }
+            else if (obj.type == DrawMode.Line)
+            {
+                SplitLine(obj, int1, int2, toRemove, toAdd);
+            }
+        }
+
+        foreach (var obj in toRemove)
+        {
+            if (obj.rootObj != null) Destroy(obj.rootObj);
+            allObjs.Remove(obj);
+        }
+
+        foreach (var obj in toAdd)
+        {
+            allObjs.Add(obj);
+            Rebuild(obj, false);
+            onDrawComplete?.Invoke(obj);
+        }
+
+        ClearCutLine();
+        DeactivateMode(DrawMode.Cut);
+    }
+
+    // Cek apakah dua garis berpotongan
+    bool LineIntersect(Vector2 p1, Vector2 p2, Vector2 p3, Vector2 p4, out Vector2 intersection)
+    {
+        intersection = Vector2.zero;
+        
+        float d = (p1.x - p2.x) * (p3.y - p4.y) - (p1.y - p2.y) * (p3.x - p4.x);
+        if (Mathf.Abs(d) < 0.0001f) return false;  // Parallel
+        
+        float t = ((p1.x - p3.x) * (p3.y - p4.y) - (p1.y - p3.y) * (p3.x - p4.x)) / d;
+        float u = -((p1.x - p2.x) * (p1.y - p3.y) - (p1.y - p2.y) * (p1.x - p3.x)) / d;
+        
+        if (t >= 0 && t <= 1 && u >= 0 && u <= 1)
+        {
+            intersection = new Vector2(p1.x + t * (p2.x - p1.x), p1.y + t * (p2.y - p1.y));
+            return true;
+        }
+        return false;
+    }
+
+    void SplitPolygon(DrawObject obj, (int segmentIndex, Vector2 point) int1, (int segmentIndex, Vector2 point) int2, List<DrawObject> toRemove, List<DrawObject> toAdd)
+    {
+        if (int1.segmentIndex > int2.segmentIndex)
+        {
+            var temp = int1;
+            int1 = int2;
+            int2 = temp;
+        }
+
+        List<Vector2> newCoords1 = new List<Vector2>();
+        newCoords1.Add(int1.point);
+        for (int i = int1.segmentIndex + 1; i <= int2.segmentIndex; i++) newCoords1.Add(obj.coordinates[i]);
+        newCoords1.Add(int2.point);
+
+        List<Vector2> newCoords2 = new List<Vector2>();
+        newCoords2.Add(int2.point);
+        for (int i = int2.segmentIndex + 1; i < obj.coordinates.Count; i++) newCoords2.Add(obj.coordinates[i]);
+        for (int i = 0; i <= int1.segmentIndex; i++) newCoords2.Add(obj.coordinates[i]);
+        newCoords2.Add(int1.point);
+
+        if (newCoords1.Count >= 3)
+        {
+            var newObj1 = new DrawObject
+            {
+                id = System.Guid.NewGuid().ToString(),
+                type = DrawMode.Polygon,
+                layerName = obj.layerName,
+                coordinates = newCoords1,
+                rootObj = CreateRoot(obj.layerName + "_split1")
+            };
+            toAdd.Add(newObj1);
+        }
+
+        if (newCoords2.Count >= 3)
+        {
+            var newObj2 = new DrawObject
+            {
+                id = System.Guid.NewGuid().ToString(),
+                type = DrawMode.Polygon,
+                layerName = obj.layerName,
+                coordinates = newCoords2,
+                rootObj = CreateRoot(obj.layerName + "_split2")
+            };
+            toAdd.Add(newObj2);
+        }
+
+        toRemove.Add(obj);
+    }
+
+    void SplitLine(DrawObject obj, (int segmentIndex, Vector2 point) int1, (int segmentIndex, Vector2 point) int2, List<DrawObject> toRemove, List<DrawObject> toAdd)
+    {
+        if (int1.segmentIndex > int2.segmentIndex)
+        {
+            var temp = int1;
+            int1 = int2;
+            int2 = temp;
+        }
+        
+        List<Vector2> newCoords1 = new List<Vector2>();
+        for (int i = 0; i <= int1.segmentIndex; i++)
+            newCoords1.Add(obj.coordinates[i]);
+        newCoords1.Add(int1.point);
+        
+        List<Vector2> newCoords2 = new List<Vector2>();
+        newCoords2.Add(int1.point);
+        for (int i = int1.segmentIndex + 1; i <= int2.segmentIndex; i++)
+            newCoords2.Add(obj.coordinates[i]);
+        newCoords2.Add(int2.point);
+        
+        List<Vector2> newCoords3 = new List<Vector2>();
+        newCoords3.Add(int2.point);
+        for (int i = int2.segmentIndex + 1; i < obj.coordinates.Count; i++)
+            newCoords3.Add(obj.coordinates[i]);
+        
+        if (newCoords1.Count >= 2)
+        {
+            var newObj = new DrawObject
+            {
+                id = System.Guid.NewGuid().ToString(),
+                type = DrawMode.Line,
+                layerName = obj.layerName,
+                coordinates = newCoords1,
+                rootObj = CreateRoot(obj.layerName + "_split1")
+            };
+            toAdd.Add(newObj);
+        }
+        
+        if (newCoords2.Count >= 2)
+        {
+            var newObj = new DrawObject
+            {
+                id = System.Guid.NewGuid().ToString(),
+                type = DrawMode.Line,
+                layerName = obj.layerName,
+                coordinates = newCoords2,
+                rootObj = CreateRoot(obj.layerName + "_split2")
+            };
+            toAdd.Add(newObj);
+        }
+        
+        if (newCoords3.Count >= 2)
+        {
+            var newObj = new DrawObject
+            {
+                id = System.Guid.NewGuid().ToString(),
+                type = DrawMode.Line,
+                layerName = obj.layerName,
+                coordinates = newCoords3,
+                rootObj = CreateRoot(obj.layerName + "_split3")
+            };
+            toAdd.Add(newObj);
+        }
+        
+        toRemove.Add(obj);
+    }
+
+    // Hapus cut line visual
+    void ClearCutLine()
+    {
+        foreach (var v in cutVisuals)
+            if (v != null) Destroy(v);
+        cutVisuals.Clear();
+        cutPoints.Clear();
     }
 }

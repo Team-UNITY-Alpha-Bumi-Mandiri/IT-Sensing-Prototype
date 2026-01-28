@@ -117,6 +117,8 @@ public class SimpleMapController_Baru : MonoBehaviour
             lastMousePos = currentMouse;
             MoveMapByPixel(delta);
         }
+
+
     }
 
     bool IsMouseInArea()
@@ -421,4 +423,6 @@ public class SimpleMapController_Baru : MonoBehaviour
         
         return new Vector2((float)lat, (float)lon);
     }
+
+
 }

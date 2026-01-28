@@ -99,6 +99,7 @@ public class DrawModeButton : MonoBehaviour
             case DrawTool.DrawMode.Point:
             case DrawTool.DrawMode.Line:
             case DrawTool.DrawMode.Delete:
+            case DrawTool.DrawMode.Cut:
                 ToggleDrawMode();
                 break;
         }

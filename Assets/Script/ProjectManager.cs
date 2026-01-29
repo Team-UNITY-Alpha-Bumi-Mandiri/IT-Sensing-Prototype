@@ -183,15 +183,33 @@ public class ProjectManager : MonoBehaviour
     // Callback selesai gambar
     void OnDrawn(DrawTool.DrawObject obj)
     {
-        // CASE A: Tambah drawing ke project aktif (Layer Drawing)
+        if (obj.layerName != null && (obj.layerName.StartsWith("Loaded") || obj.layerName.Contains("_ROI")))
+        {
+            Debug.Log($"[OnDrawn] Skipped system layer: {obj.layerName}");
+            return;
+        }
+        // CASE A: Tambah/Update drawing ke project aktif (Layer Drawing)
         if (current != null && !string.IsNullOrEmpty(obj.layerName))
         {
-            current.drawings.Add(new SerializedDrawObject
+            Debug.Log($"[OnDrawn] Saved drawing id:{obj.id} layer:{obj.layerName}");
+            // Cari existing drawing dengan ID yang sama
+            var existing = current.drawings.Find(d => d.id == obj.id);
+            
+            if (existing != null)
             {
-                id = obj.id, type = obj.type, layerName = obj.layerName,
-                coordinates = new List<Vector2>(obj.coordinates), useTexture = obj.useTexture
-            });
-
+                // Update existing
+                existing.coordinates = new List<Vector2>(obj.coordinates);
+                existing.useTexture = obj.useTexture;
+            }
+            else
+            {
+                // Add new
+                current.drawings.Add(new SerializedDrawObject
+                {
+                    id = obj.id, type = obj.type, layerName = obj.layerName,
+                    coordinates = new List<Vector2>(obj.coordinates), useTexture = obj.useTexture
+                });
+            }
             var props = current.GetProps();
             if (props.ContainsKey(obj.layerName))
             {
@@ -200,7 +218,6 @@ public class ProjectManager : MonoBehaviour
                 current.SetProps(props);
                 propertyPanel?.ShowPropertiesWithType(props);
             }
-            Save();
             return;
         }
 
@@ -228,7 +245,6 @@ public class ProjectManager : MonoBehaviour
         }
 
         projects.Add(proj);
-        Save();
         SetupDropdown();
 
         // Select project baru
@@ -291,6 +307,12 @@ public class ProjectManager : MonoBehaviour
             {
                 if (drawTool.HasDrawing(d.id)) drawTool.ShowDrawing(d.id, true);
                 else drawTool.CreateObj(d.type, d.coordinates, d.layerName, d.useTexture, d.id);
+            }
+            
+            // Force show semua drawings yang baru diload
+            foreach (var d in proj.drawings)
+            {
+                drawTool.ShowDrawing(d.id, true);
             }
         }
 
@@ -450,7 +472,8 @@ public class ProjectManager : MonoBehaviour
     {
         if (current?.drawings == null) return;
         int idx = current.drawings.FindIndex(x => x.id == obj.id);
-        if (idx != -1) { current.drawings.RemoveAt(idx); Save(); }
+        if (idx != -1) current.drawings.RemoveAt(idx);
+        // Tidak auto-save, user harus klik Save button
     }
 
     // Callback saat property dihapus
@@ -462,7 +485,8 @@ public class ProjectManager : MonoBehaviour
         var dict = current.GetProps();
         if (dict.ContainsKey(name)) 
         { 
-            dict.Remove(name); current.SetProps(dict); Save();
+            dict.Remove(name); current.SetProps(dict);
+            // Tidak auto-save, user harus klik Save button
         }
 
         if (current.drawings != null)
@@ -538,8 +562,50 @@ public class ProjectManager : MonoBehaviour
     // Simpan ke file JSON
     public void Save()
     {
+        Debug.Log($"[Save] Writing {projects.Count} projects to {SavePath}");
+        if (current != null)
+        {
+            Debug.Log($"[Save] Current project '{current.name}' has {current.drawings.Count} drawings");
+        }
         try { File.WriteAllText(SavePath, JsonUtility.ToJson(new Wrapper { items = projects }, true)); }
         catch (System.Exception e) { Debug.LogError("Save failed: " + e.Message); }
+    }
+
+    // Simpan drawings di layer tertentu
+    public void SaveLayer(string layerName)
+    {
+        if (current == null || drawTool == null || string.IsNullOrEmpty(layerName))
+        {
+            Debug.LogWarning("[SaveLayer] No current project or invalid layer");
+            return;
+        }
+        
+        Debug.Log($"[SaveLayer] Saving layer '{layerName}'");
+        
+        // Ambil drawings dari DrawTool
+        var drawingsFromTool = drawTool.GetLayerDrawings(layerName);
+        Debug.Log($"[SaveLayer] Found {drawingsFromTool.Count} drawings in DrawTool");
+        
+        // Hapus drawings lama dengan layer ini dari current.drawings
+        current.drawings.RemoveAll(d => d.layerName == layerName);
+        
+        // Tambah drawings baru
+        foreach (var obj in drawingsFromTool)
+        {
+            current.drawings.Add(new SerializedDrawObject
+            {
+                id = obj.id,
+                type = obj.type,
+                layerName = obj.layerName,
+                coordinates = new List<Vector2>(obj.coordinates),
+                useTexture = obj.useTexture
+            });
+        }
+        
+        Debug.Log($"[SaveLayer] Total drawings in project: {current.drawings.Count}");
+        
+        // Simpan ke JSON
+        Save();
     }
 
     // Load dari file JSON
@@ -549,8 +615,52 @@ public class ProjectManager : MonoBehaviour
         try
         {
             var wrapper = JsonUtility.FromJson<Wrapper>(File.ReadAllText(SavePath));
-            if (wrapper?.items != null) projects = wrapper.items;
+            if (wrapper?.items != null) 
+            {
+                projects = wrapper.items;
+                Debug.Log($"[Load] Loaded {projects.Count} projects");
+                foreach (var p in projects)
+                {
+                    Debug.Log($"[Load] Project '{p.name}' has {p.drawings.Count} drawings");
+                }
+            }
         }
         catch { }
+    }
+
+    public void DiscardChanges(string layerName)
+    {
+        if (current == null || drawTool == null || string.IsNullOrEmpty(layerName)) return;
+        
+        Debug.Log($"[Discard] Layer: '{layerName}'");
+        
+        drawTool.DeactivateAllModes();
+        drawTool.DeleteLayer(layerName);
+        
+        // Reload dari JSON untuk mendapat data tersimpan
+        try
+        {
+            if (File.Exists(SavePath))
+            {
+                var wrapper = JsonUtility.FromJson<Wrapper>(File.ReadAllText(SavePath));
+                var savedProject = wrapper?.items?.Find(p => p.id == current.id);
+                
+                if (savedProject != null)
+                {
+                    foreach (var d in savedProject.drawings)
+                    {
+                        if (d.layerName == layerName && !drawTool.HasDrawing(d.id))
+                        {
+                            drawTool.CreateObj(d.type, d.coordinates, d.layerName, d.useTexture, d.id);
+                        }
+                    }
+                    current.drawings = savedProject.drawings;
+                }
+            }
+        }
+        catch (System.Exception e)
+        {
+            Debug.LogError($"[Discard] Failed: {e.Message}");
+        }
     }
 }

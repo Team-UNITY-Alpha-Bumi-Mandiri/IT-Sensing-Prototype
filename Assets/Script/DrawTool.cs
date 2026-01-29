@@ -185,7 +185,7 @@ public class DrawTool : MonoBehaviour
         if (mode == DrawMode.Point)
         {
             CreateObj(DrawMode.Point, new List<Vector2> { latLon });
-            onDrawComplete?.Invoke(allObjs[^1]);
+            // Auto-save disabled - gunakan tombol Save
             return;
         }
 
@@ -229,7 +229,7 @@ public class DrawTool : MonoBehaviour
         if (activeObj == null) return;
         Rebuild(activeObj, false);
         allObjs.Add(activeObj);
-        onDrawComplete?.Invoke(activeObj);
+        // Auto-save disabled - gunakan tombol Save
         Reset();
     }
 
@@ -605,6 +605,12 @@ public class DrawTool : MonoBehaviour
 
     // Cek apakah drawing dengan ID tertentu ada
     public bool HasDrawing(string id) => allObjs.Exists(x => x.id == id);
+
+    // Ambil semua drawings di layer tertentu
+    public List<DrawObject> GetLayerDrawings(string layerName)
+    {
+        return allObjs.FindAll(x => x.layerName == layerName);
+    }
 
     // Sembunyikan semua visual (dipanggil saat ganti project)
     public void ForceHideAllVisuals()

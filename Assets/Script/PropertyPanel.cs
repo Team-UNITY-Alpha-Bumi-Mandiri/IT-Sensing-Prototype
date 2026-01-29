@@ -228,9 +228,22 @@ public class PropertyPanel : MonoBehaviour
         }
     }
 
+    // Simpan layer yang sedang diedit
+    public void SaveEditedLayer()
+    {
+        if (string.IsNullOrEmpty(editLayerName)) return;
+        FindObjectOfType<ProjectManager>()?.SaveLayer(editLayerName);
+    }
+
+    // Tutup popup dan discard perubahan
     public void CloseEditPopup()
     {
+        string layer = editLayerName;
+        
         if (sharedEditPopup != null) sharedEditPopup.SetActive(false);
         SetEditMode(null, false);
+        
+        FindObjectOfType<DrawTool>()?.DeactivateAllModes();
+        FindObjectOfType<ProjectManager>()?.DiscardChanges(layer);
     }
 }

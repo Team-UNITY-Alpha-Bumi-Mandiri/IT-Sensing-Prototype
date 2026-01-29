@@ -162,6 +162,7 @@
     <Compile Include="Assets\Script\ButtonCustom.cs" />
     <Compile Include="Assets\Script\FolderBrowserHelper.cs" />
     <Compile Include="Assets\UI\Script\DistanceRulerController.cs" />
+    <Compile Include="Assets\Script\zTestColorpicker.cs" />
     <Compile Include="Assets\Script kedua\PanAndZoom.cs" />
     <Compile Include="Assets\Script\SplitViewTool.cs" />
     <Compile Include="Assets\TextMesh Pro\Examples &amp; Extras\Scripts\TMP_TextInfoDebugTool.cs" />

@@ -72,3 +72,6 @@ crashlytics-build.properties
 Logs/shadercompiler-UnityShaderCompiler.exe-0.log
 UserSettings/Layouts/default-6000.dwlt
 /UserSettings/Layouts
+/Assets/StreamingAssets/Backend/downloaded_bands
+/Assets/StreamingAssets/Backend/previews
+/Assets/StreamingAssets/Backend/downloaded_bands

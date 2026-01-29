@@ -1,24 +1,34 @@
-using UnityEngine;
-using UnityEngine.UI;
-using TMPro;
 using System.Collections.Generic;
+using TMPro;
+using UnityEditor;
+using UnityEngine;
 using UnityEngine.Timeline;
+using UnityEngine.UI;
 
 public class PrintTool : MonoBehaviour
 {
     public RectTransform mapWindow;
-    public List<Vector2> paperDimension; //in milimeters
-    public int template, paperSize, layout, scale;
-    float dpi;
+    public GameObject objectContainer, standardObjectWindow,compassWindow;
+     int template, paperSize, layout, scale;
     bool mapDragging;
     Vector3 cursorOffset;
+
+    //Paper
+     List<Vector2> paperDimension; //in milimeters
+    float dpi;
+    GameObject selectedObject,addedCompass;
+
+    [Header("Add Object")]  //standar object
+    public GameObject[] standardShapes;
+    public GameObject compassPref;
+    public Sprite[] compassTypes;
 
     void Start()
     {
         dpi = Screen.dpi;
         if (dpi == 0)
             dpi = 96;
-        Debug.Log("DPI is = " + dpi);
+       // Debug.Log("DPI is = " + dpi);
 
         paperDimension = new List<Vector2>(5);
         paperDimension.Add(new Vector2(297, 420));
@@ -63,7 +73,21 @@ public class PrintTool : MonoBehaviour
         SetMapWindow();
     }
 
-    void SetMapWindow()
+    public void Print_ImageAdd(TMP_Dropdown selectOb)
+    {
+        switch (selectOb.value)
+        {
+            case 0:
+                standardObjectWindow.SetActive(true);
+                break;
+
+            case 1:
+                compassWindow.SetActive(true);
+                break;
+        }
+    }
+
+        void SetMapWindow()
     {
         Vector2 paperPixelSize = new Vector2(
             (paperDimension[paperSize].x/10) * (dpi / 2.54f),
@@ -76,6 +100,20 @@ public class PrintTool : MonoBehaviour
             pixelSizeWithLayout = paperPixelSize;
 
         mapWindow.sizeDelta = pixelSizeWithLayout;
-       Debug.Log(paperDimension[paperSize].ToString());
+//       Debug.Log(paperDimension[paperSize].ToString());
     }
+
+    public void AddObject_StandardShapes(int shapeIndex)
+    {
+        selectedObject = Instantiate(standardShapes[shapeIndex], objectContainer.transform);
+    }
+
+    public void AddObject_Compass(int shapeIndex)
+    {
+        if (addedCompass != null)
+            addedCompass = Instantiate(compassPref, objectContainer.transform);
+       
+            Image compassImg = addedCompass.GetComponent<Image>();
+            compassImg.sprite = compassTypes[shapeIndex];
+       }
 }

@@ -5,6 +5,7 @@ TagManager:
   serializedVersion: 3
   tags:
   - ToolButton
+  - PrintImages
   layers:
   - Default
   - TransparentFX

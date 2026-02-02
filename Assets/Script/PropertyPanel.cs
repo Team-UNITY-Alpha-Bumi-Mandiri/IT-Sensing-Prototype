@@ -231,19 +231,40 @@ public class PropertyPanel : MonoBehaviour
     // Simpan layer yang sedang diedit
     public void SaveEditedLayer()
     {
-        if (string.IsNullOrEmpty(editLayerName)) return;
-        FindObjectOfType<ProjectManager>()?.SaveLayer(editLayerName);
+        var drawTool = FindObjectOfType<DrawTool>();
+        
+        // Ambil layer dari editLayerName atau dari DrawTool
+        string layer = !string.IsNullOrEmpty(editLayerName) 
+            ? editLayerName 
+            : drawTool?.currentDrawingLayer ?? "";
+        
+        Debug.Log($"[SaveEditedLayer] Saving layer: '{layer}'");
+        
+        if (string.IsNullOrEmpty(layer)) return;
+        FindObjectOfType<ProjectManager>()?.SaveLayer(layer);
     }
 
     // Tutup popup dan discard perubahan
+    // PENTING: Di Unity, assign HANYA method ini ke Close button
+    // JANGAN assign DeactivateAllModes terpisah karena akan clear layer duluan
     public void CloseEditPopup()
     {
-        string layer = editLayerName;
+        var drawTool = FindObjectOfType<DrawTool>();
+        
+        // PENTING: Ambil layer SEBELUM deactivate karena DeactivateAllModes akan reset currentDrawingLayer
+        string layer = !string.IsNullOrEmpty(editLayerName) 
+            ? editLayerName 
+            : drawTool?.currentDrawingLayer ?? "";
+        
+        Debug.Log($"[CloseEditPopup] Layer to discard: '{layer}'");
         
         if (sharedEditPopup != null) sharedEditPopup.SetActive(false);
         SetEditMode(null, false);
         
-        FindObjectOfType<DrawTool>()?.DeactivateAllModes();
+        // Deactivate setelah ambil layer
+        drawTool?.DeactivateAllModes();
+        
+        // Discard changes untuk layer tersebut
         FindObjectOfType<ProjectManager>()?.DiscardChanges(layer);
     }
 }

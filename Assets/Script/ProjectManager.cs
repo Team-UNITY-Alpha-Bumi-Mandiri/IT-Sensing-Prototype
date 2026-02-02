@@ -180,49 +180,16 @@ public class ProjectManager : MonoBehaviour
         drawTool.ActivateMode(DrawTool.DrawMode.Polygon);
     }
 
-    // Callback selesai gambar
+    // Callback selesai gambar - HANYA untuk Create View
     void OnDrawn(DrawTool.DrawObject obj)
     {
-        if (obj.layerName != null && (obj.layerName.StartsWith("Loaded") || obj.layerName.Contains("_ROI")))
-        {
-            Debug.Log($"[OnDrawn] Skipped system layer: {obj.layerName}");
-            return;
-        }
-        // CASE A: Tambah/Update drawing ke project aktif (Layer Drawing)
-        if (current != null && !string.IsNullOrEmpty(obj.layerName))
-        {
-            Debug.Log($"[OnDrawn] Saved drawing id:{obj.id} layer:{obj.layerName}");
-            // Cari existing drawing dengan ID yang sama
-            var existing = current.drawings.Find(d => d.id == obj.id);
-            
-            if (existing != null)
-            {
-                // Update existing
-                existing.coordinates = new List<Vector2>(obj.coordinates);
-                existing.useTexture = obj.useTexture;
-            }
-            else
-            {
-                // Add new
-                current.drawings.Add(new SerializedDrawObject
-                {
-                    id = obj.id, type = obj.type, layerName = obj.layerName,
-                    coordinates = new List<Vector2>(obj.coordinates), useTexture = obj.useTexture
-                });
-            }
-            var props = current.GetProps();
-            if (props.ContainsKey(obj.layerName))
-            {
-                bool currentVal = props[obj.layerName].value;
-                props[obj.layerName] = new PropertyPanel.PropertyInfo(currentVal, true);
-                current.SetProps(props);
-                propertyPanel?.ShowPropertiesWithType(props);
-            }
-            return;
-        }
-
-        // CASE B: Buat project baru (ROI Drawing)
+        // Skip system layers
+        if (obj.layerName != null && obj.layerName.StartsWith("Loaded")) return;
+        
+        // Validasi untuk Create View
         if (string.IsNullOrEmpty(newProjectNameInput?.text) || obj.coordinates.Count == 0) return;
+
+        Debug.Log($"[OnDrawn] Creating project: {newProjectNameInput.text}");
 
         var proj = new ProjectData
         {
@@ -234,17 +201,8 @@ public class ProjectManager : MonoBehaviour
             polygonCoords = new List<Vector2>(obj.coordinates)
         };
 
-        // Jika drawing ada layer name, simpan juga
-        if (!string.IsNullOrEmpty(drawTool.currentDrawingLayer))
-        {
-            proj.drawings.Add(new SerializedDrawObject
-            {
-                id = obj.id, type = obj.type, layerName = obj.layerName,
-                coordinates = new List<Vector2>(obj.coordinates), useTexture = obj.useTexture
-            });
-        }
-
         projects.Add(proj);
+        Save();  // Auto-save project baru ke JSON
         SetupDropdown();
 
         // Select project baru
@@ -600,6 +558,16 @@ public class ProjectManager : MonoBehaviour
                 coordinates = new List<Vector2>(obj.coordinates),
                 useTexture = obj.useTexture
             });
+        }
+        
+        // Update props dengan isDrawing = true jika ada drawings
+        var props = current.GetProps();
+        if (props.ContainsKey(layerName))
+        {
+            bool hasDrawings = drawingsFromTool.Count > 0;
+            props[layerName] = new PropertyPanel.PropertyInfo(props[layerName].value, hasDrawings);
+            current.SetProps(props);
+            propertyPanel?.ShowPropertiesWithType(props);
         }
         
         Debug.Log($"[SaveLayer] Total drawings in project: {current.drawings.Count}");

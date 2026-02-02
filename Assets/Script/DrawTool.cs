@@ -229,7 +229,14 @@ public class DrawTool : MonoBehaviour
         if (activeObj == null) return;
         Rebuild(activeObj, false);
         allObjs.Add(activeObj);
-        // Auto-save disabled - gunakan tombol Save
+        
+        // Hanya invoke untuk Create View (layer kosong)
+        // Layer drawings disimpan via SaveLayer saat klik Save button
+        if (string.IsNullOrEmpty(currentDrawingLayer))
+        {
+            onDrawComplete?.Invoke(activeObj);
+        }
+        
         Reset();
     }
 
@@ -966,13 +973,5 @@ public class DrawTool : MonoBehaviour
             if (v != null) Destroy(v);
         cutVisuals.Clear();
         cutPoints.Clear();
-    }
-
-    public void SaveAllChanges()
-    {
-        foreach (var obj in allObjs)
-        {
-            onDrawComplete?.Invoke(obj);
-        }
     }
 }

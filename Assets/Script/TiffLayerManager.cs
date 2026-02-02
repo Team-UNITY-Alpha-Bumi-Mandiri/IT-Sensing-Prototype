@@ -4,7 +4,6 @@ using System.IO;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
-using static UnityEditor.Experimental.GraphView.GraphView;
 
 // ============================================================
 // TiffLayerManager - Manager untuk GeoTIFF dan PNG Overlay

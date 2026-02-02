@@ -380,8 +380,31 @@ public class GeeDownloadController : MonoBehaviour
                 layerName = parentDir;
             }
 
-            // Load PNG dengan nama layer custom
-            tiffLayerManager?.LoadPngOverlay(pngPath, curNorth, curSouth, curWest, curEast, false, false, layerName);
+            // Cek apakah ada file TIFF asli yang sesuai dengan PNG ini
+            // Agar Raster Calculator bisa menggunakan data asli (karena PNG hanya visualisasi)
+            string tiffPath = Path.ChangeExtension(pngPath, ".tif");
+            if (!File.Exists(tiffPath)) tiffPath = Path.ChangeExtension(pngPath, ".tiff");
+            
+            // Jika tidak ketemu persis, coba cari file .tif apapun di folder yang sama
+            // Ini asumsi jika dalam satu folder hanya ada 1 pasang hasil
+            if (!File.Exists(tiffPath))
+            {
+                string dir = Path.GetDirectoryName(pngPath);
+                var tiffs = Directory.GetFiles(dir, "*.tif");
+                if (tiffs.Length > 0) tiffPath = tiffs[0];
+            }
+
+            if (File.Exists(tiffPath))
+            {
+                UnityEngine.Debug.Log($"[GeeDownload] Found matching TIFF for {Path.GetFileName(pngPath)}: {Path.GetFileName(tiffPath)}");
+            }
+            else
+            {
+                tiffPath = ""; // Reset jika tidak ditemukan
+            }
+
+            // Load PNG dengan nama layer custom dan path TIFF asli
+            tiffLayerManager?.LoadPngOverlay(pngPath, curNorth, curSouth, curWest, curEast, false, false, layerName, tiffPath);
 
             projectManager?.AddProperty(layerName, true, false);
             projectManager?.Save();

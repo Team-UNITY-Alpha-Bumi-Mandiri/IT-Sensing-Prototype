@@ -104,13 +104,21 @@ public class TiffLayerManager : MonoBehaviour
     //   west/east   - Longitude bounds (derajat)
     //   isPreview   - True jika ini preview sementara (tidak disimpan ke project)
     //   clearExisting - True untuk hapus layer sebelumnya
-    public void LoadPngOverlay(string pngPath, double north, double south, double west, double east, bool isPreview = false, bool clearExisting = true, string customLayerName = "")
+    //   realTiffPath - (Optional) Path ke file TIFF asli jika PNG ini hanya preview/visualisasi
+    public void LoadPngOverlay(string pngPath, double north, double south, double west, double east, bool isPreview = false, bool clearExisting = true, string customLayerName = "", string realTiffPath = "")
     {
+        UnityEngine.Debug.Log($"[TiffLayerManager] Loading PNG Overlay: {pngPath}");
+        UnityEngine.Debug.Log($"[TiffLayerManager] Custom Name: '{customLayerName}'");
+
         if (!File.Exists(pngPath)) { Debug.LogError($"[TiffLayerManager] PNG tidak ditemukan: {pngPath}"); return; }
 
         // Tentukan nama layer
         string layerName = isPreview ? "PREVIEW_SATELIT" : 
                           (!string.IsNullOrEmpty(customLayerName) ? customLayerName : Path.GetFileNameWithoutExtension(pngPath));
+
+        if (string.IsNullOrEmpty(layerName)) layerName = "Unnamed_Layer_" + System.DateTime.Now.Ticks;
+
+        UnityEngine.Debug.Log($"[TiffLayerManager] Final Layer Name: '{layerName}'");
         
         // Hapus preview lama jika ada
         if (layerName == "PREVIEW_SATELIT") RemoveLayer("PREVIEW_SATELIT");
@@ -137,7 +145,10 @@ public class TiffLayerManager : MonoBehaviour
         hasGeoData = true;
 
         // Buat layer data
-        var newLayer = new LayerData { name = layerName, texture = tex, isVisible = true, path = pngPath };
+        // Gunakan realTiffPath jika ada, agar Raster Calculator bisa mengakses data asli
+        string finalPath = !string.IsNullOrEmpty(realTiffPath) && File.Exists(realTiffPath) ? realTiffPath : pngPath;
+        
+        var newLayer = new LayerData { name = layerName, texture = tex, isVisible = true, path = finalPath };
         layers.Add(newLayer);
 
         // Tampilkan di peta
@@ -158,7 +169,7 @@ public class TiffLayerManager : MonoBehaviour
     // ============================================================
 
     // Load file GeoTIFF dan extract semua band sebagai layer terpisah
-    public void LoadTiff(string path, bool clearExisting = true)
+    public void LoadTiff(string path, bool clearExisting = true, string customLayerName = "")
     {
         if (!File.Exists(path)) { Debug.LogError($"[TiffLayerManager] File tidak ditemukan: {path}"); return; }
         if (clearExisting) ClearLayers();
@@ -168,6 +179,13 @@ public class TiffLayerManager : MonoBehaviour
         if (layerCache.ContainsKey(path))
         {
             layers = layerCache[path];
+            
+            // Jika custom name diminta, update nama layer pertama (biasanya hasil olahan)
+            if (!string.IsNullOrEmpty(customLayerName) && layers.Count > 0)
+            {
+                 layers[0].name = customLayerName;
+            }
+
             foreach (var layer in layers) if (layer.isVisible) ShowLayerOnMap(layer);
             hasGeoData = true;
             SyncWithProject();
@@ -211,8 +229,20 @@ public class TiffLayerManager : MonoBehaviour
             string prefix = GetNamingPrefix();
             for (int i = 0; i < samplesPerPixel; i++)
             {
-                string bandName = (customBandNames != null && i < customBandNames.Count) ? customBandNames[i] : "";
-                CreateLayerManual(bandData, imageWidth, imageHeight, prefix + bandName, i, minVal[i], maxVal[i]);
+                string bandName;
+                if (!string.IsNullOrEmpty(customLayerName))
+                {
+                    bandName = (samplesPerPixel > 1) ? $"{customLayerName}_Band{i+1}" : customLayerName;
+                }
+                else
+                {
+                    bandName = (customBandNames != null && i < customBandNames.Count) ? customBandNames[i] : "";
+                    if (string.IsNullOrEmpty(bandName)) 
+                        bandName = Path.GetFileNameWithoutExtension(path) + (samplesPerPixel > 1 ? $"_Band{i+1}" : "");
+                    bandName = prefix + bandName;
+                }
+                
+                CreateLayerManual(bandData, imageWidth, imageHeight, bandName, i, minVal[i], maxVal[i]);
             }
 
             // Buat RGB composite jika ada minimal 3 band

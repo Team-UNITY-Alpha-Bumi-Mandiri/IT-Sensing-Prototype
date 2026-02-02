@@ -311,13 +311,42 @@ public class CompositeManager : MonoBehaviour
 
                 string projectName = Path.GetFileNameWithoutExtension(tiffPath);
                 
-                // Tambahkan sebagai project baru di grid
-                // Param ke-5 (tiffPath) diganti fileToLoad (bisa PNG atau TIFF)
-                // [FIX] Jangan load overlay terpisah jika fileToLoad sudah PNG
-                // Fungsi CreateProjectAuto akan mengurus load layer via ProjectItem.
-                pm.CreateProjectAuto(projectName, centerLat, centerLon, zoom, fileToLoad, polyCoords);
-                
-                UnityEngine.Debug.Log($"[Composite] Added to project grid: {projectName} (Source: {Path.GetFileName(fileToLoad)})");
+                // Tambahkan sebagai project baru di grid atau layer di project aktif
+                if (pm.GetCurrentProject() != null)
+                {
+                    // [UPDATED] Jika ada project aktif, tambahkan sebagai layer
+                    string layerName = Path.GetFileNameWithoutExtension(tiffPath);
+                    // Bersihkan timestamp jika ada format _custom_YYYYMMDDHHMMSS
+                    // Format output python: {prefix}_custom_{time}.tif
+                    // Kita ingin nama layer bersih: {prefix}
+                    if (layerName.Contains("_custom_"))
+                    {
+                        int idx = layerName.IndexOf("_custom_");
+                        if (idx > 0) layerName = layerName.Substring(0, idx);
+                    }
+                    else if (layerName.Contains("_composite_")) // Format composite manager
+                    {
+                         int idx = layerName.IndexOf("_composite_");
+                         if (idx > 0) layerName = layerName.Substring(0, idx);
+                    }
+                    
+                    // Load PNG overlay dengan referensi ke TIFF asli
+                    lm.LoadPngOverlay(previewPng, minLat, maxLat, minLon, maxLon, false, false, layerName, tiffPath);
+                    
+                    // Tambahkan ke property project
+                    pm.AddProperty(layerName, true, false);
+                    
+                    // Pastikan layer aktif
+                    pm.OnPropertyChanged(layerName, true);
+                    
+                    UnityEngine.Debug.Log($"[Composite] Added as layer to active project: {layerName}");
+                }
+                else
+                {
+                    // [EXISTING] Buat project baru jika tidak ada project aktif
+                    pm.CreateProjectAuto(projectName, centerLat, centerLon, zoom, fileToLoad, polyCoords);
+                    UnityEngine.Debug.Log($"[Composite] Created new project: {projectName}");
+                }
                 
                 // [REMOVED] Jangan panggil LoadPngOverlay lagi karena CreateProjectAuto sudah akan mentrigger load.
                 // if (usePng)

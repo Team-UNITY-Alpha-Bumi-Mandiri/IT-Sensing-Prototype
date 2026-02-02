@@ -60,7 +60,14 @@ public class PropertyToggleItem : MonoBehaviour
         if (popup != null) editPopup = popup;
         _parentPanel = parentPanel;
 
-        if (labelText != null) labelText.text = name;
+        // Ensure name is visible even if empty (debug fallback)
+        if (labelText != null) 
+        {
+            if (string.IsNullOrEmpty(name)) 
+                labelText.text = "<Unnamed Layer>"; 
+            else 
+                labelText.text = name;
+        }
 
         // Setup toggle
         if (toggle != null)

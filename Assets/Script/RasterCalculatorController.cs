@@ -44,6 +44,7 @@ public class RasterCalculatorController : MonoBehaviour
 
     [Header("Dependencies")]
     public TiffLayerManager tiffLayerManager;
+    public ProjectManager projectManager;
     
     // Config
     private string backendFolder;
@@ -199,7 +200,36 @@ public class RasterCalculatorController : MonoBehaviour
 
     void UpdateBandCount(string path)
     {
-        currentLayerBandCount = 4; // Default safe
+        currentLayerBandCount = 0; // Default to 0 to indicate unknown/no bands
+
+        // Auto-fix: Jika path adalah PNG, coba cari TIFF pasangannya
+        if (!string.IsNullOrEmpty(path) && path.EndsWith(".png", StringComparison.OrdinalIgnoreCase))
+        {
+            string tiffPath = Path.ChangeExtension(path, ".tif");
+            if (!File.Exists(tiffPath)) tiffPath = Path.ChangeExtension(path, ".tiff");
+            
+            // Coba cari file tif apapun di folder yg sama jika nama tidak persis
+            if (!File.Exists(tiffPath))
+            {
+                try {
+                    string dir = Path.GetDirectoryName(path);
+                    if (Directory.Exists(dir))
+                    {
+                        var tiffs = Directory.GetFiles(dir, "*.tif");
+                        if (tiffs.Length > 0) tiffPath = tiffs[0];
+                    }
+                } catch {}
+            }
+
+            if (File.Exists(tiffPath))
+            {
+                UnityEngine.Debug.Log($"[RasterCalc] Switched from PNG to TIFF for band counting: {tiffPath}");
+                path = tiffPath;
+                // Update selectedLayer path juga agar saat diproses python menggunakan TIFF
+                if (selectedLayer != null) selectedLayer.path = tiffPath;
+            }
+        }
+
         if (!string.IsNullOrEmpty(path) && File.Exists(path))
         {
             try
@@ -284,13 +314,17 @@ public class RasterCalculatorController : MonoBehaviour
         // Bersihkan child lama
         foreach (Transform child in suggestionContainer.transform) Destroy(child.gameObject);
 
-        // Gunakan band count asli dari file TIFF
-        int count = currentLayerBandCount > 0 ? currentLayerBandCount : 4;
-        
-        for (int i = 1; i <= count; i++)
+        if (currentLayerBandCount <= 0)
         {
-            string bandName = $"b{i}";
-            CreateSuggestionButton(bandName);
+             CreateSuggestionButton("Tidak ada band ditemukan", false);
+        }
+        else
+        {
+            for (int i = 1; i <= currentLayerBandCount; i++)
+            {
+                string bandName = $"b{i}";
+                CreateSuggestionButton(bandName);
+            }
         }
         
         // Update posisi dropdown ke kursor
@@ -329,7 +363,7 @@ public class RasterCalculatorController : MonoBehaviour
         csf.verticalFit = ContentSizeFitter.FitMode.PreferredSize;
     }
 
-    private void CreateSuggestionButton(string bandName)
+    private void CreateSuggestionButton(string bandName, bool interactable = true)
     {
         GameObject btnObj = new GameObject("Btn_" + bandName);
         btnObj.transform.SetParent(suggestionContainer.transform, false);
@@ -340,6 +374,7 @@ public class RasterCalculatorController : MonoBehaviour
         
         Button btn = btnObj.AddComponent<Button>();
         btn.targetGraphic = img;
+        btn.interactable = interactable;
         
         // Add Layout Element
         LayoutElement le = btnObj.AddComponent<LayoutElement>();
@@ -357,14 +392,17 @@ public class RasterCalculatorController : MonoBehaviour
         TextMeshProUGUI tmp = textObj.AddComponent<TextMeshProUGUI>();
         tmp.text = bandName;
         tmp.fontSize = 14;
-        tmp.color = Color.white;
+        tmp.color = interactable ? Color.white : new Color(0.8f, 0.3f, 0.3f); // Merah jika tidak ada band
         tmp.alignment = TextAlignmentOptions.MidlineLeft;
         
         // Copy Font asset dari inputFormula jika ada
         if (inputFormula.textComponent != null) tmp.font = inputFormula.textComponent.font;
 
-        // Add Listener
-        btn.onClick.AddListener(() => InsertBand(bandName));
+        // Add Listener only if interactable
+        if (interactable)
+        {
+            btn.onClick.AddListener(() => InsertBand(bandName));
+        }
     }
 
     private void UpdateDropdownPosition()
@@ -558,7 +596,7 @@ public class RasterCalculatorController : MonoBehaviour
 
         string resultJson = await RunPythonScript(inputPath, formula, outputName);
         
-        HandleResult(resultJson);
+        HandleResult(resultJson, outputName);
         
         btnProcess.interactable = true;
     }
@@ -582,6 +620,21 @@ public class RasterCalculatorController : MonoBehaviour
 
                 // Python Executable logic (sama seperti RasterTransformController)
                 string pythonExe = "python"; 
+                
+                // Cek apakah ada .venv di project root (Development environment)
+                string projectRoot = Path.GetDirectoryName(Application.dataPath);
+                string venvPython = Path.Combine(projectRoot, ".venv", "Scripts", "python.exe");
+                
+                if (File.Exists(venvPython))
+                {
+                    pythonExe = venvPython;
+                    UnityEngine.Debug.Log($"[RasterCalc] Using venv python: {pythonExe}");
+                }
+                else
+                {
+                    UnityEngine.Debug.Log($"[RasterCalc] Using global python");
+                }
+                
                 // Bisa ditambahkan logic cek venv jika perlu
 
                 // Arguments
@@ -636,7 +689,7 @@ public class RasterCalculatorController : MonoBehaviour
         });
     }
 
-    void HandleResult(string json)
+    void HandleResult(string json, string userOutputName)
     {
         UnityEngine.Debug.Log("Python Result: " + json);
         
@@ -648,8 +701,12 @@ public class RasterCalculatorController : MonoBehaviour
             {
                 SetStatus("Sukses!", false);
                 
-                string overlayName = !string.IsNullOrEmpty(inputOutputName?.text) ? inputOutputName.text : "RasterCalc_Result";
+                // Gunakan nama dari input user (passed parameter) untuk keamanan thread/context
+                string overlayName = !string.IsNullOrEmpty(userOutputName) ? userOutputName.Trim() : "RasterCalc_Result";
+                if (string.IsNullOrEmpty(overlayName)) overlayName = "RasterCalc_Result";
                 
+                UnityEngine.Debug.Log($"[RasterCalc] Handling Result for Layer: '{overlayName}'");
+
                 // Prioritas 1: Load PNG preview dengan bounds agar tampil sebagai overlay di project aktif
                 if (!string.IsNullOrEmpty(result.preview_png) && result.bounds != null)
                 {
@@ -657,8 +714,15 @@ public class RasterCalculatorController : MonoBehaviour
                     if (!Path.IsPathRooted(pngPath))
                         pngPath = Path.Combine(backendFolder, pngPath);
                     
+                    // Ambil TIFF Path asli untuk referensi
+                    string tifPath = result.path;
+                    if (!string.IsNullOrEmpty(tifPath) && !Path.IsPathRooted(tifPath))
+                        tifPath = Path.Combine(backendFolder, tifPath);
+
                     if (File.Exists(pngPath))
                     {
+                        // PENTING: Pass overlayName sebagai customLayerName agar konsisten
+                        // Pass tifPath sebagai realTiffPath agar bisa diproses ulang di RasterCalc
                         tiffLayerManager.LoadPngOverlay(
                             pngPath, 
                             result.bounds.north, 
@@ -667,9 +731,23 @@ public class RasterCalculatorController : MonoBehaviour
                             result.bounds.east, 
                             false, 
                             false, 
-                            overlayName
+                            overlayName,
+                            tifPath // Pass realTiffPath
                         );
-                        tiffLayerManager.OnPropertyToggleExternal(overlayName, true);
+                        
+                        // Register ke Project Manager secara eksplisit
+                        if (projectManager != null && projectManager.GetCurrentProject() != null)
+                        {
+                            projectManager.AddProperty(overlayName, true, false);
+                            projectManager.OnPropertyChanged(overlayName, true); // Force enable
+                            UnityEngine.Debug.Log($"[RasterCalc] Registered layer '{overlayName}' to active project");
+                        }
+                        else
+                        {
+                             // Fallback jika tidak ada project (harusnya jarang karena RasterCalc butuh layer)
+                             tiffLayerManager.OnPropertyToggleExternal(overlayName, true);
+                        }
+                        
                         return;
                     }
                 }
@@ -683,7 +761,14 @@ public class RasterCalculatorController : MonoBehaviour
                     
                     if (File.Exists(tifPath))
                     {
-                        tiffLayerManager.LoadTiff(tifPath, false);
+                        tiffLayerManager.LoadTiff(tifPath, false, overlayName);
+                        
+                        // Register ke Project Manager
+                        if (projectManager != null && projectManager.GetCurrentProject() != null)
+                        {
+                            projectManager.AddProperty(overlayName, true, false);
+                            projectManager.OnPropertyChanged(overlayName, true);
+                        }
                     }
                 }
             }

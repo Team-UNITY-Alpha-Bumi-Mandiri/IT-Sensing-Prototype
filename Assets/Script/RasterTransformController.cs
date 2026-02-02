@@ -311,6 +311,8 @@ public class RasterTransformController : MonoBehaviour
         UnityEngine.Debug.Log($"[RasterTransformController] Input PNG: {pngPath}");
         UnityEngine.Debug.Log($"[RasterTransformController] Has Bounds: {(bounds != null)}");
 
+        string layerName; // Declare here to avoid scope conflict
+
         // PRIORITAS 1: Load PNG jika ada (karena sudah diwarnai/visualized)
         if (!string.IsNullOrEmpty(pngPath) && bounds != null)
         {
@@ -365,28 +367,63 @@ public class RasterTransformController : MonoBehaviour
             if (pngExists)
             {
                 UnityEngine.Debug.Log($"[RasterTransformController] DECISION: LOADING PNG PREVIEW");
-                layerManager.LoadPngOverlay(fullPngPath, bounds.north, bounds.south, bounds.west, bounds.east);
+                
+                // Tentukan nama layer dari file asli (TIFF) agar bersih, atau fallback ke PNG jika perlu
+                layerName = Path.GetFileNameWithoutExtension(filePath);
+                if (string.IsNullOrEmpty(layerName)) layerName = Path.GetFileNameWithoutExtension(fullPngPath);
+
+                // Bersihkan timestamp jika ada format _custom_YYYYMMDDHHMMSS
+                if (layerName.Contains("_custom_"))
+                {
+                    int idx = layerName.IndexOf("_custom_");
+                    if (idx > 0) layerName = layerName.Substring(0, idx);
+                }
+                else if (layerName.Contains("_transformed_")) // Format transform manager (NDWI dll)
+                {
+                     int idx = layerName.IndexOf("_transformed_");
+                     if (idx > 0) layerName = layerName.Substring(0, idx);
+                }
+
+                UnityEngine.Debug.Log($"[RasterTransformController] Layer Name: '{layerName}'");
+
+                // Gunakan overload baru LoadPngOverlay untuk menyimpan referensi ke TIFF asli (filePath)
+                // PENTING: Pass layerName sebagai customLayerName agar konsisten antara LayerManager dan ProjectManager
+                layerManager.LoadPngOverlay(fullPngPath, bounds.north, bounds.south, bounds.west, bounds.east, false, false, layerName, filePath);
                 
                 // Buka folder
                 // string folder = Path.GetDirectoryName(fullPngPath);
                 // Process.Start("explorer.exe", folder);
                 
-                // Register ke Project Manager (menggunakan nama PNG)
+                // Register ke Project Manager
                 if (projectManager != null)
                 {
-                    string layerName = Path.GetFileNameWithoutExtension(fullPngPath);
-                    // Gunakan CreateProjectAuto agar masuk grid dengan benar
-                    double centerLat = (bounds.north + bounds.south) / 2.0;
-                    double centerLon = (bounds.west + bounds.east) / 2.0;
-                    int zoom = layerManager.CalculateFitZoom();
-                    List<Vector2> polyCoords = new List<Vector2>
+                    if (projectManager.GetCurrentProject() != null)
                     {
-                        new Vector2((float)bounds.north, (float)bounds.west),
-                        new Vector2((float)bounds.north, (float)bounds.east),
-                        new Vector2((float)bounds.south, (float)bounds.east),
-                        new Vector2((float)bounds.south, (float)bounds.west)
-                    };
-                    projectManager.CreateProjectAuto(layerName, centerLat, centerLon, zoom, fullPngPath, polyCoords);
+                        // Jika ada project aktif, tambahkan sebagai layer baru
+                        projectManager.AddProperty(layerName, true, false);
+                        
+                        // Pastikan layer aktif (karena AddProperty skip jika sudah ada via SyncWithProject)
+                        projectManager.OnPropertyChanged(layerName, true);
+                        
+                        UnityEngine.Debug.Log($"[RasterTransformController] Added layer '{layerName}' to active project.");
+                    }
+                    else
+                    {
+                        // Jika tidak ada project, buat baru
+                        // Gunakan CreateProjectAuto agar masuk grid dengan benar
+                        double centerLat = (bounds.north + bounds.south) / 2.0;
+                        double centerLon = (bounds.west + bounds.east) / 2.0;
+                        int zoom = layerManager.CalculateFitZoom();
+                        List<Vector2> polyCoords = new List<Vector2>
+                        {
+                            new Vector2((float)bounds.north, (float)bounds.west),
+                            new Vector2((float)bounds.north, (float)bounds.east),
+                            new Vector2((float)bounds.south, (float)bounds.east),
+                            new Vector2((float)bounds.south, (float)bounds.west)
+                        };
+                        // Gunakan layerName untuk nama project juga
+                        projectManager.CreateProjectAuto(layerName, centerLat, centerLon, zoom, fullPngPath, polyCoords);
+                    }
                 }
                 return;
             }
@@ -402,25 +439,55 @@ public class RasterTransformController : MonoBehaviour
 
         // PRIORITAS 2: Load TIFF (Fallback)
         UnityEngine.Debug.Log($"[RasterTransformController] DECISION: LOADING RAW TIFF (FALLBACK)");
-        layerManager.LoadTiff(filePath);
+        
+        bool hasActiveProject = projectManager != null && projectManager.GetCurrentProject() != null;
+        
+        // Tentukan nama layer dari file asli (TIFF) agar bersih
+        layerName = Path.GetFileNameWithoutExtension(filePath);
+        // Bersihkan timestamp jika ada format _custom_YYYYMMDDHHMMSS
+        if (layerName.Contains("_custom_"))
+        {
+            int idx = layerName.IndexOf("_custom_");
+            if (idx > 0) layerName = layerName.Substring(0, idx);
+        }
+        else if (layerName.Contains("_transformed_")) // Format transform manager (NDWI dll)
+        {
+                int idx = layerName.IndexOf("_transformed_");
+                if (idx > 0) layerName = layerName.Substring(0, idx);
+        }
+
+        // Load TIFF (jangan clear existing jika kita menambahkan ke project aktif)
+        layerManager.LoadTiff(filePath, !hasActiveProject, layerName);
 
         // Daftarkan ke Project Manager (optional, agar tersimpan di sesi)
         if (projectManager != null)
         {
-            if (layerManager.GetTiffBounds(filePath, out double minLat, out double maxLat, out double minLon, out double maxLon))
+            // Jika ada project aktif, tambahkan sebagai layer baru
+            if (hasActiveProject)
             {
-                double centerLat = (minLat + maxLat) / 2.0;
-                double centerLon = (minLon + maxLon) / 2.0;
-                int zoom = layerManager.CalculateFitZoom();
-                List<Vector2> polyCoords = new List<Vector2>
+                projectManager.AddProperty(layerName, true, false);
+                projectManager.OnPropertyChanged(layerName, true);
+                UnityEngine.Debug.Log($"[RasterTransformController] Added layer '{layerName}' to active project.");
+            }
+            else
+            {
+                // Jika tidak ada project, buat baru
+                // Gunakan CreateProjectAuto agar masuk grid dengan benar
+                // Kita perlu bounds untuk ini. Jika bounds kosong (karena PNG gagal), kita perlu baca dari TIFF via TiffLayerManager
+                if (layerManager.GetTiffBounds(filePath, out double minLat, out double maxLat, out double minLon, out double maxLon))
                 {
-                    new Vector2((float)maxLat, (float)minLon),
-                    new Vector2((float)maxLat, (float)maxLon),
-                    new Vector2((float)minLat, (float)maxLon),
-                    new Vector2((float)minLat, (float)minLon)
-                };
-                string layerName = Path.GetFileNameWithoutExtension(filePath);
-                projectManager.CreateProjectAuto(layerName, centerLat, centerLon, zoom, filePath, polyCoords);
+                    double centerLat = (minLat + maxLat) / 2.0;
+                    double centerLon = (minLon + maxLon) / 2.0;
+                    int zoom = layerManager.CalculateFitZoom();
+                    List<Vector2> polyCoords = new List<Vector2>
+                    {
+                        new Vector2((float)maxLat, (float)minLon),
+                        new Vector2((float)maxLat, (float)maxLon),
+                        new Vector2((float)minLat, (float)maxLon),
+                        new Vector2((float)minLat, (float)minLon)
+                    };
+                    projectManager.CreateProjectAuto(layerName, centerLat, centerLon, zoom, filePath, polyCoords);
+                }
             }
         }
 

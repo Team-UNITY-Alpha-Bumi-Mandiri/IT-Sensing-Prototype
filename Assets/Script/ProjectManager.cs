@@ -425,12 +425,18 @@ public class ProjectManager : MonoBehaviour
     // PROPERTY MANAGEMENT
     // ============================================================
 
-    // Tambah property baru
+    // Tambah property ke list (dan save)
     public void AddProperty(string name, bool value = false, bool isDrawing = false)
     {
         if (current == null) return;
+        if (string.IsNullOrEmpty(name)) 
+        {
+            UnityEngine.Debug.LogWarning("[ProjectManager] Cannot add property with empty name.");
+            return;
+        }
+
         var dict = current.GetProps();
-        if (dict.ContainsKey(name)) return;
+        if (dict.ContainsKey(name)) return; // Kalau sudah ada, skip (atau update?)
 
         dict[name] = new PropertyPanel.PropertyInfo(value, isDrawing);
         current.SetProps(dict);
@@ -565,7 +571,8 @@ public class ProjectManager : MonoBehaviour
         Debug.Log($"[Save] Writing {projects.Count} projects to {SavePath}");
         if (current != null)
         {
-            Debug.Log($"[Save] Current project '{current.name}' has {current.drawings.Count} drawings");
+            int propsCount = current.properties != null ? current.properties.Count : 0;
+            Debug.Log($"[Save] Project '{current.name}' saved. Layers (Props): {propsCount}, Drawings (ROI): {current.drawings.Count}");
         }
         try { File.WriteAllText(SavePath, JsonUtility.ToJson(new Wrapper { items = projects }, true)); }
         catch (System.Exception e) { Debug.LogError("Save failed: " + e.Message); }

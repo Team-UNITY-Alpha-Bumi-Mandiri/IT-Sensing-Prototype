@@ -25,6 +25,25 @@ public class PropertyPanel : MonoBehaviour
     public GameObject sharedEditPopup;
     public TextMeshProUGUI layerInfoText;
 
+    [Header("Atribut Popup")]
+    public GameObject sharedAtributPopup;       // Popup shared untuk atribut
+    public Transform atributContent;            // Container untuk tabel
+    public GameObject atributHeaderPrefab;      // Prefab untuk header cell
+    public GameObject atributRowPrefab;         // Prefab untuk satu row
+    public GameObject atributCellPrefab;        // Prefab untuk cell (dengan InputField)
+    public Button addColumnButton;              // Tombol tambah kolom
+    public Button deleteColumnButton;           // Tombol hapus kolom selected
+    public Button deleteRowButton;              // Tombol hapus row selected
+    public TMP_InputField columnNameInput;      // Input nama kolom baru
+    public Color selectedColor = new Color(0.8f, 0.9f, 1f);  // Warna highlight kolom
+    public Color selectedRowColor = new Color(1f, 0.9f, 0.8f);  // Warna highlight row
+    public Color normalColor = Color.white;     // Warna normal
+    string currentAtributLayer = "";            // Layer yang sedang ditampilkan
+    string selectedColumnName = "";             // Kolom yang sedang dipilih
+    string selectedRowId = "";                  // Drawing ID row yang dipilih
+    Dictionary<string, List<Image>> columnCells = new();  // Cells per kolom untuk highlight
+    Dictionary<string, List<Image>> rowCells = new();     // Cells per row untuk highlight
+
     // Events untuk komunikasi dengan ProjectManager
     public UnityEvent<string, bool> onPropertyChanged;      // (name, value)
     public UnityEvent<string, string> onPropertyRenamed;    // (oldName, newName)
@@ -55,6 +74,15 @@ public class PropertyPanel : MonoBehaviour
         // Auto-find ScrollRect
         if (scrollRect == null && panel != null)
             scrollRect = panel.GetComponentInChildren<ScrollRect>();
+
+        if (addColumnButton != null)
+            addColumnButton.onClick.AddListener(OnAddColumnClicked);
+        
+        if (deleteColumnButton != null)
+            deleteColumnButton.onClick.AddListener(OnDeleteColumnClicked);
+        
+        if (deleteRowButton != null)
+            deleteRowButton.onClick.AddListener(OnDeleteRowClicked);
     }
 
     // Tampilkan property dari dictionary
@@ -96,8 +124,7 @@ public class PropertyPanel : MonoBehaviour
             var item = obj.GetComponent<PropertyToggleItem>();
             if (item != null)
             {
-                GameObject popup = kv.Value.isDrawing ? sharedEditPopup : null;
-                item.Setup(kv.Key, kv.Value.value, OnToggle, OnRename, OnDelete, popup, this);
+                item.Setup(kv.Key, kv.Value.value, OnToggle, OnRename, OnDelete, this);
                 items.Add(item);
             }
         }
@@ -266,5 +293,318 @@ public class PropertyPanel : MonoBehaviour
         
         // Discard changes untuk layer tersebut
         FindObjectOfType<ProjectManager>()?.DiscardChanges(layer);
+    }
+
+    // Tampilkan popup atribut dengan tabel dinamis
+    public void ShowAtribut(string layerName)
+    {
+        if (atributContent == null) return;
+        currentAtributLayer = layerName;
+        
+        // Clear existing rows
+        foreach (Transform child in atributContent)
+            Destroy(child.gameObject);
+        
+        var pm = FindObjectOfType<ProjectManager>();
+        var proj = pm?.GetCurrentProject();
+        if (proj == null) return;
+        
+        // Reset selection state
+        columnCells.Clear();
+        rowCells.Clear();
+        selectedColumnName = "";
+        selectedRowId = "";
+        
+        // Get kolom: ID (default) + custom columns
+        var customColumns = proj.GetColumns(layerName);
+        
+        // === HEADER ROW ===
+        if (atributRowPrefab != null)
+        {
+            var headerRow = Instantiate(atributRowPrefab, atributContent);
+            
+            // Header ID (tidak bisa di-select/delete)
+            CreateHeaderCell(headerRow.transform, "ID", true);
+            
+            // Header custom columns (bisa di-select)
+            foreach (var col in customColumns)
+                CreateHeaderCell(headerRow.transform, col, false);
+        }
+        
+        // === DATA ROWS ===
+        var layerDrawings = proj.drawings.FindAll(d => d.layerName == layerName);
+        
+        foreach (var drawing in layerDrawings)
+        {
+            if (atributRowPrefab == null) continue;
+            
+            var row = Instantiate(atributRowPrefab, atributContent);
+            
+            // Cell ID (read-only)
+            CreateDataCell(row.transform, drawing.sequentialId.ToString(), null, null, true);
+            
+            // Cell custom columns (editable)
+            foreach (var col in customColumns)
+            {
+                string currentValue = drawing.GetAttribute(col);
+                CreateDataCell(row.transform, currentValue, drawing.id, col, false);
+            }
+        }
+        
+        Debug.Log($"[ShowAtribut] Layer '{layerName}' has {layerDrawings.Count} rows, {customColumns.Count} custom columns");
+    }
+
+    // Buat header cell (clickable untuk select kolom)
+    void CreateHeaderCell(Transform parent, string columnName, bool isIdColumn = false)
+    {
+        if (atributHeaderPrefab == null) return;
+        var cell = Instantiate(atributHeaderPrefab, parent);
+        var tmp = cell.GetComponentInChildren<TMP_Text>();
+        if (tmp != null) tmp.text = columnName;
+        
+        // Track cell untuk highlight
+        var img = cell.GetComponent<Image>();
+        if (img != null && !isIdColumn)
+        {
+            if (!columnCells.ContainsKey(columnName))
+                columnCells[columnName] = new List<Image>();
+            columnCells[columnName].Add(img);
+            
+            // Tambah click handler
+            var btn = cell.GetComponent<Button>() ?? cell.AddComponent<Button>();
+            string col = columnName;
+            btn.onClick.AddListener(() => SelectColumn(col));
+        }
+    }
+
+    // Buat data cell (editable + clickable untuk select kolom/row)
+    void CreateDataCell(Transform parent, string value, string drawingId, string columnName, bool readOnly)
+    {
+        if (atributCellPrefab == null) return;
+        var cell = Instantiate(atributCellPrefab, parent);
+        var input = cell.GetComponentInChildren<TMP_InputField>();
+        
+        var img = cell.GetComponent<Image>();
+        
+        // Track cell untuk column highlight (kecuali ID column)
+        if (img != null && !string.IsNullOrEmpty(columnName))
+        {
+            if (!columnCells.ContainsKey(columnName))
+                columnCells[columnName] = new List<Image>();
+            columnCells[columnName].Add(img);
+        }
+        
+        // Track cell untuk row highlight
+        if (img != null && !string.IsNullOrEmpty(drawingId))
+        {
+            if (!rowCells.ContainsKey(drawingId))
+                rowCells[drawingId] = new List<Image>();
+            rowCells[drawingId].Add(img);
+        }
+        
+        // Tambah click handler (select row, atau select column jika ada)
+        if (img != null)
+        {
+            var btn = cell.GetComponent<Button>() ?? cell.AddComponent<Button>();
+            string rowId = drawingId;
+            string col = columnName;
+            
+            btn.onClick.AddListener(() => {
+                // Select row (selalu)
+                if (!string.IsNullOrEmpty(rowId)) SelectRow(rowId);
+                // Select column (jika bukan ID column)
+                if (!string.IsNullOrEmpty(col)) SelectColumn(col);
+            });
+        }
+        
+        if (input != null)
+        {
+            input.text = value;
+            input.readOnly = readOnly;
+            input.ForceLabelUpdate();
+            
+            if (!readOnly && !string.IsNullOrEmpty(drawingId) && !string.IsNullOrEmpty(columnName))
+            {
+                string id = drawingId;
+                string col = columnName;
+                input.onEndEdit.AddListener(newValue => OnCellValueChanged(id, col, newValue));
+            }
+        }
+        else
+        {
+            var tmp = cell.GetComponentInChildren<TMP_Text>();
+            if (tmp != null) tmp.text = value;
+        }
+    }
+
+    // Callback saat cell value berubah
+    void OnCellValueChanged(string drawingId, string columnName, string newValue)
+    {
+        var pm = FindObjectOfType<ProjectManager>();
+        var proj = pm?.GetCurrentProject();
+        if (proj == null) return;
+        
+        var drawing = proj.drawings.Find(d => d.id == drawingId);
+        if (drawing != null)
+        {
+            drawing.SetAttribute(columnName, newValue);
+            Debug.Log($"[Atribut] Set {columnName}='{newValue}' for drawing {drawingId}");
+        }
+    }
+
+    // Public method untuk tambah kolom
+    public void AddAtributColumn(string columnName)
+    {
+        if (string.IsNullOrEmpty(currentAtributLayer) || string.IsNullOrEmpty(columnName)) return;
+        
+        var pm = FindObjectOfType<ProjectManager>();
+        var proj = pm?.GetCurrentProject();
+        proj?.AddColumn(currentAtributLayer, columnName);
+        
+        // Refresh tabel
+        ShowAtribut(currentAtributLayer);
+    }
+
+    // Public method untuk hapus kolom
+    public void RemoveAtributColumn(string columnName)
+    {
+        if (string.IsNullOrEmpty(currentAtributLayer) || string.IsNullOrEmpty(columnName)) return;
+        
+        var pm = FindObjectOfType<ProjectManager>();
+        var proj = pm?.GetCurrentProject();
+        proj?.RemoveColumn(currentAtributLayer, columnName);
+        
+        // Refresh tabel
+        ShowAtribut(currentAtributLayer);
+    }
+
+    void OnAddColumnClicked()
+    {
+        if (columnNameInput == null) return;
+        string colName = columnNameInput.text.Trim();
+        if (string.IsNullOrEmpty(colName)) return;
+        
+        AddAtributColumn(colName);
+        columnNameInput.text = "";
+    }
+
+    // Select kolom dan highlight
+    void SelectColumn(string colName)
+    {
+        selectedColumnName = colName;
+        HighlightColumn(colName);
+        Debug.Log($"[Atribut] Selected column: {colName}");
+    }
+
+    // Highlight cells dari kolom yang dipilih
+    void HighlightColumn(string colName)
+    {
+        // Reset semua ke normal color
+        foreach (var kv in columnCells)
+        {
+            foreach (var img in kv.Value)
+                if (img != null) img.color = normalColor;
+        }
+        
+        // Highlight kolom yang dipilih
+        if (columnCells.TryGetValue(colName, out var cells))
+        {
+            foreach (var img in cells)
+                if (img != null) img.color = selectedColor;
+        }
+    }
+
+    // Hapus kolom yang sedang dipilih
+    void OnDeleteColumnClicked()
+    {
+        if (string.IsNullOrEmpty(selectedColumnName))
+        {
+            Debug.Log("[Atribut] No column selected");
+            return;
+        }
+        
+        RemoveAtributColumn(selectedColumnName);
+        selectedColumnName = "";
+    }
+
+    // Select row dan highlight
+    void SelectRow(string drawingId)
+    {
+        selectedRowId = drawingId;
+        HighlightRow(drawingId);
+        Debug.Log($"[Atribut] Selected row: {drawingId}");
+    }
+
+    // Highlight cells dari row yang dipilih
+    void HighlightRow(string drawingId)
+    {
+        // Reset semua row ke normal color
+        foreach (var kv in rowCells)
+        {
+            foreach (var img in kv.Value)
+                if (img != null) img.color = normalColor;
+        }
+        
+        // Highlight row yang dipilih
+        if (rowCells.TryGetValue(drawingId, out var cells))
+        {
+            foreach (var img in cells)
+                if (img != null) img.color = selectedRowColor;
+        }
+    }
+
+    // Hapus row yang sedang dipilih
+    void OnDeleteRowClicked()
+    {
+        if (string.IsNullOrEmpty(selectedRowId))
+        {
+            Debug.Log("[Atribut] No row selected");
+            return;
+        }
+        
+        DeleteDrawing(selectedRowId);
+        selectedRowId = "";
+    }
+
+    // Hapus drawing dan polygon terkait
+    void DeleteDrawing(string drawingId)
+    {
+        var pm = FindObjectOfType<ProjectManager>();
+        var proj = pm?.GetCurrentProject();
+        if (proj == null) return;
+        
+        // Cari drawing
+        var drawing = proj.drawings.Find(d => d.id == drawingId);
+        if (drawing == null) return;
+        
+        // Hapus polygon visual dari DrawTool
+        var drawTool = FindObjectOfType<DrawTool>();
+        if (drawTool != null)
+        {
+            drawTool.DeletePolygonById(drawingId);
+        }
+        
+        // Hapus dari project data
+        proj.drawings.Remove(drawing);
+        
+        // Update sequential IDs untuk layer ini
+        UpdateSequentialIds(proj, drawing.layerName);
+        
+        // Refresh tabel
+        ShowAtribut(currentAtributLayer);
+        
+        Debug.Log($"[Atribut] Deleted drawing {drawingId}");
+    }
+
+    // Update sequential IDs setelah delete
+    void UpdateSequentialIds(ProjectManager.ProjectData proj, string layerName)
+    {
+        var layerDrawings = proj.drawings.FindAll(d => d.layerName == layerName);
+        layerDrawings.Sort((a, b) => a.sequentialId.CompareTo(b.sequentialId));
+        
+        for (int i = 0; i < layerDrawings.Count; i++)
+        {
+            layerDrawings[i].sequentialId = i + 1;
+        }
     }
 }

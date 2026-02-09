@@ -31,6 +31,7 @@ public class DrawTool : MonoBehaviour
     public GameObject lineSegmentPrefab;   // Segment garis
     public GameObject vertexPointPrefab;   // Titik sudut polygon
     public GameObject tooltipPrefab;       // Tooltip saat drawing
+    public GameObject infoTooltipPrefab;   // Tooltip info polygon (ID)
 
     [Header("Settings")]
     public float snapDist = 30f;                // Jarak snap untuk finish drawing (pixel)
@@ -62,6 +63,11 @@ public class DrawTool : MonoBehaviour
     DrawObject activeObj;                               // Objek yang sedang digambar
     GameObject ghost, tooltip;                          // Helper visual
     TMP_Text tooltipText;
+
+    // Info Tooltip State (untuk click polygon tanpa mode)
+    GameObject infoTooltip;
+    TMP_Text infoTooltipText;
+    DrawObject activeInfoObj;  // Polygon yang sedang ditampilkan info-nya
 
     // Edit Mode State
     List<DrawObject> editObjs = new List<DrawObject>();
@@ -105,10 +111,18 @@ public class DrawTool : MonoBehaviour
         if (mapController.latitude != lastLat || mapController.longitude != lastLon || mapController.zoom != lastZoom)
         {
             RefreshAll();
+            UpdateInfoTooltipPosition();  // Update posisi info tooltip saat pan/zoom
             lastLat = mapController.latitude;
             lastLon = mapController.longitude;
             lastZoom = mapController.zoom;
         }
+        
+        // Handle click polygon saat tidak dalam mode aktif
+        if (!isActive && Mouse.current != null && Mouse.current.leftButton.wasPressedThisFrame)
+        {
+            HandlePolygonInfoClick(Mouse.current.position.ReadValue());
+        }
+        
         HandleInput();
     }
 
@@ -480,6 +494,23 @@ public class DrawTool : MonoBehaviour
         }
     }
 
+    // Hapus polygon berdasarkan ID (dipanggil dari PropertyPanel)
+    public void DeletePolygonById(string drawingId)
+    {
+        for (int i = allObjs.Count - 1; i >= 0; i--)
+        {
+            if (allObjs[i].id == drawingId)
+            {
+                onObjectDeleted?.Invoke(allObjs[i]);
+                if (allObjs[i].rootObj != null) Destroy(allObjs[i].rootObj);
+                allObjs.RemoveAt(i);
+                Debug.Log($"[DrawTool] Deleted polygon with ID: {drawingId}");
+                return;
+            }
+        }
+        Debug.Log($"[DrawTool] Polygon not found with ID: {drawingId}");
+    }
+
     // Hit test untuk objek
     bool HitTest(DrawObject obj, Vector2 mousePos)
     {
@@ -524,6 +555,125 @@ public class DrawTool : MonoBehaviour
     }
 
     // ============================================================
+    // POLYGON INFO TOOLTIP (Click saat tidak dalam mode)
+    // ============================================================
+
+    // Handle klik polygon untuk menampilkan info
+    void HandlePolygonInfoClick(Vector2 mousePos)
+    {
+        // Cari polygon yang diklik
+        DrawObject clickedObj = null;
+        foreach (var obj in allObjs)
+        {
+            if (obj.type == DrawMode.Polygon && obj.rootObj != null && obj.rootObj.activeSelf)
+            {
+                if (HitTest(obj, mousePos))
+                {
+                    clickedObj = obj;
+                    break;
+                }
+            }
+        }
+
+        // Jika klik di polygon, tampilkan tooltip
+        if (clickedObj != null)
+        {
+            ShowInfoTooltip(clickedObj);
+        }
+        else
+        {
+            // Klik di tempat lain, sembunyikan tooltip
+            HideInfoTooltip();
+        }
+    }
+
+    // Tampilkan info tooltip di tengah polygon
+    void ShowInfoTooltip(DrawObject obj)
+    {
+        activeInfoObj = obj;
+        
+        // Buat tooltip jika belum ada
+        if (infoTooltip == null && infoTooltipPrefab != null)
+        {
+            infoTooltip = Instantiate(infoTooltipPrefab, container);
+            infoTooltipText = infoTooltip.GetComponentInChildren<TMP_Text>();
+        }
+        
+        if (infoTooltip == null) return;
+        
+        // Dapatkan sequential ID dari ProjectManager
+        int seqId = GetSequentialId(obj.id);
+        
+        // Set text
+        if (infoTooltipText != null)
+            infoTooltipText.text = $"ID = {seqId}";
+        
+        // Posisikan di tengah polygon
+        UpdateInfoTooltipPosition();
+        infoTooltip.SetActive(true);
+    }
+
+    // Sembunyikan info tooltip
+    void HideInfoTooltip()
+    {
+        if (infoTooltip != null)
+            infoTooltip.SetActive(false);
+        activeInfoObj = null;
+    }
+
+    // Update posisi info tooltip saat pan/zoom
+    void UpdateInfoTooltipPosition()
+    {
+        if (infoTooltip == null || activeInfoObj == null || !infoTooltip.activeSelf) return;
+        
+        // Hitung center polygon dalam screen space
+        Vector2 centerGeo = CalculatePolygonCenter(activeInfoObj.coordinates);
+        Vector2 centerScreen = GeoToScreen(centerGeo);
+        
+        // Convert screen position ke local position dalam container
+        RectTransform rt = infoTooltip.GetComponent<RectTransform>();
+        if (rt != null && container != null)
+        {
+            Vector2 localPos;
+            RectTransformUtility.ScreenPointToLocalPointInRectangle(
+                container, centerScreen, null, out localPos);
+            rt.anchoredPosition = localPos;
+            
+            // Scale berdasarkan zoom (zoom 15 = scale 1, zoom 10 = scale 0.5, zoom 20 = scale 2)
+            float baseZoom = 15f;
+            float zoomScale = Mathf.Pow(2f, (mapController.zoom - baseZoom) / 5f);
+            rt.localScale = Vector3.one * zoomScale;
+        }
+    }
+
+    // Hitung center polygon dari koordinat lat/lon
+    Vector2 CalculatePolygonCenter(List<Vector2> coords)
+    {
+        if (coords.Count == 0) return Vector2.zero;
+        
+        float sumX = 0, sumY = 0;
+        foreach (var c in coords)
+        {
+            sumX += c.x;
+            sumY += c.y;
+        }
+        return new Vector2(sumX / coords.Count, sumY / coords.Count);
+    }
+
+    // Dapatkan sequential ID dari ProjectManager
+    int GetSequentialId(string drawingId)
+    {
+        var pm = FindObjectOfType<ProjectManager>();
+        if (pm == null) return 0;
+        
+        var proj = pm.GetCurrentProject();
+        if (proj == null) return 0;
+        
+        var drawing = proj.drawings.Find(d => d.id == drawingId);
+        return drawing?.sequentialId ?? 0;
+    }
+
+    // ============================================================
     // PUBLIC API
     // ============================================================
 
@@ -531,6 +681,7 @@ public class DrawTool : MonoBehaviour
     public void ActivateMode(DrawMode m)
     {
         if (isDrawing && mode != m) Cancel();
+        HideInfoTooltip();  // Sembunyikan info tooltip saat masuk mode
         isActive = true;
         mode = m;
     }

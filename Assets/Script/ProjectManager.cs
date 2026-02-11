@@ -61,20 +61,46 @@ public class ProjectManager : MonoBehaviour
         public PropertyEntry(string k, bool v, bool drawing = false) { key = k; value = v; isDrawing = drawing; }
     }
 
+    // Entry untuk custom attribute (key-value)
+    [System.Serializable]
+    public class AttributeEntry
+    {
+        public string key;
+        public string value;
+        public AttributeEntry(string k, string v) { key = k; value = v; }
+    }
+
     // Drawing object yang diserialisasi
     [System.Serializable]
     public class SerializedDrawObject
     {
-        public string id;                   // ID unik
+        public string id;                   // ID unik (GUID)
+        public int sequentialId;            // ID urut per layer (1, 2, 3...)
         public DrawTool.DrawMode type;      // Tipe gambar
         public string layerName;            // Layer
         public List<Vector2> coordinates;   // Koordinat
         public bool useTexture;             // Pakai texture atau tidak
+        public List<AttributeEntry> customAttributes = new();  // Custom kolom values
+
+        // Helper untuk get/set attribute
+        public string GetAttribute(string key)
+        {
+            var entry = customAttributes?.Find(a => a.key == key);
+            return entry?.value ?? "";
+        }
+
+        public void SetAttribute(string key, string value)
+        {
+            if (customAttributes == null) customAttributes = new();
+            var entry = customAttributes.Find(a => a.key == key);
+            if (entry != null) entry.value = value;
+            else customAttributes.Add(new AttributeEntry(key, value));
+        }
     }
 
     // Data project
     [System.Serializable]
-    public class ProjectData
+    public partial class ProjectData
     {
         public string id, name, tiffPath;           // ID, nama, path TIFF (opsional)
         public double lat, lon;                     // Koordinat center
@@ -102,6 +128,45 @@ public class ProjectManager : MonoBehaviour
         {
             properties = new List<PropertyEntry>();
             foreach (var kv in dict) properties.Add(new PropertyEntry(kv.Key, kv.Value.value, kv.Value.isDrawing));
+        }
+    }
+
+    // Definisi kolom per layer
+    [System.Serializable]
+    public class LayerColumnData
+    {
+        public string layerName;
+        public List<string> columns = new();  // Nama kolom custom (tanpa ID)
+
+        public LayerColumnData(string name) { layerName = name; }
+    }
+
+    // Extension ProjectData untuk column management
+    public partial class ProjectData
+    {
+        public List<LayerColumnData> layerColumns = new();
+
+        // Get kolom untuk layer tertentu
+        public List<string> GetColumns(string layerName)
+        {
+            var data = layerColumns?.Find(l => l.layerName == layerName);
+            return data?.columns ?? new List<string>();
+        }
+
+        // Tambah kolom ke layer
+        public void AddColumn(string layerName, string columnName)
+        {
+            if (layerColumns == null) layerColumns = new();
+            var data = layerColumns.Find(l => l.layerName == layerName);
+            if (data == null) { data = new LayerColumnData(layerName); layerColumns.Add(data); }
+            if (!data.columns.Contains(columnName)) data.columns.Add(columnName);
+        }
+
+        // Hapus kolom dari layer
+        public void RemoveColumn(string layerName, string columnName)
+        {
+            var data = layerColumns?.Find(l => l.layerName == layerName);
+            data?.columns?.Remove(columnName);
         }
     }
 
@@ -180,49 +245,16 @@ public class ProjectManager : MonoBehaviour
         drawTool.ActivateMode(DrawTool.DrawMode.Polygon);
     }
 
-    // Callback selesai gambar
+    // Callback selesai gambar - HANYA untuk Create View
     void OnDrawn(DrawTool.DrawObject obj)
     {
-        if (obj.layerName != null && (obj.layerName.StartsWith("Loaded") || obj.layerName.Contains("_ROI")))
-        {
-            Debug.Log($"[OnDrawn] Skipped system layer: {obj.layerName}");
-            return;
-        }
-        // CASE A: Tambah/Update drawing ke project aktif (Layer Drawing)
-        if (current != null && !string.IsNullOrEmpty(obj.layerName))
-        {
-            Debug.Log($"[OnDrawn] Saved drawing id:{obj.id} layer:{obj.layerName}");
-            // Cari existing drawing dengan ID yang sama
-            var existing = current.drawings.Find(d => d.id == obj.id);
-            
-            if (existing != null)
-            {
-                // Update existing
-                existing.coordinates = new List<Vector2>(obj.coordinates);
-                existing.useTexture = obj.useTexture;
-            }
-            else
-            {
-                // Add new
-                current.drawings.Add(new SerializedDrawObject
-                {
-                    id = obj.id, type = obj.type, layerName = obj.layerName,
-                    coordinates = new List<Vector2>(obj.coordinates), useTexture = obj.useTexture
-                });
-            }
-            var props = current.GetProps();
-            if (props.ContainsKey(obj.layerName))
-            {
-                bool currentVal = props[obj.layerName].value;
-                props[obj.layerName] = new PropertyPanel.PropertyInfo(currentVal, true);
-                current.SetProps(props);
-                propertyPanel?.ShowPropertiesWithType(props);
-            }
-            return;
-        }
-
-        // CASE B: Buat project baru (ROI Drawing)
+        // Skip system layers
+        if (obj.layerName != null && obj.layerName.StartsWith("Loaded")) return;
+        
+        // Validasi untuk Create View
         if (string.IsNullOrEmpty(newProjectNameInput?.text) || obj.coordinates.Count == 0) return;
+
+        Debug.Log($"[OnDrawn] Creating project: {newProjectNameInput.text}");
 
         var proj = new ProjectData
         {
@@ -234,17 +266,8 @@ public class ProjectManager : MonoBehaviour
             polygonCoords = new List<Vector2>(obj.coordinates)
         };
 
-        // Jika drawing ada layer name, simpan juga
-        if (!string.IsNullOrEmpty(drawTool.currentDrawingLayer))
-        {
-            proj.drawings.Add(new SerializedDrawObject
-            {
-                id = obj.id, type = obj.type, layerName = obj.layerName,
-                coordinates = new List<Vector2>(obj.coordinates), useTexture = obj.useTexture
-            });
-        }
-
         projects.Add(proj);
+        Save();  // Auto-save project baru ke JSON
         SetupDropdown();
 
         // Select project baru
@@ -589,17 +612,29 @@ public class ProjectManager : MonoBehaviour
         // Hapus drawings lama dengan layer ini dari current.drawings
         current.drawings.RemoveAll(d => d.layerName == layerName);
         
-        // Tambah drawings baru
+        // Tambah drawings baru dengan sequential ID
+        int seqId = 1;
         foreach (var obj in drawingsFromTool)
         {
             current.drawings.Add(new SerializedDrawObject
             {
                 id = obj.id,
+                sequentialId = seqId++,  // Assign sequential ID (1, 2, 3...)
                 type = obj.type,
                 layerName = obj.layerName,
                 coordinates = new List<Vector2>(obj.coordinates),
                 useTexture = obj.useTexture
             });
+        }
+        
+        // Update props dengan isDrawing = true jika ada drawings
+        var props = current.GetProps();
+        if (props.ContainsKey(layerName))
+        {
+            bool hasDrawings = drawingsFromTool.Count > 0;
+            props[layerName] = new PropertyPanel.PropertyInfo(props[layerName].value, hasDrawings);
+            current.SetProps(props);
+            propertyPanel?.ShowPropertiesWithType(props);
         }
         
         Debug.Log($"[SaveLayer] Total drawings in project: {current.drawings.Count}");

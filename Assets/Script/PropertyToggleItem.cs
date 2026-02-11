@@ -24,9 +24,9 @@ public class PropertyToggleItem : MonoBehaviour
     public Button confirmRenameBtn;      // Tombol konfirmasi rename
     public Button cancelRenameBtn;       // Tombol batal rename
 
-    [Header("Edit Mode")]
-    public GameObject editPopup;
-    public Button editModeButton;
+    [Header("Actions")]
+    public Button editModeButton;        // Tombol buka edit popup
+    public Button atributButton;         // Tombol buka popup atribut/ID list
 
     // [REMOVED] Edit Layer Actions and Callbacks for rollback
 
@@ -42,6 +42,7 @@ public class PropertyToggleItem : MonoBehaviour
     void Start()
     {
         if (editModeButton != null) editModeButton.onClick.AddListener(ToggleEditPopup);
+        if (atributButton != null) atributButton.onClick.AddListener(ToggleAtributPopup);
     }
 
     // Setup toggle dengan data dan callbacks
@@ -50,14 +51,12 @@ public class PropertyToggleItem : MonoBehaviour
     // onChange - Callback saat nilai berubah
     // onRename - Callback saat rename (opsional)
     // onDelete - Callback saat delete (opsional)
-    public void Setup(string name, bool value, Action<string, bool> onChange, Action<string, string> onRename = null, Action<string> onDelete = null, GameObject popup = null, PropertyPanel parentPanel = null)
+    public void Setup(string name, bool value, Action<string, bool> onChange, Action<string, string> onRename = null, Action<string> onDelete = null, PropertyPanel parentPanel = null)
     {
         _name = name;
         _onChange = onChange;
         _onRename = onRename;
         _onDelete = onDelete;
-
-        if (popup != null) editPopup = popup;
         _parentPanel = parentPanel;
 
         if (labelText != null) labelText.text = name;
@@ -120,12 +119,11 @@ public class PropertyToggleItem : MonoBehaviour
 
     void ToggleEditPopup()
     {
-        if (editPopup != null)
-        {
-            bool willBeActive = !editPopup.activeSelf;
-            editPopup.SetActive(willBeActive);
-            _parentPanel?.SetEditMode(_name, willBeActive);
-        }
+        if (_parentPanel?.sharedEditPopup == null) return;
+        
+        bool willBeActive = !_parentPanel.sharedEditPopup.activeSelf;
+        _parentPanel.sharedEditPopup.SetActive(willBeActive);
+        _parentPanel.SetEditMode(_name, willBeActive);
     }
 
     public void SetInteractable(bool interactable)
@@ -134,5 +132,21 @@ public class PropertyToggleItem : MonoBehaviour
         if (renameButton != null) renameButton.interactable = interactable;
         if (deleteButton != null) deleteButton.interactable = interactable;
         if (editModeButton != null) editModeButton.interactable = interactable;
+        if (atributButton != null) atributButton.interactable = interactable;
+    }
+
+    // Toggle popup atribut dan populate dengan ID dari layer ini
+    void ToggleAtributPopup()
+    {
+        if (_parentPanel?.sharedAtributPopup == null) return;
+        
+        bool willBeActive = !_parentPanel.sharedAtributPopup.activeSelf;
+        _parentPanel.sharedAtributPopup.SetActive(willBeActive);
+        
+        if (willBeActive)
+        {
+            // Populate popup dengan ID dari layer ini
+            _parentPanel.ShowAtribut(_name);
+        }
     }
 }

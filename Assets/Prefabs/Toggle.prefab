@@ -1335,6 +1335,8 @@ MonoBehaviour:
   renameInput: {fileID: 3065278046257854187}
   confirmRenameBtn: {fileID: 3042715825471828697}
   cancelRenameBtn: {fileID: 3645221059708593010}
+  editModeButton: {fileID: 0}
+  atributButton: {fileID: 0}
 --- !u!1 &5207305983912580416
 GameObject:
   m_ObjectHideFlags: 0

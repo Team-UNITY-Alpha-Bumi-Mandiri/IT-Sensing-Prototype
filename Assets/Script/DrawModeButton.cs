@@ -5,87 +5,71 @@ using TMPro;
 // ============================================================
 // DrawModeButton - Tombol untuk mengaktifkan mode gambar
 // ============================================================
-// Mode: Point, Line, Polygon, Delete
-// Tombol hanya interactable jika:
-// 1. Ada layer aktif (dari label "Layer : xxx")
-// 2. Layer tersebut ON di project properties
-// 3. Semua layer lain OFF (hanya satu layer yang boleh aktif)
+// Mode: Point, Line, Polygon, Delete, Cut, Edit
+// Mendapat layer dari:
+// - propertyPanel.editLayerName (jika ada)
+// - ATAU dari layerInfoText "Layer : xxx"
 // ============================================================
 public class DrawModeButton : MonoBehaviour
 {
-    public DrawTool.DrawMode mode;  // Mode yang diaktifkan tombol ini
-    public DrawTool drawTool;       // Referensi ke DrawTool
+    public DrawTool.DrawMode mode;
+    public DrawTool drawTool;
     
-    [Header("Settings")]
-    public bool isEditLayerButton;
+    [Header("Layer Sources")]
+    public PropertyPanel propertyPanel;
+    public TextMeshProUGUI layerInfoText;
+    public ProjectManager projectManager;
     
-    [Header("Validation")]
-    public TextMeshProUGUI layerInfoText;  // Label "Layer : xxx" untuk cek layer aktif
-    public ProjectManager projectManager;   // Manager project untuk cek properties
-    
-    Button _btn;  // Referensi ke Button component
-
     [Header("Visual")]
     public Color activeColor = new Color(0.5f, 1f, 0.5f);
-    private Color originalNormalColor;
-
-    [Header("Validation (Edit Mode)")]
-    public PropertyPanel propertyPanel;
+    Color originalColor;
+    Button _btn;
 
     void Start()
     {
         if (TryGetComponent(out _btn))
         {
             _btn.onClick.AddListener(OnClick);
-            originalNormalColor = _btn.colors.normalColor;
+            originalColor = _btn.colors.normalColor;
         }
-        
-        // Auto-find ProjectManager jika tidak di-assign
         if (projectManager == null) projectManager = FindObjectOfType<ProjectManager>();
-
         if (propertyPanel == null) propertyPanel = FindObjectOfType<PropertyPanel>();
     }
 
     void Update()
     {
-        // Update interactable berdasarkan validasi
         if (_btn != null) _btn.interactable = IsValid();
     }
 
-    // Validasi kondisi untuk enable tombol
-    bool IsValid()
+    // Ambil layer name dari sumber yang tersedia
+    string GetTargetLayer()
     {
-        if (isEditLayerButton)
-        {
-            // Valid jika ada layer yang sedang diedit
-            return propertyPanel != null && !string.IsNullOrEmpty(propertyPanel.editLayerName);
-        }
-
-        if (layerInfoText == null || projectManager == null) return false;
+        // Prioritas 1: dari PropertyPanel (edit popup)
+        if (propertyPanel != null && !string.IsNullOrEmpty(propertyPanel.editLayerName))
+            return propertyPanel.editLayerName;
         
-        var proj = projectManager.GetCurrentProject();
-        if (proj == null) return false;
-
-        // Parse nama layer dari label "Layer : xxx"
-        string txt = layerInfoText.text;
-        if (string.IsNullOrEmpty(txt) || !txt.StartsWith("Layer : ")) return false;
+        // Prioritas 2: dari layerInfoText
+        if (layerInfoText != null && layerInfoText.text.StartsWith("Layer : "))
+            return layerInfoText.text.Substring("Layer : ".Length).Trim();
         
-        string layerName = txt.Substring("Layer : ".Length).Trim();
-        var props = proj.GetProps();
-
-        // Layer harus ada dan ON
-        if (!props.ContainsKey(layerName) || !props[layerName].value) return false;
-        
-        // Semua layer lain harus OFF
-        foreach (var kv in props)
-        {
-            if (kv.Key != layerName && kv.Value.value) return false;
-        }
-        
-        return true;
+        return "";
     }
 
-    // Dipanggil saat tombol diklik
+    bool IsValid()
+    {
+        string layer = GetTargetLayer();
+        
+        // Jika ada layer, valid
+        if (!string.IsNullOrEmpty(layer)) return true;
+        
+        // Jika tidak ada layer, cek apakah ada project untuk validasi layer
+        if (projectManager == null) return false;
+        var proj = projectManager.GetCurrentProject();
+        if (proj == null) return false;
+        
+        return false;
+    }
+
     void OnClick()
     {
         if (!_btn.interactable) return;
@@ -95,11 +79,7 @@ public class DrawModeButton : MonoBehaviour
             case DrawTool.DrawMode.Edit:
                 ToggleEditMode();
                 break;
-            case DrawTool.DrawMode.Polygon:
-            case DrawTool.DrawMode.Point:
-            case DrawTool.DrawMode.Line:
-            case DrawTool.DrawMode.Delete:
-            case DrawTool.DrawMode.Cut:
+            default:
                 ToggleDrawMode();
                 break;
         }
@@ -109,13 +89,10 @@ public class DrawModeButton : MonoBehaviour
     {
         if (!drawTool.IsModeActive(DrawTool.DrawMode.Edit))
         {
-            string targetLayer = "";
-
-            if (isEditLayerButton && propertyPanel != null) targetLayer = propertyPanel.editLayerName;
-
-            drawTool.currentDrawingLayer = targetLayer; 
+            string layer = GetTargetLayer();
+            drawTool.currentDrawingLayer = layer; 
             drawTool.ActivateMode(DrawTool.DrawMode.Edit);
-            drawTool.EditLayer(targetLayer);
+            drawTool.EditLayer(layer);
         }
         else
         {
@@ -129,21 +106,7 @@ public class DrawModeButton : MonoBehaviour
     {
         if (!drawTool.IsModeActive(mode))
         {
-            string targetLayer = "";
-
-            if (isEditLayerButton)
-            {
-                if (propertyPanel != null) targetLayer = propertyPanel.editLayerName;
-            }
-            else
-            {
-                if (layerInfoText != null && layerInfoText.text.StartsWith("Layer : "))
-                {
-                    targetLayer = layerInfoText.text.Substring("Layer : ".Length).Trim();
-                }
-            }
-
-            drawTool.currentDrawingLayer = targetLayer;
+            drawTool.currentDrawingLayer = GetTargetLayer();
             drawTool.ActivateMode(mode);
         }
         else
@@ -158,16 +121,18 @@ public class DrawModeButton : MonoBehaviour
         if (_btn == null) return;
         
         bool isActive = drawTool.IsModeActive(mode);
-
-        if (isActive && isEditLayerButton && propertyPanel != null)
+        
+        // Cek apakah mode aktif untuk layer yang sama
+        string myLayer = GetTargetLayer();
+        if (isActive && !string.IsNullOrEmpty(myLayer))
         {
-             if (drawTool.currentDrawingLayer != propertyPanel.editLayerName)
-                 isActive = false;
+            if (drawTool.currentDrawingLayer != myLayer)
+                isActive = false;
         }
         
         var colors = _btn.colors;
-        colors.normalColor = isActive ? activeColor : originalNormalColor;
-        colors.selectedColor = isActive ? activeColor : originalNormalColor;
+        colors.normalColor = isActive ? activeColor : originalColor;
+        colors.selectedColor = isActive ? activeColor : originalColor;
         _btn.colors = colors;
     }
 }

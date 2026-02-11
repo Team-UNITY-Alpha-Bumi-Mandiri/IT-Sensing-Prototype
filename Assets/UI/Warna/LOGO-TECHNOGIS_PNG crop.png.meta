@@ -1,22 +1,10 @@
 fileFormatVersion: 2
-guid: 5e741cffb9b188a45b5e24b2459614a6
+guid: 7c17263d49786244a92de174678ab07e
 TextureImporter:
   internalIDToNameTable:
   - first:
-      213: 524957960605921313
-    second: bluemarine_0
-  - first:
-      213: 7822845363061888028
-    second: bluemarine_1
-  - first:
-      213: -3193301041163293335
-    second: bluemarine_2
-  - first:
-      213: -7095578519659269437
-    second: bluemarine_3
-  - first:
-      213: 460155578507948275
-    second: bluemarine_4
+      213: 5425756622152061611
+    second: LOGO-TECHNOGIS_PNG crop_0
   externalObjects: {}
   serializedVersion: 13
   mipmaps:
@@ -58,7 +46,7 @@ TextureImporter:
   nPOTScale: 0
   lightmap: 0
   compressionQuality: 50
-  spriteMode: 1
+  spriteMode: 2
   spriteExtrude: 1
   spriteMeshType: 1
   alignment: 0
@@ -112,13 +100,13 @@ TextureImporter:
     serializedVersion: 2
     sprites:
     - serializedVersion: 2
-      name: bluemarine_0
+      name: LOGO-TECHNOGIS_PNG crop_0
       rect:
         serializedVersion: 2
-        x: 16
-        y: 262
-        width: 422
-        height: 333
+        x: 0
+        y: 0
+        width: 380
+        height: 392
       alignment: 0
       pivot: {x: 0, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -127,96 +115,8 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: -1
       bones: []
-      spriteID: 120fdebdb76094700800000000000000
-      internalID: 524957960605921313
-      vertices: []
-      indices: 
-      edges: []
-      weights: []
-    - serializedVersion: 2
-      name: bluemarine_1
-      rect:
-        serializedVersion: 2
-        x: 55
-        y: 183
-        width: 381
-        height: 197
-      alignment: 0
-      pivot: {x: 0, y: 0}
-      border: {x: 0, y: 0, z: 0, w: 0}
-      customData: 
-      outline: []
-      physicsShape: []
-      tessellationDetail: -1
-      bones: []
-      spriteID: c149d161964509c60800000000000000
-      internalID: 7822845363061888028
-      vertices: []
-      indices: 
-      edges: []
-      weights: []
-    - serializedVersion: 2
-      name: bluemarine_2
-      rect:
-        serializedVersion: 2
-        x: 106
-        y: 130
-        width: 309
-        height: 155
-      alignment: 0
-      pivot: {x: 0, y: 0}
-      border: {x: 0, y: 0, z: 0, w: 0}
-      customData: 
-      outline: []
-      physicsShape: []
-      tessellationDetail: -1
-      bones: []
-      spriteID: 96da3943f9d1fa3d0800000000000000
-      internalID: -3193301041163293335
-      vertices: []
-      indices: 
-      edges: []
-      weights: []
-    - serializedVersion: 2
-      name: bluemarine_3
-      rect:
-        serializedVersion: 2
-        x: 140
-        y: 89
-        width: 237
-        height: 122
-      alignment: 0
-      pivot: {x: 0, y: 0}
-      border: {x: 0, y: 0, z: 0, w: 0}
-      customData: 
-      outline: []
-      physicsShape: []
-      tessellationDetail: -1
-      bones: []
-      spriteID: 3c231db2ee0778d90800000000000000
-      internalID: -7095578519659269437
-      vertices: []
-      indices: 
-      edges: []
-      weights: []
-    - serializedVersion: 2
-      name: bluemarine_4
-      rect:
-        serializedVersion: 2
-        x: 176
-        y: 14
-        width: 144
-        height: 119
-      alignment: 0
-      pivot: {x: 0, y: 0}
-      border: {x: 0, y: 0, z: 0, w: 0}
-      customData: 
-      outline: []
-      physicsShape: []
-      tessellationDetail: -1
-      bones: []
-      spriteID: 3f071668f0dc26600800000000000000
-      internalID: 460155578507948275
+      spriteID: ba2d815a6e82c4b40800000000000000
+      internalID: 5425756622152061611
       vertices: []
       indices: 
       edges: []
@@ -225,7 +125,7 @@ TextureImporter:
     customData: 
     physicsShape: []
     bones: []
-    spriteID: 5e97eb03825dee720800000000000000
+    spriteID: 
     internalID: 0
     vertices: []
     indices: 
@@ -235,11 +135,7 @@ TextureImporter:
     spriteCustomMetadata:
       entries: []
     nameFileIdTable:
-      bluemarine_0: 524957960605921313
-      bluemarine_1: 7822845363061888028
-      bluemarine_2: -3193301041163293335
-      bluemarine_3: -7095578519659269437
-      bluemarine_4: 460155578507948275
+      LOGO-TECHNOGIS_PNG crop_0: 5425756622152061611
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 

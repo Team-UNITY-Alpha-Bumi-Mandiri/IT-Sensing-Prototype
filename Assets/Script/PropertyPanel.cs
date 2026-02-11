@@ -35,12 +35,12 @@ public class PropertyPanel : MonoBehaviour
     public Button deleteColumnButton;           // Tombol hapus kolom selected
     public Button deleteRowButton;              // Tombol hapus row selected
     public TMP_InputField columnNameInput;      // Input nama kolom baru
-    public Color selectedColor = new Color(0.8f, 0.9f, 1f);  // Warna highlight kolom
-    public Color selectedRowColor = new Color(1f, 0.9f, 0.8f);  // Warna highlight row
+    public Color selectedColor = new Color(0.8f, 0.9f, 1f);  // Warna highlight
     public Color normalColor = Color.white;     // Warna normal
     string currentAtributLayer = "";            // Layer yang sedang ditampilkan
     string selectedColumnName = "";             // Kolom yang sedang dipilih
     string selectedRowId = "";                  // Drawing ID row yang dipilih
+    public Button saveButton;                   // Tombol save
     Dictionary<string, List<Image>> columnCells = new();  // Cells per kolom untuk highlight
     Dictionary<string, List<Image>> rowCells = new();     // Cells per row untuk highlight
 
@@ -83,6 +83,9 @@ public class PropertyPanel : MonoBehaviour
         
         if (deleteRowButton != null)
             deleteRowButton.onClick.AddListener(OnDeleteRowClicked);
+
+        if (saveButton != null)
+            saveButton.onClick.AddListener(OnSaveClicked);
     }
 
     // Tampilkan property dari dictionary
@@ -362,18 +365,14 @@ public class PropertyPanel : MonoBehaviour
         var tmp = cell.GetComponentInChildren<TMP_Text>();
         if (tmp != null) tmp.text = columnName;
         
-        // Track cell untuk highlight
         var img = cell.GetComponent<Image>();
         if (img != null && !isIdColumn)
         {
-            if (!columnCells.ContainsKey(columnName))
-                columnCells[columnName] = new List<Image>();
-            columnCells[columnName].Add(img);
-            
-            // Tambah click handler
+            // Tambah click handler - highlight header cell saja
             var btn = cell.GetComponent<Button>() ?? cell.AddComponent<Button>();
             string col = columnName;
-            btn.onClick.AddListener(() => SelectColumn(col));
+            Image cellImg = img;
+            btn.onClick.AddListener(() => SelectCell("", col, cellImg));
         }
     }
 
@@ -386,14 +385,6 @@ public class PropertyPanel : MonoBehaviour
         
         var img = cell.GetComponent<Image>();
         
-        // Track cell untuk column highlight (kecuali ID column)
-        if (img != null && !string.IsNullOrEmpty(columnName))
-        {
-            if (!columnCells.ContainsKey(columnName))
-                columnCells[columnName] = new List<Image>();
-            columnCells[columnName].Add(img);
-        }
-        
         // Track cell untuk row highlight
         if (img != null && !string.IsNullOrEmpty(drawingId))
         {
@@ -402,19 +393,15 @@ public class PropertyPanel : MonoBehaviour
             rowCells[drawingId].Add(img);
         }
         
-        // Tambah click handler (select row, atau select column jika ada)
-        if (img != null)
+        // Tambah click handler (select cell, track row + kolom)
+        if (img != null && !string.IsNullOrEmpty(drawingId))
         {
             var btn = cell.GetComponent<Button>() ?? cell.AddComponent<Button>();
             string rowId = drawingId;
             string col = columnName;
+            Image cellImg = img;
             
-            btn.onClick.AddListener(() => {
-                // Select row (selalu)
-                if (!string.IsNullOrEmpty(rowId)) SelectRow(rowId);
-                // Select column (jika bukan ID column)
-                if (!string.IsNullOrEmpty(col)) SelectColumn(col);
-            });
+            btn.onClick.AddListener(() => SelectCell(rowId, col, cellImg));
         }
         
         if (input != null)
@@ -488,30 +475,24 @@ public class PropertyPanel : MonoBehaviour
         columnNameInput.text = "";
     }
 
-    // Select kolom dan highlight
-    void SelectColumn(string colName)
+    // Select cell - highlight hanya cell yang diklik, track row & kolom
+    Image lastSelectedCell;
+    
+    void SelectCell(string rowId, string colName, Image cellImg)
     {
+        selectedRowId = rowId;
         selectedColumnName = colName;
-        HighlightColumn(colName);
-        Debug.Log($"[Atribut] Selected column: {colName}");
-    }
-
-    // Highlight cells dari kolom yang dipilih
-    void HighlightColumn(string colName)
-    {
-        // Reset semua ke normal color
-        foreach (var kv in columnCells)
-        {
-            foreach (var img in kv.Value)
-                if (img != null) img.color = normalColor;
-        }
         
-        // Highlight kolom yang dipilih
-        if (columnCells.TryGetValue(colName, out var cells))
-        {
-            foreach (var img in cells)
-                if (img != null) img.color = selectedColor;
-        }
+        // Reset highlight sebelumnya
+        if (lastSelectedCell != null)
+            lastSelectedCell.color = normalColor;
+        
+        // Highlight cell yang diklik
+        if (cellImg != null)
+            cellImg.color = selectedColor;
+        
+        lastSelectedCell = cellImg;
+        Debug.Log($"[Atribut] Selected cell - row: {rowId}, column: {colName}");
     }
 
     // Hapus kolom yang sedang dipilih
@@ -525,32 +506,6 @@ public class PropertyPanel : MonoBehaviour
         
         RemoveAtributColumn(selectedColumnName);
         selectedColumnName = "";
-    }
-
-    // Select row dan highlight
-    void SelectRow(string drawingId)
-    {
-        selectedRowId = drawingId;
-        HighlightRow(drawingId);
-        Debug.Log($"[Atribut] Selected row: {drawingId}");
-    }
-
-    // Highlight cells dari row yang dipilih
-    void HighlightRow(string drawingId)
-    {
-        // Reset semua row ke normal color
-        foreach (var kv in rowCells)
-        {
-            foreach (var img in kv.Value)
-                if (img != null) img.color = normalColor;
-        }
-        
-        // Highlight row yang dipilih
-        if (rowCells.TryGetValue(drawingId, out var cells))
-        {
-            foreach (var img in cells)
-                if (img != null) img.color = selectedRowColor;
-        }
     }
 
     // Hapus row yang sedang dipilih
@@ -585,11 +540,7 @@ public class PropertyPanel : MonoBehaviour
         }
         
         // Hapus dari project data
-        proj.drawings.Remove(drawing);
-        
-        // Update sequential IDs untuk layer ini
-        UpdateSequentialIds(proj, drawing.layerName);
-        
+        proj.drawings.Remove(drawing);        
         // Refresh tabel
         ShowAtribut(currentAtributLayer);
         
@@ -605,6 +556,16 @@ public class PropertyPanel : MonoBehaviour
         for (int i = 0; i < layerDrawings.Count; i++)
         {
             layerDrawings[i].sequentialId = i + 1;
+        }
+    }
+
+    void OnSaveClicked()
+    {
+        var pm = FindObjectOfType<ProjectManager>();
+        if (pm != null)
+        {
+            pm.Save();
+            Debug.Log("[Atribut] Project saved!");
         }
     }
 }

@@ -285,12 +285,10 @@ public class CompositeManager : MonoBehaviour
             // Di python: base, _ = os.path.splitext(output_tif_path) -> preview_path = f"{base}_preview.png"
             string previewPng = Path.ChangeExtension(tiffPath, null) + "_preview.png";
             string fileToLoad = tiffPath;
-            bool usePng = false;
 
             if (File.Exists(previewPng))
             {
                 fileToLoad = previewPng;
-                usePng = true;
                 UnityEngine.Debug.Log($"[Composite] Found preview PNG: {previewPng}");
             }
 

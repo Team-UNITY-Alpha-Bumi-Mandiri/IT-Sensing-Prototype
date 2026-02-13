@@ -663,7 +663,7 @@ public class DrawTool : MonoBehaviour
     // Dapatkan sequential ID dari ProjectManager
     int GetSequentialId(string drawingId)
     {
-        var pm = FindObjectOfType<ProjectManager>();
+        var pm = Object.FindFirstObjectByType<ProjectManager>();
         if (pm == null) return 0;
         
         var proj = pm.GetCurrentProject();

@@ -54,4 +54,5 @@ Prototyping 3 Sampai Detik ini
 - Fitur fungsi CAM2 (crop n split 2 in 1)
 - Fitur integrasi API Windows untuk pilih File
 - Fitur untuk pilih dokumen
-- Fitur Image Sharpening/Pansharpening ( Gram dan Wavelet ) dan UInya
+- Fitur Image Sharpening/Pansharpening ( Gram dan Wavelet ) dan UInya ✔
+- **Sistem Popup GNSS (Geotagging, Static Processing, Data Viewer) dengan workflow Prefab** ✔ (Lihat [README_GNSS_UI.md](file:///Assets/UI/README_GNSS_UI.md) untuk detail)

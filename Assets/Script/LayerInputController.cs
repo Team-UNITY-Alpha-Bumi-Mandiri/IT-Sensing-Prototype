@@ -31,7 +31,7 @@ public class LayerInputController : MonoBehaviour
         
         // Auto-find ProjectManager jika tidak di-assign
         if (projectManager == null)
-            projectManager = FindObjectOfType<ProjectManager>();
+            projectManager = Object.FindFirstObjectByType<ProjectManager>();
     }
 
     void Update()

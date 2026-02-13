@@ -32,8 +32,8 @@ public class DrawModeButton : MonoBehaviour
             _btn.onClick.AddListener(OnClick);
             originalColor = _btn.colors.normalColor;
         }
-        if (projectManager == null) projectManager = FindObjectOfType<ProjectManager>();
-        if (propertyPanel == null) propertyPanel = FindObjectOfType<PropertyPanel>();
+        if (projectManager == null) projectManager = Object.FindFirstObjectByType<ProjectManager>();
+        if (propertyPanel == null) propertyPanel = Object.FindFirstObjectByType<PropertyPanel>();
     }
 
     void Update()

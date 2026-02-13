@@ -67,7 +67,7 @@ public class NavbarManager : MonoBehaviour
         // 1. Ensure we are under a Canvas (Auto-fix if possible)
         if (GetComponentInParent<Canvas>() == null)
         {
-            Canvas canvas = FindObjectOfType<Canvas>();
+            Canvas canvas = Object.FindFirstObjectByType<Canvas>();
             if (canvas != null)
             {
                 transform.SetParent(canvas.transform, false);
@@ -143,7 +143,7 @@ public class NavbarManager : MonoBehaviour
         Canvas canvas = GetComponentInParent<Canvas>();
         if (canvas == null)
         {
-            canvas = FindObjectOfType<Canvas>();
+            canvas = Object.FindFirstObjectByType<Canvas>();
             if (canvas != null)
             {
                 Debug.Log("Reparenting NavbarManager to existing Canvas.");
@@ -185,7 +185,7 @@ public class NavbarManager : MonoBehaviour
         Canvas.ForceUpdateCanvases();
         
         // 3. Ensure EventSystem exists (for buttons to work)
-        if (FindObjectOfType<EventSystem>() == null)
+        if (Object.FindFirstObjectByType<EventSystem>() == null)
         {
             GameObject eventSystem = new GameObject("EventSystem");
             eventSystem.AddComponent<EventSystem>();
@@ -551,11 +551,28 @@ public class NavbarManager : MonoBehaviour
         }
     }
 
+    // Handle popup generation based on menu title
     void HandlePopup(string title)
     {
         Debug.Log("Opening Popup for " + title);
-        // Here you would instantiate your Popup Prefab
-        // Example: PopupFactory.Create(title);
+        
+        if (title == "GNSS Data Viewer")
+        {
+            GNSSPopupFactory.CreateGNSSDataReader();
+        }
+        else if (title == "Static Processing")
+        {
+            GNSSPopupFactory.CreateStaticProcessing();
+        }
+        else if (title == "Geotagging")
+        {
+            GNSSPopupFactory.CreateGeotagging();
+        }
+        else
+        {
+            // Placeholder for other popups
+            // Example: PopupFactory.Create(title);
+        }
     }
 
     void SetLayerRecursively(GameObject obj, int newLayer)

@@ -261,7 +261,7 @@ public class PropertyPanel : MonoBehaviour
     // Simpan layer yang sedang diedit
     public void SaveEditedLayer()
     {
-        var drawTool = FindObjectOfType<DrawTool>();
+        var drawTool = Object.FindFirstObjectByType<DrawTool>();
         
         // Ambil layer dari editLayerName atau dari DrawTool
         string layer = !string.IsNullOrEmpty(editLayerName) 
@@ -271,7 +271,7 @@ public class PropertyPanel : MonoBehaviour
         Debug.Log($"[SaveEditedLayer] Saving layer: '{layer}'");
         
         if (string.IsNullOrEmpty(layer)) return;
-        FindObjectOfType<ProjectManager>()?.SaveLayer(layer);
+        Object.FindFirstObjectByType<ProjectManager>()?.SaveLayer(layer);
     }
 
     // Tutup popup dan discard perubahan
@@ -279,7 +279,7 @@ public class PropertyPanel : MonoBehaviour
     // JANGAN assign DeactivateAllModes terpisah karena akan clear layer duluan
     public void CloseEditPopup()
     {
-        var drawTool = FindObjectOfType<DrawTool>();
+        var drawTool = Object.FindFirstObjectByType<DrawTool>();
         
         // PENTING: Ambil layer SEBELUM deactivate karena DeactivateAllModes akan reset currentDrawingLayer
         string layer = !string.IsNullOrEmpty(editLayerName) 
@@ -295,7 +295,7 @@ public class PropertyPanel : MonoBehaviour
         drawTool?.DeactivateAllModes();
         
         // Discard changes untuk layer tersebut
-        FindObjectOfType<ProjectManager>()?.DiscardChanges(layer);
+        Object.FindFirstObjectByType<ProjectManager>()?.DiscardChanges(layer);
     }
 
     // Tampilkan popup atribut dengan tabel dinamis
@@ -308,7 +308,7 @@ public class PropertyPanel : MonoBehaviour
         foreach (Transform child in atributContent)
             Destroy(child.gameObject);
         
-        var pm = FindObjectOfType<ProjectManager>();
+        var pm = Object.FindFirstObjectByType<ProjectManager>();
         var proj = pm?.GetCurrentProject();
         if (proj == null) return;
         
@@ -427,7 +427,7 @@ public class PropertyPanel : MonoBehaviour
     // Callback saat cell value berubah
     void OnCellValueChanged(string drawingId, string columnName, string newValue)
     {
-        var pm = FindObjectOfType<ProjectManager>();
+        var pm = Object.FindFirstObjectByType<ProjectManager>();
         var proj = pm?.GetCurrentProject();
         if (proj == null) return;
         
@@ -444,7 +444,7 @@ public class PropertyPanel : MonoBehaviour
     {
         if (string.IsNullOrEmpty(currentAtributLayer) || string.IsNullOrEmpty(columnName)) return;
         
-        var pm = FindObjectOfType<ProjectManager>();
+        var pm = Object.FindFirstObjectByType<ProjectManager>();
         var proj = pm?.GetCurrentProject();
         proj?.AddColumn(currentAtributLayer, columnName);
         
@@ -457,7 +457,7 @@ public class PropertyPanel : MonoBehaviour
     {
         if (string.IsNullOrEmpty(currentAtributLayer) || string.IsNullOrEmpty(columnName)) return;
         
-        var pm = FindObjectOfType<ProjectManager>();
+        var pm = Object.FindFirstObjectByType<ProjectManager>();
         var proj = pm?.GetCurrentProject();
         proj?.RemoveColumn(currentAtributLayer, columnName);
         
@@ -524,7 +524,7 @@ public class PropertyPanel : MonoBehaviour
     // Hapus drawing dan polygon terkait
     void DeleteDrawing(string drawingId)
     {
-        var pm = FindObjectOfType<ProjectManager>();
+        var pm = Object.FindFirstObjectByType<ProjectManager>();
         var proj = pm?.GetCurrentProject();
         if (proj == null) return;
         
@@ -533,7 +533,7 @@ public class PropertyPanel : MonoBehaviour
         if (drawing == null) return;
         
         // Hapus polygon visual dari DrawTool
-        var drawTool = FindObjectOfType<DrawTool>();
+        var drawTool = Object.FindFirstObjectByType<DrawTool>();
         if (drawTool != null)
         {
             drawTool.DeletePolygonById(drawingId);
@@ -561,7 +561,7 @@ public class PropertyPanel : MonoBehaviour
 
     void OnSaveClicked()
     {
-        var pm = FindObjectOfType<ProjectManager>();
+        var pm = Object.FindFirstObjectByType<ProjectManager>();
         if (pm != null)
         {
             pm.Save();

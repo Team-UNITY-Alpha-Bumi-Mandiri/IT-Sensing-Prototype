@@ -402,7 +402,7 @@ public class SharpeningController : MonoBehaviour
         if (go != null) go.SetActive(active);
     }
 
-    async Task HandleResultOutput(string resultOutput, string outputName, string algorithm, string rawProjectName)
+    Task HandleResultOutput(string resultOutput, string outputName, string algorithm, string rawProjectName)
     {
         if (resultOutput.Contains("\"status\": \"success\"") || resultOutput.Contains("successfuly"))
         {
@@ -422,7 +422,7 @@ public class SharpeningController : MonoBehaviour
                         string outDir = Path.GetDirectoryName(res.path);
                         if (!string.IsNullOrEmpty(outDir) && Directory.Exists(outDir))
                             Process.Start("explorer.exe", outDir.Replace("/", "\\"));
-                        return;
+                        return Task.CompletedTask;
                     }
                 }
                 catch { }
@@ -440,6 +440,7 @@ public class SharpeningController : MonoBehaviour
             textStatus.color = Color.red;
             UnityEngine.Debug.LogError("FULL ERROR: " + resultOutput);
         }
+        return Task.CompletedTask;
     }
 
     void LoadResultTiffFromPath(string tiffPath, string outputName, string algorithm)

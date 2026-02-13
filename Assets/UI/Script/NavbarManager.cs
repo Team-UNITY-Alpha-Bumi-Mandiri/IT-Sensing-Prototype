@@ -309,6 +309,7 @@ public class NavbarManager : MonoBehaviour
         var toolsMenu = new MenuItem { title = "Tools" };
         toolsMenu.subItems.Add(new SubMenuItem { title = "Coordinat Converter", isEnabled = true });
         toolsMenu.subItems.Add(new SubMenuItem { title = "GNSS PPK Advanced Setting", isEnabled = true });
+        toolsMenu.subItems.Add(new SubMenuItem { title = "PPK + Geotagging", isEnabled = true });
         
         // Offline/Online Mode Toggle
         toolsMenu.subItems.Add(new SubMenuItem { 
@@ -591,11 +592,15 @@ public class NavbarManager : MonoBehaviour
     // Handle popup generation based on menu title
     void HandlePopup(string title)
     {
-        Debug.Log("Opening Popup for " + title);
+        Debug.Log("Opening Popup or App for " + title);
         
         if (title == "GNSS Data Viewer")
         {
             GNSSPopupFactory.CreateGNSSDataReader();
+        }
+        else if (title == "GNSS Converter")
+        {
+            LaunchGNSSConverter();
         }
         else if (title == "Static Processing")
         {
@@ -604,6 +609,14 @@ public class NavbarManager : MonoBehaviour
         else if (title == "Geotagging")
         {
             GNSSPopupFactory.CreateGeotagging();
+        }
+        else if (title == "PPK + Geotagging")
+        {
+            GNSSPopupFactory.CreatePPKGeotagging();
+        }
+        else if (title == "File Bin to Log")
+        {
+            GNSSPopupFactory.CreateIMUBinToLog();
         }
         else
         {
@@ -620,6 +633,39 @@ public class NavbarManager : MonoBehaviour
         {
             if (child == null) continue;
             SetLayerRecursively(child.gameObject, newLayer);
+        }
+    }
+
+    private void LaunchGNSSConverter()
+    {
+        string relativePath = "Backend/GNSS_Converter_1_37_2305_79/GNSS-Converter.exe";
+        string fullPath = System.IO.Path.Combine(Application.streamingAssetsPath, relativePath);
+        
+        // Ensure path uses correct separators for Windows
+        fullPath = fullPath.Replace("/", "\\");
+
+        Debug.Log($"[NavbarManager] Attempting to launch: {fullPath}");
+
+        if (System.IO.File.Exists(fullPath))
+        {
+            try
+            {
+                System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo()
+                {
+                    FileName = fullPath,
+                    WorkingDirectory = System.IO.Path.GetDirectoryName(fullPath),
+                    UseShellExecute = true
+                });
+                Debug.Log("[NavbarManager] GNSS-Converter launched successfully.");
+            }
+            catch (System.Exception e)
+            {
+                Debug.LogError($"[NavbarManager] Failed to launch GNSS-Converter: {e.Message}");
+            }
+        }
+        else
+        {
+            Debug.LogError($"[NavbarManager] GNSS-Converter NOT found at: {fullPath}");
         }
     }
 }

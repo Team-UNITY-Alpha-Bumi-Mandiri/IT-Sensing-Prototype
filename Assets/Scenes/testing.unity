@@ -64836,8 +64836,8 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 1, y: 1}
-  m_AnchoredPosition: {x: -35.3, y: 3.7}
-  m_SizeDelta: {x: -191.73999, y: 3.599998}
+  m_AnchoredPosition: {x: -37.2, y: 1.8}
+  m_SizeDelta: {x: -178.03, y: 3.6}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1335333229
 MonoBehaviour:
@@ -64852,14 +64852,14 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Image
   m_Material: {fileID: 0}
-  m_Color: {r: 1, g: 1, b: 1, a: 1}
+  m_Color: {r: 0.735849, g: 0.735849, b: 0.735849, a: 1}
   m_RaycastTarget: 1
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Sprite: {fileID: 21300000, guid: 5e741cffb9b188a45b5e24b2459614a6, type: 3}
+  m_Sprite: {fileID: 5425756622152061611, guid: 7c17263d49786244a92de174678ab07e, type: 3}
   m_Type: 0
   m_PreserveAspect: 0
   m_FillCenter: 1

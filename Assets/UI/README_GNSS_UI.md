@@ -41,6 +41,8 @@ Pastikan file prefab berikut tetap berada di `Assets/Resources` agar sistem load
 - `GNSS_Geotagging_Popup.prefab`
 - `GNSS_StaticProcessing_Popup.prefab`
 - `GNSS_DataReader_Popup.prefab`
+- `GNSS_PPKGeotagging_Popup.prefab`
+- `IMU_BinToLog_Popup.prefab`
 
 ## Cuplikan Kode Penting
 
@@ -94,36 +96,58 @@ public static void CreateGeotaggingPrefab()
     UnityEditor.PrefabUtility.SaveAsPrefabAsset(popup, path);
     Object.DestroyImmediate(popup);
 }
+
+[UnityEditor.MenuItem("Tools/GNSS/Create PPK Geotagging Prefab")]
+public static void CreatePPKGeotaggingPrefab()
+{
+    GameObject popup = CreatePPKGeotagging(null, true); 
+    string path = "Assets/Resources/GNSS_PPKGeotagging_Popup.prefab";
+    UnityEditor.PrefabUtility.SaveAsPrefabAsset(popup, path);
+    Object.DestroyImmediate(popup);
+}
 #endif
 
 ### 4. Fitur Tambahan: Offline Mode
 Fitur ini memungkinkan pengguna untuk mematikan pengambilan data peta dari internet dan menggantinya dengan basemap kotak-kotak (grid).
 
-- **Lokasi**: Menu `Tools` -> `Offline Mode`.
+- **Lokasi**: Menu `Tools` -> `Offline Mode` / `Online Mode`.
 - **Cara Kerja**:
-    - Mengatur properti statis `MapCore.IsOfflineMode`.
-    - Saat aktif, `MapCore` akan menggunakan tekstur grid prosedural 256x256 sebagai pengganti tile dari OpenStreetMap.
-    - Toggle ini dilengkapi dengan indikator centang (✓) pada menu dropdown.
+    - Mengatur properti statis `SimpleMapController_Baru.IsOfflineMode`.
+    - Saat aktif, `SimpleMapController_Baru` akan menggunakan tekstur grid prosedural 256x256 sebagai pengganti tile online.
+    - Teks menu akan berubah secara dinamis antara "Offline Mode" dan "Online Mode".
 
 ```csharp
 // Contoh Logika Toggle Offline Mode di NavbarManager.cs
-SubMenuItem offlineItem = new SubMenuItem { 
-    title = "Offline Mode", 
-    isEnabled = true, 
-    isChecked = MapCore.IsOfflineMode 
-};
-offlineItem.onClickAction = () => {
-    MapCore.IsOfflineMode = !MapCore.IsOfflineMode;
-    offlineItem.isChecked = MapCore.IsOfflineMode;
+if (sub.title == "Offline Mode" || sub.title == "Online Mode") {
+    SimpleMapController_Baru.IsOfflineMode = !SimpleMapController_Baru.IsOfflineMode;
+    sub.title = SimpleMapController_Baru.IsOfflineMode ? "Online Mode" : "Offline Mode";
     
-    MapCore map = Object.FindFirstObjectByType<MapCore>();
-    if (map != null) map.UpdateAllTiles();
-    
-    CloseDropdown();
-};
+    SimpleMapController_Baru map = SimpleMapController_Baru.Instance;
+    if (map != null) map.RefreshMap(true);
+}
 ```
 
 ---
 
+## Daftar Popup yang Tersedia
+
+1. **GNSS Data Viewer** (`CreateGNSSDataReader`)
+   - Membaca file mentah .ubx.
+2. **Static Processing** (`CreateStaticProcessing`)
+   - Pemrosesan data statis GNSS.
+3. **Geotagging** (`CreateGeotagging`)
+   - Sinkronisasi foto dengan koordinat.
+4. **PPK + Geotagging** (`CreatePPKGeotagging`)
+   - Popup komprehensif untuk post-processing (TGS Post Processing).
+   - Mendukung: Dual Frequency, Rinex Base, Antenna Rover Offset, Satellite Selection (GPS, GLO, dll), dan Flight Log.
+5. **GNSS Converter** (External App)
+   - Membuka aplikasi eksternal `GNSS-Converter.exe` yang terletak di folder `StreamingAssets/Backend`.
+   - Menggunakan `System.Diagnostics.Process` untuk integrasi aplikasi pihak ketiga.
+6. **IMU File Bin to Log** (`CreateIMUBinToLog`)
+   - Konverter file binary IMU (.bin) ke format log.
+   - Fitur: Input binary file dan output directory selection.
+
+---
+
 ## Kesimpulan
-```
+Sistem ini memisahkan antara **Struktur UI (Factory)**, **Logika Interaksi (Controller)**, dan **Navigasi (Navbar)**. Hal ini memungkinkan pengembangan UI yang kompleks namun tetap mudah dikelola oleh programmer maupun desainer.

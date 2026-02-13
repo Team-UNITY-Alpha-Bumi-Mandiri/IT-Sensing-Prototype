@@ -29,7 +29,80 @@ public static class GNSSPopupFactory
         UnityEditor.AssetDatabase.Refresh();
         Debug.Log("GNSS Data Viewer Prefab created at: " + path);
     }
+
+    [UnityEditor.MenuItem("Tools/IMU/Create IMU Bin To Log Prefab")]
+    public static void CreateIMUBinToLogPrefab()
+    {
+        GameObject popup = CreateIMUBinToLog(null, true);
+        string folder = "Assets/Resources";
+        string path = folder + "/IMU_BinToLog_Popup.prefab";
+        
+        if (!System.IO.Directory.Exists(folder))
+            System.IO.Directory.CreateDirectory(folder);
+
+        UnityEditor.PrefabUtility.SaveAsPrefabAsset(popup, path);
+        Object.DestroyImmediate(popup);
+        UnityEditor.AssetDatabase.Refresh();
+        Debug.Log("IMU Bin To Log Prefab created at: " + path);
+    }
 #endif
+
+    public static GameObject CreateIMUBinToLog(Canvas canvas = null, bool forceNew = false)
+    {
+        if (!forceNew) {
+            GameObject prefab = Resources.Load<GameObject>("IMU_BinToLog_Popup");
+            if (prefab != null) {
+                if (canvas == null) canvas = Object.FindFirstObjectByType<Canvas>();
+                GameObject instance = Object.Instantiate(prefab, canvas.transform);
+                instance.name = "IMU_BinToLog_Root";
+                AttachPopupLogic(instance, "File Bin Converter");
+                return instance;
+            }
+        }
+        if (canvas == null)
+            canvas = Object.FindFirstObjectByType<Canvas>();
+
+        // 1. Root Overlay
+        GameObject root = new GameObject("IMU_BinToLog_Root", typeof(RectTransform), typeof(Image));
+        root.transform.SetParent(canvas.transform, false);
+        RectTransform rtRoot = root.GetComponent<RectTransform>();
+        rtRoot.anchorMin = Vector2.zero; rtRoot.anchorMax = Vector2.one; rtRoot.sizeDelta = Vector2.zero;
+        root.GetComponent<Image>().color = new Color(0, 0, 0, 0.4f);
+
+        // 2. Main Window
+        GameObject window = new GameObject("Window", typeof(RectTransform), typeof(Image));
+        window.transform.SetParent(root.transform, false);
+        RectTransform rtWin = window.GetComponent<RectTransform>();
+        rtWin.anchorMin = rtWin.anchorMax = new Vector2(0.5f, 0.5f);
+        rtWin.sizeDelta = new Vector2(650, 400);
+        window.GetComponent<Image>().color = new Color32(235, 235, 235, 255);
+
+        // Header
+        GameObject header = CreateUIElement("Header", window.transform, new Vector2(0, 1), new Vector2(1, 1), new Vector2(0, -30));
+        header.GetComponent<Image>().color = new Color32(245, 245, 245, 255);
+        CreateText(header.transform, "File Bin Converter", 14, Color.black, TextAlignmentOptions.Left, new Vector2(10, 0));
+
+        // Content
+        float currentY = -40;
+        
+        // Input Binary File Log (.bin)
+        CreateInputWithBrowse(window.transform, "Input Binary File Log (.bin)", "", ref currentY, 30);
+
+        currentY -= 20;
+
+        // Select Output Directory
+        CreateInputWithBrowse(window.transform, "Select Output Directory", "", ref currentY, 30);
+
+        // Footer Buttons
+        GameObject footer = CreateUIElement("Footer", window.transform, new Vector2(0, 0), new Vector2(1, 0), new Vector2(0, 40));
+        GameObject execBtn = CreateSmallButton(footer.transform, "EXECUTE", new Vector2(180, 0), new Vector2(150, 40));
+        GameObject cancelBtn = CreateSmallButton(footer.transform, "CANCEL", new Vector2(470, 0), new Vector2(150, 40));
+
+        // Logic
+        AttachPopupLogic(root, "File Bin Converter");
+        
+        return root;
+    }
 
     public static GameObject CreateGNSSDataReader(Canvas canvas = null, bool forceNew = false)
     {
@@ -430,6 +503,164 @@ public static class GNSSPopupFactory
     }
 
     // Helper Methods for Layout
+    // --- PPK + Geotagging Popup Implementation ---
+
+#if UNITY_EDITOR
+    [UnityEditor.MenuItem("Tools/GNSS/Create PPK Geotagging Prefab")]
+    public static void CreatePPKGeotaggingPrefab()
+    {
+        GameObject popup = CreatePPKGeotagging(null, true);
+        string folder = "Assets/Resources";
+        string path = folder + "/GNSS_PPKGeotagging_Popup.prefab";
+        
+        if (!System.IO.Directory.Exists(folder))
+            System.IO.Directory.CreateDirectory(folder);
+
+        UnityEditor.PrefabUtility.SaveAsPrefabAsset(popup, path);
+        Object.DestroyImmediate(popup);
+        UnityEditor.AssetDatabase.Refresh();
+        Debug.Log("PPK Geotagging Prefab created at: " + path);
+    }
+#endif
+
+    public static GameObject CreatePPKGeotagging(Canvas canvas = null, bool forceNew = false)
+    {
+        if (!forceNew) {
+            GameObject prefab = Resources.Load<GameObject>("GNSS_PPKGeotagging_Popup");
+            if (prefab != null) {
+                if (canvas == null) canvas = Object.FindFirstObjectByType<Canvas>();
+                GameObject instance = Object.Instantiate(prefab, canvas.transform);
+                instance.name = "PPKGeotagging_Root";
+                AttachPopupLogic(instance, "PPK + Geotagging");
+                return instance;
+            }
+        }
+        if (canvas == null)
+            canvas = Object.FindFirstObjectByType<Canvas>();
+
+        // 1. Root Overlay
+        GameObject root = new GameObject("PPKGeotagging_Root", typeof(RectTransform), typeof(Image));
+        root.transform.SetParent(canvas.transform, false);
+        RectTransform rtRoot = root.GetComponent<RectTransform>();
+        rtRoot.anchorMin = Vector2.zero; rtRoot.anchorMax = Vector2.one; rtRoot.sizeDelta = Vector2.zero;
+        root.GetComponent<Image>().color = new Color(0, 0, 0, 0.4f);
+
+        // 2. Main Window
+        GameObject window = new GameObject("Window", typeof(RectTransform), typeof(Image));
+        window.transform.SetParent(root.transform, false);
+        RectTransform rtWin = window.GetComponent<RectTransform>();
+        rtWin.anchorMin = rtWin.anchorMax = new Vector2(0.5f, 0.5f);
+        rtWin.sizeDelta = new Vector2(700, 850);
+        window.GetComponent<Image>().color = new Color32(235, 235, 235, 255);
+
+        // Header
+        GameObject header = CreateUIElement("Header", window.transform, new Vector2(0, 1), new Vector2(1, 1), new Vector2(0, -30));
+        header.GetComponent<Image>().color = new Color32(245, 245, 245, 255);
+        CreateText(header.transform, "TGS Post Processing 1.15.13", 14, Color.black, TextAlignmentOptions.Left, new Vector2(10, 0));
+
+        // Scroll View Content
+        GameObject content = new GameObject("Content", typeof(RectTransform));
+        content.transform.SetParent(window.transform, false);
+        RectTransform rtContent = content.GetComponent<RectTransform>();
+        rtContent.anchorMin = Vector2.zero; rtContent.anchorMax = Vector2.one;
+        rtContent.offsetMin = new Vector2(10, 80); rtContent.offsetMax = new Vector2(-10, -40);
+
+        float currentY = -20;
+
+        // Frequencies
+        CreateLabel(content.transform, "Frequencies", ref currentY);
+        GameObject freqDD = TMP_DefaultControls.CreateDropdown(GetTMPResources());
+        freqDD.transform.SetParent(content.transform, false);
+        RectTransform rtFreq = freqDD.GetComponent<RectTransform>();
+        rtFreq.anchorMin = new Vector2(0, 1); rtFreq.anchorMax = new Vector2(0.3f, 1);
+        rtFreq.anchoredPosition = new Vector2(110, currentY + 12);
+        rtFreq.sizeDelta = new Vector2(0, 25);
+        TMP_Dropdown ddFreq = freqDD.GetComponent<TMP_Dropdown>();
+        ddFreq.options.Clear(); 
+        ddFreq.options.Add(new TMP_Dropdown.OptionData("Single Frequency"));
+        ddFreq.options.Add(new TMP_Dropdown.OptionData("Dual Frequency"));
+        ddFreq.value = 1; // Default to Dual Frequency as in image
+        if (ddFreq.captionText != null) { ddFreq.captionText.color = Color.black; ddFreq.captionText.fontSize = 11; }
+        currentY -= 35;
+
+        // Input GNSS BASE
+        currentY -= 10;
+        CreateInputWithBrowse(content.transform, "Input GNSS BASE :", "Rinex", ref currentY, 30, true);
+
+        // Input Coordinate Base
+        currentY -= 10;
+        CreateLabel(content.transform, "Input Coordinate Base :", ref currentY);
+        GameObject radioRow = CreateUIElement("RadioRow", content.transform, new Vector2(0, 1), new Vector2(1, 1), new Vector2(0, currentY - 5));
+        CreateRadioButton(radioRow.transform, "Average of Single Position", new Vector2(20, 0), true);
+        CreateRadioButton(radioRow.transform, "Lat/Lon/Height", new Vector2(250, 0), false);
+        currentY -= 35;
+
+        // Lat/Lon/Height Inputs
+        GameObject tripleInput = CreateUIElement("TripleInput", content.transform, new Vector2(0, 1), new Vector2(1, 1), new Vector2(0, currentY - 15));
+        CreateLabelledInput(tripleInput.transform, "Latitude(deg)", 20, 200, true);
+        CreateLabelledInput(tripleInput.transform, "Longitude(deg)", 240, 200, true);
+        CreateLabelledInput(tripleInput.transform, "Height(m)", 460, 200, true);
+        currentY -= 60;
+
+        // Antenna Base Height
+        CreateLabel(content.transform, "Antenna Base Height :", ref currentY);
+        GameObject antHeightRow = CreateUIElement("AntHeightRow", content.transform, new Vector2(0, 1), new Vector2(1, 1), new Vector2(0, currentY - 10));
+        
+        GameObject antInput = TMP_DefaultControls.CreateInputField(GetTMPResources());
+        antInput.transform.SetParent(antHeightRow.transform, false);
+        RectTransform rtAnt = antInput.GetComponent<RectTransform>();
+        rtAnt.anchorMin = new Vector2(0, 0.5f); rtAnt.anchorMax = new Vector2(0, 0.5f);
+        rtAnt.anchoredPosition = new Vector2(110, 0);
+        rtAnt.sizeDelta = new Vector2(200, 25);
+        antInput.GetComponent<Image>().color = Color.white;
+        TMP_InputField tmpAnt = antInput.GetComponent<TMP_InputField>();
+        tmpAnt.text = "0.000";
+        if (tmpAnt.textComponent != null) { tmpAnt.textComponent.color = Color.black; tmpAnt.textComponent.fontSize = 11; }
+        CreateText(antHeightRow.transform, "Base Height(m)", 11, Color.black, TextAlignmentOptions.Center, new Vector2(110, -20));
+        currentY -= 45;
+
+        // Antenna Rover Offset
+        CreateLabel(content.transform, "Antenna Rover Offset :", ref currentY);
+        GameObject roverOffsetRow = CreateUIElement("RoverOffsetRow", content.transform, new Vector2(0, 1), new Vector2(1, 1), new Vector2(0, currentY - 15));
+        CreateLabelledInput(roverOffsetRow.transform, "X Offset(m)", 20, 200, true);
+        CreateLabelledInput(roverOffsetRow.transform, "Y Offset(m)", 240, 200, true);
+        CreateLabelledInput(roverOffsetRow.transform, "Z Offset(m)", 460, 200, true);
+        currentY -= 60;
+
+        // Input Flight Log (Optional)
+        currentY -= 10;
+        CreateInputWithBrowse(content.transform, "Input Flight Log (Optional)", "Pixhawk", ref currentY, 30, true);
+
+        // Choose GNSS Satellite
+        CreateLabel(content.transform, "Choose GNSS Satellite :", ref currentY);
+        GameObject satRow = CreateUIElement("SatRow", content.transform, new Vector2(0, 1), new Vector2(1, 1), new Vector2(0, currentY - 5));
+        CreateCheckbox(satRow.transform, "GPS", new Vector2(20, 0), true);
+        CreateCheckbox(satRow.transform, "GLO", new Vector2(120, 0), true);
+        CreateCheckbox(satRow.transform, "Galileo", new Vector2(220, 0), false);
+        CreateCheckbox(satRow.transform, "QZSS", new Vector2(320, 0), false);
+        CreateCheckbox(satRow.transform, "SBAS", new Vector2(420, 0), false);
+        CreateCheckbox(satRow.transform, "BeiDou", new Vector2(520, 0), false);
+        currentY -= 35;
+
+        // Input Directory Photo
+        currentY -= 10;
+        CreateInputWithBrowse(content.transform, "Input Directory Photo :", "", ref currentY, 30, true);
+
+        // Output Directory
+        currentY -= 10;
+        CreateInputWithBrowse(content.transform, "Output Directory :", "", ref currentY, 30, true);
+
+        // Footer Buttons
+        GameObject footer = CreateUIElement("Footer", window.transform, new Vector2(0, 0), new Vector2(1, 0), new Vector2(0, 40));
+        GameObject execBtn = CreateSmallButton(footer.transform, "EXECUTE", new Vector2(180, 0), new Vector2(150, 40));
+        GameObject cancelBtn = CreateSmallButton(footer.transform, "CANCEL", new Vector2(470, 0), new Vector2(150, 40));
+
+        // Logic
+        AttachPopupLogic(root, "PPK + Geotagging");
+        
+        return root;
+    }
+
     private static void AttachPopupLogic(GameObject root, string title)
     {
         GNSSPopupController controller = root.GetComponent<GNSSPopupController>();

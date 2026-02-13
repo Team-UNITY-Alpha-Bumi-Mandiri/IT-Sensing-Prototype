@@ -95,4 +95,35 @@ public static void CreateGeotaggingPrefab()
     Object.DestroyImmediate(popup);
 }
 #endif
+
+### 4. Fitur Tambahan: Offline Mode
+Fitur ini memungkinkan pengguna untuk mematikan pengambilan data peta dari internet dan menggantinya dengan basemap kotak-kotak (grid).
+
+- **Lokasi**: Menu `Tools` -> `Offline Mode`.
+- **Cara Kerja**:
+    - Mengatur properti statis `MapCore.IsOfflineMode`.
+    - Saat aktif, `MapCore` akan menggunakan tekstur grid prosedural 256x256 sebagai pengganti tile dari OpenStreetMap.
+    - Toggle ini dilengkapi dengan indikator centang (✓) pada menu dropdown.
+
+```csharp
+// Contoh Logika Toggle Offline Mode di NavbarManager.cs
+SubMenuItem offlineItem = new SubMenuItem { 
+    title = "Offline Mode", 
+    isEnabled = true, 
+    isChecked = MapCore.IsOfflineMode 
+};
+offlineItem.onClickAction = () => {
+    MapCore.IsOfflineMode = !MapCore.IsOfflineMode;
+    offlineItem.isChecked = MapCore.IsOfflineMode;
+    
+    MapCore map = Object.FindFirstObjectByType<MapCore>();
+    if (map != null) map.UpdateAllTiles();
+    
+    CloseDropdown();
+};
+```
+
+---
+
+## Kesimpulan
 ```

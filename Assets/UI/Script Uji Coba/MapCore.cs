@@ -17,6 +17,9 @@ public class MapCore : MonoBehaviour
     public RectTransform inputArea; // area that accepts drag/zoom
 
     [Header("Map Settings")]
+    public static bool IsOfflineMode = false; // Global toggle for offline mode
+    public static MapCore Instance { get; private set; } // Singleton for easy access
+
     public double latitude = -7.797068;
     public double longitude = 110.370529;
     public int zoom = 13;
@@ -26,10 +29,41 @@ public class MapCore : MonoBehaviour
     // internal
     [HideInInspector] public Vector2Int centerTile;
     private Dictionary<Vector2Int, RawImage> tiles = new Dictionary<Vector2Int, RawImage>();
+    private Texture2D _gridTexture;
+
+    private Texture2D GetGridTexture()
+    {
+        if (_gridTexture == null)
+        {
+            int size = tileSize;
+            _gridTexture = new Texture2D(size, size);
+            Color bgColor = new Color(0.9f, 0.9f, 0.9f, 1f); // Light grey
+            Color gridColor = new Color(0.7f, 0.7f, 0.7f, 1f); // Darker grey for lines
+            
+            for (int y = 0; y < size; y++)
+            {
+                for (int x = 0; x < size; x++)
+                {
+                    if (x == 0 || x == size - 1 || y == 0 || y == size - 1)
+                        _gridTexture.SetPixel(x, y, gridColor);
+                    else
+                        _gridTexture.SetPixel(x, y, bgColor);
+                }
+            }
+            _gridTexture.Apply();
+        }
+        return _gridTexture;
+    }
 
     void Awake()
     {
+        Instance = this;
         if (tileContainer == null) Debug.LogWarning("tileContainer not assigned in MapCore.");
+    }
+
+    private void OnDestroy()
+    {
+        if (Instance == this) Instance = null;
     }
 
     void Start()
@@ -132,7 +166,15 @@ public class MapCore : MonoBehaviour
 
                 // set placeholder
                 img.texture = null;
-                img.color = new Color(1,1,1,0.15f);
+                img.color = new Color(1, 1, 1, 0.15f);
+
+                // If offline mode, use grid texture
+                if (IsOfflineMode)
+                {
+                    img.texture = GetGridTexture();
+                    img.color = Color.white;
+                    continue;
+                }
 
                 // enqueue load through TileLoader
                 if (tileLoader != null)

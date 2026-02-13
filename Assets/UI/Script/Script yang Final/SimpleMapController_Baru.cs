@@ -14,10 +14,49 @@ public class SimpleMapController_Baru : MonoBehaviour
     public RectTransform inputArea;
 
     [Header("Map Settings")]
+    public static bool IsOfflineMode = false;
+    public static SimpleMapController_Baru Instance { get; private set; }
+    
     public double latitude = -7.797068;
     public double longitude = 110.370529;
     public int zoom = 13;
     public MapStyle currentStyle = MapStyle.OSM;
+
+    private Texture2D _gridTexture;
+
+    private Texture2D GetGridTexture()
+    {
+        if (_gridTexture == null)
+        {
+            int size = TILE_SIZE;
+            _gridTexture = new Texture2D(size, size);
+            Color bgColor = new Color(0.9f, 0.9f, 0.9f, 1f); // Light grey
+            Color gridColor = new Color(0.7f, 0.7f, 0.7f, 1f); // Darker grey for lines
+            
+            for (int y = 0; y < size; y++)
+            {
+                for (int x = 0; x < size; x++)
+                {
+                    if (x == 0 || x == size - 1 || y == 0 || y == size - 1)
+                        _gridTexture.SetPixel(x, y, gridColor);
+                    else
+                        _gridTexture.SetPixel(x, y, bgColor);
+                }
+            }
+            _gridTexture.Apply();
+        }
+        return _gridTexture;
+    }
+
+    void Awake()
+    {
+        Instance = this;
+    }
+
+    void OnDestroy()
+    {
+        if (Instance == this) Instance = null;
+    }
 
     public MeasureTool2 measureToolRef;
     public DrawTool drawTool;
@@ -210,6 +249,14 @@ public class SimpleMapController_Baru : MonoBehaviour
             if (ty < 0 || ty >= n)
             {
                 img.color = Color.clear;
+                continue;
+            }
+
+            // Offline Mode handling
+            if (IsOfflineMode)
+            {
+                img.texture = GetGridTexture();
+                img.color = Color.white;
                 continue;
             }
 

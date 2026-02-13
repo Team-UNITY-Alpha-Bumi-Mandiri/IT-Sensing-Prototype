@@ -20,6 +20,7 @@ public class NavbarManager : MonoBehaviour
     {
         public string title;
         public bool isEnabled = true;
+        public bool isChecked = false; // Added for toggle support
         public System.Action onClickAction;
     }
 
@@ -308,6 +309,14 @@ public class NavbarManager : MonoBehaviour
         var toolsMenu = new MenuItem { title = "Tools" };
         toolsMenu.subItems.Add(new SubMenuItem { title = "Coordinat Converter", isEnabled = true });
         toolsMenu.subItems.Add(new SubMenuItem { title = "GNSS PPK Advanced Setting", isEnabled = true });
+        
+        // Offline/Online Mode Toggle
+        toolsMenu.subItems.Add(new SubMenuItem { 
+            title = SimpleMapController_Baru.IsOfflineMode ? "Online Mode" : "Offline Mode", 
+            isEnabled = true, 
+            isChecked = SimpleMapController_Baru.IsOfflineMode 
+        });
+
         menuStructure.Add(toolsMenu);
     }
 
@@ -477,7 +486,7 @@ public class NavbarManager : MonoBehaviour
         textRT.offsetMax = new Vector2(-10, 0);
 
         TextMeshProUGUI tmp = textObj.AddComponent<TextMeshProUGUI>();
-        tmp.text = sub.title;
+        tmp.text = (sub.isChecked ? "✓ " : "") + sub.title;
         tmp.alignment = TextAlignmentOptions.MidlineLeft;
         tmp.fontSize = fontSize;
         tmp.color = sub.isEnabled ? textNormalColor : textDisabledColor;
@@ -515,10 +524,38 @@ public class NavbarManager : MonoBehaviour
         btn.onClick.AddListener(() => {
             if (sub.isEnabled)
             {
-                Debug.Log($"Clicked: {sub.title}");
-                sub.onClickAction?.Invoke();
-                CloseDropdown();
-                HandlePopup(sub.title);
+                Debug.Log($"[NavbarManager] Item Clicked: {sub.title}");
+                
+                // If it's a toggle like Offline Mode, we need special handling
+                if (sub.title == "Offline Mode" || sub.title == "Online Mode") {
+                    SimpleMapController_Baru.IsOfflineMode = !SimpleMapController_Baru.IsOfflineMode;
+                    sub.isChecked = SimpleMapController_Baru.IsOfflineMode;
+                    
+                    // Change title text dynamically
+                    sub.title = SimpleMapController_Baru.IsOfflineMode ? "Online Mode" : "Offline Mode";
+                    
+                    Debug.Log($"[NavbarManager] Toggle Mode: {sub.title} (IsOffline: {SimpleMapController_Baru.IsOfflineMode})");
+                    
+                    // Refresh text immediately
+                    tmp.text = (sub.isChecked ? "✓ " : "") + sub.title;
+
+                    // Find SimpleMapController_Baru in scene and refresh
+                    SimpleMapController_Baru map = SimpleMapController_Baru.Instance;
+                    if (map == null) {
+                        map = Object.FindFirstObjectByType<SimpleMapController_Baru>();
+                    }
+
+                    if (map != null) {
+                        Debug.Log("[NavbarManager] SimpleMapController_Baru found, updating tiles.");
+                        map.RefreshMap(true);
+                    } else {
+                        Debug.LogWarning("[NavbarManager] SimpleMapController_Baru NOT found in scene!");
+                    }
+                } else {
+                    sub.onClickAction?.Invoke();
+                    CloseDropdown();
+                    HandlePopup(sub.title);
+                }
             }
         });
     }

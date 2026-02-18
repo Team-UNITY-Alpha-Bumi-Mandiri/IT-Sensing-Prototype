@@ -45,6 +45,38 @@ public static class GNSSPopupFactory
         UnityEditor.AssetDatabase.Refresh();
         Debug.Log("IMU Bin To Log Prefab created at: " + path);
     }
+
+    [UnityEditor.MenuItem("Tools/Orthomosaic/Create Raster Classification Prefab")]
+    public static void CreateRasterClassificationPrefab()
+    {
+        GameObject popup = CreateRasterClassification(null, true);
+        string folder = "Assets/Resources";
+        string path = folder + "/RasterClassification_Popup.prefab";
+        
+        if (!System.IO.Directory.Exists(folder))
+            System.IO.Directory.CreateDirectory(folder);
+
+        UnityEditor.PrefabUtility.SaveAsPrefabAsset(popup, path);
+        Object.DestroyImmediate(popup);
+        UnityEditor.AssetDatabase.Refresh();
+        Debug.Log("Raster Classification Prefab created at: " + path);
+    }
+
+    [UnityEditor.MenuItem("Tools/Images/Create Image Exif Viewer Prefab")]
+    public static void CreateImagesExifViewerPrefab()
+    {
+        GameObject popup = CreateImagesExifViewer(null, true);
+        string folder = "Assets/Resources";
+        string path = folder + "/Images_ExifViewer_Popup.prefab";
+        
+        if (!System.IO.Directory.Exists(folder))
+            System.IO.Directory.CreateDirectory(folder);
+
+        UnityEditor.PrefabUtility.SaveAsPrefabAsset(popup, path);
+        Object.DestroyImmediate(popup);
+        UnityEditor.AssetDatabase.Refresh();
+        Debug.Log("Images Exif Viewer Prefab created at: " + path);
+    }
 #endif
 
     public static GameObject CreateIMUBinToLog(Canvas canvas = null, bool forceNew = false)
@@ -95,12 +127,227 @@ public static class GNSSPopupFactory
 
         // Footer Buttons
         GameObject footer = CreateUIElement("Footer", window.transform, new Vector2(0, 0), new Vector2(1, 0), new Vector2(0, 40));
-        GameObject execBtn = CreateSmallButton(footer.transform, "EXECUTE", new Vector2(180, 0), new Vector2(150, 40));
-        GameObject cancelBtn = CreateSmallButton(footer.transform, "CANCEL", new Vector2(470, 0), new Vector2(150, 40));
+        GameObject execBtn = CreateSmallButton(footer.transform, "EXECUTE", new Vector2(150, 0), new Vector2(130, 40));
+        GameObject cancelBtn = CreateSmallButton(footer.transform, "EXIT", new Vector2(350, 0), new Vector2(130, 40));
 
         // Logic
         AttachPopupLogic(root, "File Bin Converter");
         
+        return root;
+    }
+
+    public static GameObject CreateRasterClassification(Canvas canvas = null, bool forceNew = false)
+    {
+        if (!forceNew)
+        {
+            GameObject prefab = Resources.Load<GameObject>("RasterClassification_Popup");
+            if (prefab != null)
+            {
+                if (canvas == null) canvas = Object.FindFirstObjectByType<Canvas>();
+                GameObject instance = Object.Instantiate(prefab, canvas.transform);
+                instance.name = "RasterClassification_Root";
+                AttachPopupLogic(instance, "Raster Classification");
+                return instance;
+            }
+        }
+
+        if (canvas == null)
+            canvas = Object.FindFirstObjectByType<Canvas>();
+
+        GameObject root = new GameObject("RasterClassification_Root", typeof(RectTransform), typeof(Image));
+        root.transform.SetParent(canvas.transform, false);
+        RectTransform rtRoot = root.GetComponent<RectTransform>();
+        rtRoot.anchorMin = Vector2.zero;
+        rtRoot.anchorMax = Vector2.one;
+        rtRoot.sizeDelta = Vector2.zero;
+        root.GetComponent<Image>().color = new Color(0, 0, 0, 0.4f);
+
+        GameObject window = new GameObject("Window", typeof(RectTransform), typeof(Image));
+        window.transform.SetParent(root.transform, false);
+        RectTransform rtWin = window.GetComponent<RectTransform>();
+        rtWin.anchorMin = rtWin.anchorMax = new Vector2(0.5f, 0.5f);
+        rtWin.sizeDelta = new Vector2(700, 260);
+        window.GetComponent<Image>().color = new Color32(235, 235, 235, 255);
+
+        GameObject header = CreateUIElement("Header", window.transform, new Vector2(0, 1), new Vector2(1, 1), new Vector2(0, -30));
+        header.GetComponent<Image>().color = new Color32(245, 245, 245, 255);
+        CreateText(header.transform, "Raster Classification", 14, Color.black, TextAlignmentOptions.Left, new Vector2(10, 0));
+
+        GameObject content = new GameObject("Content", typeof(RectTransform));
+        content.transform.SetParent(window.transform, false);
+        RectTransform rtContent = content.GetComponent<RectTransform>();
+        rtContent.anchorMin = new Vector2(0, 0);
+        rtContent.anchorMax = new Vector2(1, 1);
+        rtContent.offsetMin = new Vector2(20, 20);
+        rtContent.offsetMax = new Vector2(-20, -60);
+
+        float currentY = -10;
+
+        TMP_DefaultControls.Resources res = GetTMPResources();
+
+        GameObject rowInput = new GameObject("Row_InputFile", typeof(RectTransform));
+        rowInput.transform.SetParent(content.transform, false);
+        RectTransform rtRowInput = rowInput.GetComponent<RectTransform>();
+        rtRowInput.anchorMin = new Vector2(0, 1);
+        rtRowInput.anchorMax = new Vector2(1, 1);
+        rtRowInput.anchoredPosition = new Vector2(0, currentY);
+        rtRowInput.sizeDelta = new Vector2(0, 30);
+
+        GameObject labelInput = new GameObject("Label_InputFile", typeof(RectTransform), typeof(TextMeshProUGUI));
+        labelInput.transform.SetParent(rowInput.transform, false);
+        RectTransform rtLabelInput = labelInput.GetComponent<RectTransform>();
+        rtLabelInput.anchorMin = new Vector2(0, 0.5f);
+        rtLabelInput.anchorMax = new Vector2(0, 0.5f);
+        rtLabelInput.anchoredPosition = new Vector2(10, 0);
+        rtLabelInput.sizeDelta = new Vector2(100, 20);
+        TextMeshProUGUI tmpLabelInput = labelInput.GetComponent<TextMeshProUGUI>();
+        tmpLabelInput.text = "Input File";
+        tmpLabelInput.fontSize = 12;
+        tmpLabelInput.color = Color.black;
+        tmpLabelInput.alignment = TextAlignmentOptions.Left;
+
+        GameObject inputFileField = TMP_DefaultControls.CreateInputField(res);
+        inputFileField.name = "InputField_InputFile";
+        inputFileField.transform.SetParent(rowInput.transform, false);
+        RectTransform rtInputFile = inputFileField.GetComponent<RectTransform>();
+        rtInputFile.anchorMin = new Vector2(0, 0.5f);
+        rtInputFile.anchorMax = new Vector2(1, 0.5f);
+        rtInputFile.offsetMin = new Vector2(110, -12);
+        rtInputFile.offsetMax = new Vector2(-60, 12);
+        Image imgInputFile = inputFileField.GetComponent<Image>();
+        if (imgInputFile != null) imgInputFile.color = Color.white;
+        TMP_InputField tmpInputFile = inputFileField.GetComponent<TMP_InputField>();
+        if (tmpInputFile != null && tmpInputFile.textComponent != null)
+        {
+            tmpInputFile.textComponent.color = Color.black;
+            tmpInputFile.textComponent.fontSize = 11;
+        }
+
+        GameObject browseInput = new GameObject("Button_Browse_InputFile", typeof(RectTransform), typeof(Image), typeof(Button));
+        browseInput.transform.SetParent(rowInput.transform, false);
+        RectTransform rtBrowseInput = browseInput.GetComponent<RectTransform>();
+        rtBrowseInput.anchorMin = new Vector2(1, 0.5f);
+        rtBrowseInput.anchorMax = new Vector2(1, 0.5f);
+        rtBrowseInput.anchoredPosition = new Vector2(-25, 0);
+        rtBrowseInput.sizeDelta = new Vector2(40, 24);
+        browseInput.GetComponent<Image>().color = new Color32(230, 230, 230, 255);
+
+        GameObject browseInputText = new GameObject("Text", typeof(RectTransform), typeof(TextMeshProUGUI));
+        browseInputText.transform.SetParent(browseInput.transform, false);
+        RectTransform rtBrowseInputText = browseInputText.GetComponent<RectTransform>();
+        rtBrowseInputText.anchorMin = Vector2.zero;
+        rtBrowseInputText.anchorMax = Vector2.one;
+        TextMeshProUGUI tmpBrowseInputText = browseInputText.GetComponent<TextMeshProUGUI>();
+        tmpBrowseInputText.text = "...";
+        tmpBrowseInputText.fontSize = 14;
+        tmpBrowseInputText.color = Color.black;
+        tmpBrowseInputText.alignment = TextAlignmentOptions.Center;
+
+        currentY -= 40;
+
+        GameObject rowRange = new GameObject("Row_RangeInterval", typeof(RectTransform));
+        rowRange.transform.SetParent(content.transform, false);
+        RectTransform rtRowRange = rowRange.GetComponent<RectTransform>();
+        rtRowRange.anchorMin = new Vector2(0, 1);
+        rtRowRange.anchorMax = new Vector2(1, 1);
+        rtRowRange.anchoredPosition = new Vector2(0, currentY);
+        rtRowRange.sizeDelta = new Vector2(0, 30);
+
+        GameObject labelRange = new GameObject("Label_RangeInterval", typeof(RectTransform), typeof(TextMeshProUGUI));
+        labelRange.transform.SetParent(rowRange.transform, false);
+        RectTransform rtLabelRange = labelRange.GetComponent<RectTransform>();
+        rtLabelRange.anchorMin = new Vector2(0, 0.5f);
+        rtLabelRange.anchorMax = new Vector2(0, 0.5f);
+        rtLabelRange.anchoredPosition = new Vector2(10, 0);
+        rtLabelRange.sizeDelta = new Vector2(100, 20);
+        TextMeshProUGUI tmpLabelRange = labelRange.GetComponent<TextMeshProUGUI>();
+        tmpLabelRange.text = "Range Interval";
+        tmpLabelRange.fontSize = 12;
+        tmpLabelRange.color = Color.black;
+        tmpLabelRange.alignment = TextAlignmentOptions.Left;
+
+        GameObject inputRangeField = TMP_DefaultControls.CreateInputField(res);
+        inputRangeField.name = "InputField_RangeInterval";
+        inputRangeField.transform.SetParent(rowRange.transform, false);
+        RectTransform rtInputRange = inputRangeField.GetComponent<RectTransform>();
+        rtInputRange.anchorMin = new Vector2(0, 0.5f);
+        rtInputRange.anchorMax = new Vector2(1, 0.5f);
+        rtInputRange.offsetMin = new Vector2(110, -12);
+        rtInputRange.offsetMax = new Vector2(-20, 12);
+        Image imgInputRange = inputRangeField.GetComponent<Image>();
+        if (imgInputRange != null) imgInputRange.color = Color.white;
+        TMP_InputField tmpInputRange = inputRangeField.GetComponent<TMP_InputField>();
+        if (tmpInputRange != null && tmpInputRange.textComponent != null)
+        {
+            tmpInputRange.textComponent.color = Color.black;
+            tmpInputRange.textComponent.fontSize = 11;
+        }
+
+        currentY -= 40;
+
+        GameObject rowOutput = new GameObject("Row_OutputFile", typeof(RectTransform));
+        rowOutput.transform.SetParent(content.transform, false);
+        RectTransform rtRowOutput = rowOutput.GetComponent<RectTransform>();
+        rtRowOutput.anchorMin = new Vector2(0, 1);
+        rtRowOutput.anchorMax = new Vector2(1, 1);
+        rtRowOutput.anchoredPosition = new Vector2(0, currentY);
+        rtRowOutput.sizeDelta = new Vector2(0, 30);
+
+        GameObject labelOutput = new GameObject("Label_OutputFile", typeof(RectTransform), typeof(TextMeshProUGUI));
+        labelOutput.transform.SetParent(rowOutput.transform, false);
+        RectTransform rtLabelOutput = labelOutput.GetComponent<RectTransform>();
+        rtLabelOutput.anchorMin = new Vector2(0, 0.5f);
+        rtLabelOutput.anchorMax = new Vector2(0, 0.5f);
+        rtLabelOutput.anchoredPosition = new Vector2(10, 0);
+        rtLabelOutput.sizeDelta = new Vector2(100, 20);
+        TextMeshProUGUI tmpLabelOutput = labelOutput.GetComponent<TextMeshProUGUI>();
+        tmpLabelOutput.text = "Output File";
+        tmpLabelOutput.fontSize = 12;
+        tmpLabelOutput.color = Color.black;
+        tmpLabelOutput.alignment = TextAlignmentOptions.Left;
+
+        GameObject outputFileField = TMP_DefaultControls.CreateInputField(res);
+        outputFileField.name = "InputField_OutputFile";
+        outputFileField.transform.SetParent(rowOutput.transform, false);
+        RectTransform rtOutputFile = outputFileField.GetComponent<RectTransform>();
+        rtOutputFile.anchorMin = new Vector2(0, 0.5f);
+        rtOutputFile.anchorMax = new Vector2(1, 0.5f);
+        rtOutputFile.offsetMin = new Vector2(110, -12);
+        rtOutputFile.offsetMax = new Vector2(-60, 12);
+        Image imgOutputFile = outputFileField.GetComponent<Image>();
+        if (imgOutputFile != null) imgOutputFile.color = Color.white;
+        TMP_InputField tmpOutputFile = outputFileField.GetComponent<TMP_InputField>();
+        if (tmpOutputFile != null && tmpOutputFile.textComponent != null)
+        {
+            tmpOutputFile.textComponent.color = Color.black;
+            tmpOutputFile.textComponent.fontSize = 11;
+        }
+
+        GameObject browseOutput = new GameObject("Button_Browse_OutputFile", typeof(RectTransform), typeof(Image), typeof(Button));
+        browseOutput.transform.SetParent(rowOutput.transform, false);
+        RectTransform rtBrowseOutput = browseOutput.GetComponent<RectTransform>();
+        rtBrowseOutput.anchorMin = new Vector2(1, 0.5f);
+        rtBrowseOutput.anchorMax = new Vector2(1, 0.5f);
+        rtBrowseOutput.anchoredPosition = new Vector2(-25, 0);
+        rtBrowseOutput.sizeDelta = new Vector2(40, 24);
+        browseOutput.GetComponent<Image>().color = new Color32(230, 230, 230, 255);
+
+        GameObject browseOutputText = new GameObject("Text", typeof(RectTransform), typeof(TextMeshProUGUI));
+        browseOutputText.transform.SetParent(browseOutput.transform, false);
+        RectTransform rtBrowseOutputText = browseOutputText.GetComponent<RectTransform>();
+        rtBrowseOutputText.anchorMin = Vector2.zero;
+        rtBrowseOutputText.anchorMax = Vector2.one;
+        TextMeshProUGUI tmpBrowseOutputText = browseOutputText.GetComponent<TextMeshProUGUI>();
+        tmpBrowseOutputText.text = "...";
+        tmpBrowseOutputText.fontSize = 14;
+        tmpBrowseOutputText.color = Color.black;
+        tmpBrowseOutputText.alignment = TextAlignmentOptions.Center;
+
+        GameObject footer = CreateUIElement("Footer", window.transform, new Vector2(0, 0), new Vector2(1, 0), new Vector2(0, 30));
+        GameObject execBtn = CreateSmallButton(footer.transform, "EXECUTE", new Vector2(450, 0), new Vector2(150, 35));
+
+        AttachPopupLogic(root, "Raster Classification");
+
         return root;
     }
 
@@ -246,7 +493,7 @@ public static class GNSSPopupFactory
         GameObject cancelText = new GameObject("Text", typeof(TextMeshProUGUI));
         cancelText.transform.SetParent(cancelBtn.transform, false);
         TextMeshProUGUI cTMP = cancelText.GetComponent<TextMeshProUGUI>();
-        cTMP.text = "CANCEL";
+        cTMP.text = "Exit";
         cTMP.color = Color.black;
         cTMP.fontSize = 16;
         cTMP.alignment = TextAlignmentOptions.Center;
@@ -407,8 +654,8 @@ public static class GNSSPopupFactory
 
         // Footer Buttons
         GameObject footer = CreateUIElement("Footer", window.transform, new Vector2(0, 0), new Vector2(1, 0), new Vector2(0, 40));
-        GameObject execBtn = CreateSmallButton(footer.transform, "EXECUTE", new Vector2(180, 0), new Vector2(150, 40));
-        GameObject cancelBtn = CreateSmallButton(footer.transform, "CANCEL", new Vector2(470, 0), new Vector2(150, 40));
+        GameObject execBtn = CreateSmallButton(footer.transform, "EXECUTE", new Vector2(150, 0), new Vector2(130, 40));
+        GameObject cancelBtn = CreateSmallButton(footer.transform, "EXIT", new Vector2(350, 0), new Vector2(130, 40));
 
         // Logic
         AttachPopupLogic(root, "Static Processing");
@@ -493,8 +740,8 @@ public static class GNSSPopupFactory
 
         // Footer Buttons
         GameObject footer = CreateUIElement("Footer", window.transform, new Vector2(0, 0), new Vector2(1, 0), new Vector2(0, 40));
-        GameObject execBtn = CreateSmallButton(footer.transform, "EXECUTE", new Vector2(180, 0), new Vector2(150, 40));
-        GameObject cancelBtn = CreateSmallButton(footer.transform, "CANCEL", new Vector2(470, 0), new Vector2(150, 40));
+        GameObject execBtn = CreateSmallButton(footer.transform, "EXECUTE", new Vector2(150, 0), new Vector2(130, 40));
+        GameObject cancelBtn = CreateSmallButton(footer.transform, "EXIT", new Vector2(350, 0), new Vector2(130, 40));
 
         // Logic
         AttachPopupLogic(root, "Geotagging");
@@ -652,12 +899,169 @@ public static class GNSSPopupFactory
 
         // Footer Buttons
         GameObject footer = CreateUIElement("Footer", window.transform, new Vector2(0, 0), new Vector2(1, 0), new Vector2(0, 40));
-        GameObject execBtn = CreateSmallButton(footer.transform, "EXECUTE", new Vector2(180, 0), new Vector2(150, 40));
-        GameObject cancelBtn = CreateSmallButton(footer.transform, "CANCEL", new Vector2(470, 0), new Vector2(150, 40));
+        GameObject execBtn = CreateSmallButton(footer.transform, "EXECUTE", new Vector2(150, 0), new Vector2(130, 40));
+        GameObject cancelBtn = CreateSmallButton(footer.transform, "EXIT", new Vector2(350, 0), new Vector2(130, 40));
 
         // Logic
         AttachPopupLogic(root, "PPK + Geotagging");
         
+        return root;
+    }
+
+    public static GameObject CreateImagesExifViewer(Canvas canvas = null, bool forceNew = false)
+    {
+        if (!forceNew)
+        {
+            GameObject prefab = Resources.Load<GameObject>("Images_ExifViewer_Popup");
+            if (prefab != null)
+            {
+                if (canvas == null) canvas = Object.FindFirstObjectByType<Canvas>();
+                GameObject instance = Object.Instantiate(prefab, canvas.transform);
+                instance.name = "Images_ExifViewer_Root";
+                AttachPopupLogic(instance, "Image Exif Viewer");
+                return instance;
+            }
+        }
+
+        if (canvas == null)
+            canvas = Object.FindFirstObjectByType<Canvas>();
+
+        GameObject root = new GameObject("Images_ExifViewer_Root", typeof(RectTransform), typeof(Image));
+        root.transform.SetParent(canvas.transform, false);
+        RectTransform rtRoot = root.GetComponent<RectTransform>();
+        rtRoot.anchorMin = Vector2.zero;
+        rtRoot.anchorMax = Vector2.one;
+        rtRoot.sizeDelta = Vector2.zero;
+        root.GetComponent<Image>().color = new Color(0, 0, 0, 0.4f);
+
+        GameObject window = new GameObject("Window", typeof(RectTransform), typeof(Image));
+        window.transform.SetParent(root.transform, false);
+        RectTransform rtWin = window.GetComponent<RectTransform>();
+        rtWin.anchorMin = rtWin.anchorMax = new Vector2(0.5f, 0.5f);
+        rtWin.sizeDelta = new Vector2(900, 500);
+        window.GetComponent<Image>().color = new Color32(235, 235, 235, 255);
+
+        GameObject header = CreateUIElement("Header", window.transform, new Vector2(0, 1), new Vector2(1, 1), new Vector2(0, -30));
+        header.GetComponent<Image>().color = new Color32(245, 245, 245, 255);
+        CreateText(header.transform, "Image Exif Viewer", 14, Color.black, TextAlignmentOptions.Left, new Vector2(10, 0));
+
+        GameObject content = new GameObject("Content", typeof(RectTransform));
+        content.transform.SetParent(window.transform, false);
+        RectTransform rtContent = content.GetComponent<RectTransform>();
+        rtContent.anchorMin = new Vector2(0, 0);
+        rtContent.anchorMax = new Vector2(1, 1);
+        rtContent.offsetMin = new Vector2(10, 10);
+        rtContent.offsetMax = new Vector2(-10, -50);
+
+        GameObject row = new GameObject("Row_ChooseImage", typeof(RectTransform));
+        row.transform.SetParent(content.transform, false);
+        RectTransform rtRow = row.GetComponent<RectTransform>();
+        rtRow.anchorMin = new Vector2(0, 1);
+        rtRow.anchorMax = new Vector2(1, 1);
+        rtRow.anchoredPosition = new Vector2(0, -20);
+        rtRow.sizeDelta = new Vector2(0, 30);
+
+        GameObject label = new GameObject("Label", typeof(RectTransform), typeof(TextMeshProUGUI));
+        label.transform.SetParent(row.transform, false);
+        RectTransform rtLabel = label.GetComponent<RectTransform>();
+        rtLabel.anchorMin = new Vector2(0, 0.5f);
+        rtLabel.anchorMax = new Vector2(0, 0.5f);
+        rtLabel.anchoredPosition = new Vector2(10, 0);
+        rtLabel.sizeDelta = new Vector2(110, 20);
+        TextMeshProUGUI labelTmp = label.GetComponent<TextMeshProUGUI>();
+        labelTmp.text = "Choose Image";
+        labelTmp.fontSize = 12;
+        labelTmp.color = Color.black;
+        labelTmp.alignment = TextAlignmentOptions.Left;
+
+        TMP_DefaultControls.Resources res = GetTMPResources();
+        GameObject inputObj = TMP_DefaultControls.CreateInputField(res);
+        inputObj.name = "InputField_ImagePath";
+        inputObj.transform.SetParent(row.transform, false);
+        RectTransform rtInput = inputObj.GetComponent<RectTransform>();
+        rtInput.anchorMin = new Vector2(0, 0.5f);
+        rtInput.anchorMax = new Vector2(1, 0.5f);
+        rtInput.offsetMin = new Vector2(120, -12);
+        rtInput.offsetMax = new Vector2(-60, 12);
+        Image inputImg = inputObj.GetComponent<Image>();
+        if (inputImg != null) inputImg.color = Color.white;
+        TMP_InputField inputField = inputObj.GetComponent<TMP_InputField>();
+        if (inputField != null && inputField.textComponent != null)
+        {
+            inputField.textComponent.color = Color.black;
+            inputField.textComponent.fontSize = 11;
+        }
+
+        GameObject browse = new GameObject("Button_Browse", typeof(RectTransform), typeof(Image), typeof(Button));
+        browse.transform.SetParent(row.transform, false);
+        RectTransform rtBrowse = browse.GetComponent<RectTransform>();
+        rtBrowse.anchorMin = new Vector2(1, 0.5f);
+        rtBrowse.anchorMax = new Vector2(1, 0.5f);
+        rtBrowse.anchoredPosition = new Vector2(-25, 0);
+        rtBrowse.sizeDelta = new Vector2(40, 24);
+        browse.GetComponent<Image>().color = new Color32(230, 230, 230, 255);
+
+        GameObject browseText = new GameObject("Text", typeof(RectTransform), typeof(TextMeshProUGUI));
+        browseText.transform.SetParent(browse.transform, false);
+        RectTransform rtBrowseText = browseText.GetComponent<RectTransform>();
+        rtBrowseText.anchorMin = Vector2.zero;
+        rtBrowseText.anchorMax = Vector2.one;
+        TextMeshProUGUI browseTmp = browseText.GetComponent<TextMeshProUGUI>();
+        browseTmp.text = "...";
+        browseTmp.fontSize = 14;
+        browseTmp.color = Color.black;
+        browseTmp.alignment = TextAlignmentOptions.Center;
+
+        GameObject leftPanel = new GameObject("LeftPanel", typeof(RectTransform), typeof(Image));
+        leftPanel.transform.SetParent(content.transform, false);
+        RectTransform rtLeft = leftPanel.GetComponent<RectTransform>();
+        rtLeft.anchorMin = new Vector2(0, 0);
+        rtLeft.anchorMax = new Vector2(0.5f, 1);
+        rtLeft.offsetMin = new Vector2(0, 0);
+        rtLeft.offsetMax = new Vector2(-5, -60);
+        leftPanel.GetComponent<Image>().color = new Color32(230, 230, 230, 255);
+
+        GameObject previewObj = new GameObject("PreviewImage", typeof(RectTransform), typeof(RawImage));
+        previewObj.transform.SetParent(leftPanel.transform, false);
+        RectTransform rtPreview = previewObj.GetComponent<RectTransform>();
+        rtPreview.anchorMin = new Vector2(0, 0);
+        rtPreview.anchorMax = new Vector2(1, 1);
+        rtPreview.offsetMin = new Vector2(10, 10);
+        rtPreview.offsetMax = new Vector2(-10, -10);
+        RawImage previewImage = previewObj.GetComponent<RawImage>();
+        previewImage.color = Color.white;
+
+        GameObject rightPanel = new GameObject("RightPanel", typeof(RectTransform), typeof(Image));
+        rightPanel.transform.SetParent(content.transform, false);
+        RectTransform rtRight = rightPanel.GetComponent<RectTransform>();
+        rtRight.anchorMin = new Vector2(0.5f, 0);
+        rtRight.anchorMax = new Vector2(1, 1);
+        rtRight.offsetMin = new Vector2(5, 0);
+        rtRight.offsetMax = new Vector2(0, -60);
+        rightPanel.GetComponent<Image>().color = new Color32(240, 240, 240, 255);
+
+        GameObject exifTextObj = new GameObject("ExifText", typeof(RectTransform), typeof(TextMeshProUGUI));
+        exifTextObj.transform.SetParent(rightPanel.transform, false);
+        RectTransform rtExif = exifTextObj.GetComponent<RectTransform>();
+        rtExif.anchorMin = new Vector2(0, 0);
+        rtExif.anchorMax = new Vector2(1, 1);
+        rtExif.offsetMin = new Vector2(10, 10);
+        rtExif.offsetMax = new Vector2(-10, -10);
+        TextMeshProUGUI exifText = exifTextObj.GetComponent<TextMeshProUGUI>();
+        exifText.text = "";
+        exifText.fontSize = 11;
+        exifText.color = Color.black;
+        exifText.alignment = TextAlignmentOptions.TopLeft;
+
+        GameObject footer = CreateUIElement("Footer", window.transform, new Vector2(0, 0), new Vector2(1, 0), new Vector2(0, 40));
+        GameObject execBtn = CreateSmallButton(footer.transform, "EXECUTE", new Vector2(150, 0), new Vector2(130, 40));
+        GameObject cancelBtn = CreateSmallButton(footer.transform, "EXIT", new Vector2(350, 0), new Vector2(130, 40));
+
+        AttachPopupLogic(root, "Image Exif Viewer");
+
+        ImagesExifViewerUI ui = root.AddComponent<ImagesExifViewerUI>();
+        ui.Setup(inputField, browse.GetComponent<Button>(), previewImage, exifText);
+
         return root;
     }
 
@@ -673,8 +1077,9 @@ public static class GNSSPopupFactory
         Button[] allButtons = root.GetComponentsInChildren<Button>(true);
         foreach (var btn in allButtons)
         {
-            if (btn.name.ToUpper().Contains("CANCEL")) cancelBtn = btn;
-            if (btn.name.ToUpper().Contains("EXECUTE")) executeBtn = btn;
+            string upperName = btn.name.ToUpper();
+            if (upperName.Contains("CANCEL") || upperName.Contains("EXIT")) cancelBtn = btn;
+            if (upperName.Contains("EXECUTE")) executeBtn = btn;
         }
 
         controller.Setup(cancelBtn, executeBtn, title);
@@ -930,33 +1335,5 @@ public static class GNSSPopupFactory
         btn.GetComponent<Image>().color = new Color32(230, 230, 230, 255);
         CreateText(btn.transform, text, 12, Color.black, TextAlignmentOptions.Center, Vector2.zero);
         return btn;
-    }
-}
-
-public class GNSSDataReaderUI : MonoBehaviour
-{
-    private TMP_InputField pathInput;
-    private Button browseBtn;
-    private Button executeBtn;
-
-    public void Setup(TMP_InputField input, Button browse, Button execute)
-    {
-        pathInput = input;
-        browseBtn = browse;
-        executeBtn = execute;
-
-        browseBtn.onClick.AddListener(OnBrowse);
-        executeBtn.onClick.AddListener(OnExecute);
-    }
-
-    private void OnBrowse()
-    {
-        // Placeholder for file browser
-        Debug.Log("Browse for .ubx file");
-    }
-
-    private void OnExecute()
-    {
-        Debug.Log("Executing GNSS Data Reader for: " + pathInput.text);
     }
 }

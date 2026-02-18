@@ -606,7 +606,7 @@ public class NavbarManager : MonoBehaviour
         {
             GNSSPopupFactory.CreateStaticProcessing();
         }
-        else if (title == "Geotagging")
+        else if (title == "Geotagging" || title == "Geotagging Images")
         {
             GNSSPopupFactory.CreateGeotagging();
         }
@@ -617,6 +617,14 @@ public class NavbarManager : MonoBehaviour
         else if (title == "File Bin to Log")
         {
             GNSSPopupFactory.CreateIMUBinToLog();
+        }
+        else if (title == "Images Exif Viewer")
+        {
+            GNSSPopupFactory.CreateImagesExifViewer();
+        }
+        else if (title == "Raster Classification")
+        {
+            GNSSPopupFactory.CreateRasterClassification();
         }
         else
         {

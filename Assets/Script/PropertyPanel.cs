@@ -36,7 +36,6 @@ public class PropertyPanel : MonoBehaviour
     public Button deleteRowButton;              // Tombol hapus row selected
     public TMP_InputField columnNameInput;      // Input nama kolom baru
     public Color selectedColor = new Color(0.8f, 0.9f, 1f);  // Warna highlight
-    public Color normalColor = Color.white;     // Warna normal
     string currentAtributLayer = "";            // Layer yang sedang ditampilkan
     string selectedColumnName = "";             // Kolom yang sedang dipilih
     string selectedRowId = "";                  // Drawing ID row yang dipilih
@@ -477,19 +476,23 @@ public class PropertyPanel : MonoBehaviour
 
     // Select cell - highlight hanya cell yang diklik, track row & kolom
     Image lastSelectedCell;
+    Color lastOriginalColor;
     
     void SelectCell(string rowId, string colName, Image cellImg)
     {
         selectedRowId = rowId;
         selectedColumnName = colName;
         
-        // Reset highlight sebelumnya
+        // Reset highlight sebelumnya ke warna asli
         if (lastSelectedCell != null)
-            lastSelectedCell.color = normalColor;
+            lastSelectedCell.color = lastOriginalColor;
         
-        // Highlight cell yang diklik
+        // Simpan warna asli cell yang diklik
         if (cellImg != null)
+        {
+            lastOriginalColor = cellImg.color;
             cellImg.color = selectedColor;
+        }
         
         lastSelectedCell = cellImg;
         Debug.Log($"[Atribut] Selected cell - row: {rowId}, column: {colName}");

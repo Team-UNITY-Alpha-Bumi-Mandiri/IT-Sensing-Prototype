@@ -77,6 +77,70 @@ public static class GNSSPopupFactory
         UnityEditor.AssetDatabase.Refresh();
         Debug.Log("Images Exif Viewer Prefab created at: " + path);
     }
+
+    [UnityEditor.MenuItem("Tools/Vector/Create Pos To Shapefile Prefab")]
+    public static void CreatePosToShapefilePrefab()
+    {
+        GameObject popup = CreatePosToShapefile(null, true);
+        string folder = "Assets/Resources";
+        string path = folder + "/PosToShapefile_Popup.prefab";
+        
+        if (!System.IO.Directory.Exists(folder))
+            System.IO.Directory.CreateDirectory(folder);
+
+        UnityEditor.PrefabUtility.SaveAsPrefabAsset(popup, path);
+        Object.DestroyImmediate(popup);
+        UnityEditor.AssetDatabase.Refresh();
+        Debug.Log("Pos To Shapefile Prefab created at: " + path);
+    }
+
+    [UnityEditor.MenuItem("Tools/Vector/Create Pos To Geojson Prefab")]
+    public static void CreatePosToGeojsonPrefab()
+    {
+        GameObject popup = CreatePosToGeojson(null, true);
+        string folder = "Assets/Resources";
+        string path = folder + "/PosToGeojson_Popup.prefab";
+        
+        if (!System.IO.Directory.Exists(folder))
+            System.IO.Directory.CreateDirectory(folder);
+
+        UnityEditor.PrefabUtility.SaveAsPrefabAsset(popup, path);
+        Object.DestroyImmediate(popup);
+        UnityEditor.AssetDatabase.Refresh();
+        Debug.Log("Pos To Geojson Prefab created at: " + path);
+    }
+
+    [UnityEditor.MenuItem("Tools/Vector/Create Pos To KML Prefab")]
+    public static void CreatePosToKMLPrefab()
+    {
+        GameObject popup = CreatePosToKML(null, true);
+        string folder = "Assets/Resources";
+        string path = folder + "/PosToKML_Popup.prefab";
+        
+        if (!System.IO.Directory.Exists(folder))
+            System.IO.Directory.CreateDirectory(folder);
+
+        UnityEditor.PrefabUtility.SaveAsPrefabAsset(popup, path);
+        Object.DestroyImmediate(popup);
+        UnityEditor.AssetDatabase.Refresh();
+        Debug.Log("Pos To KML Prefab created at: " + path);
+    }
+
+    [UnityEditor.MenuItem("Tools/Vector/Create DEM To Contour Prefab")]
+    public static void CreateDEMToContourPrefab()
+    {
+        GameObject popup = CreateDEMToContour(null, true);
+        string folder = "Assets/Resources";
+        string path = folder + "/DEMToContour_Popup.prefab";
+        
+        if (!System.IO.Directory.Exists(folder))
+            System.IO.Directory.CreateDirectory(folder);
+
+        UnityEditor.PrefabUtility.SaveAsPrefabAsset(popup, path);
+        Object.DestroyImmediate(popup);
+        UnityEditor.AssetDatabase.Refresh();
+        Debug.Log("DEM To Contour Prefab created at: " + path);
+    }
 #endif
 
     public static GameObject CreateIMUBinToLog(Canvas canvas = null, bool forceNew = false)
@@ -344,11 +408,32 @@ public static class GNSSPopupFactory
         tmpBrowseOutputText.alignment = TextAlignmentOptions.Center;
 
         GameObject footer = CreateUIElement("Footer", window.transform, new Vector2(0, 0), new Vector2(1, 0), new Vector2(0, 30));
-        GameObject execBtn = CreateSmallButton(footer.transform, "EXECUTE", new Vector2(450, 0), new Vector2(150, 35));
+        GameObject execBtn = CreateSmallButton(footer.transform, "EXECUTE", new Vector2(150, 0), new Vector2(130, 40));
+        GameObject cancelBtn = CreateSmallButton(footer.transform, "EXIT", new Vector2(350, 0), new Vector2(130, 40));
 
         AttachPopupLogic(root, "Raster Classification");
 
         return root;
+    }
+
+    public static GameObject CreatePosToShapefile(Canvas canvas = null, bool forceNew = false)
+    {
+        return CreatePosVectorPopup(canvas, forceNew, "PosToShapefile_Popup", "PosToShapefile_Root", "Pos To Shapefile");
+    }
+
+    public static GameObject CreatePosToGeojson(Canvas canvas = null, bool forceNew = false)
+    {
+        return CreatePosVectorPopup(canvas, forceNew, "PosToGeojson_Popup", "PosToGeojson_Root", "Pos To Geojson");
+    }
+
+    public static GameObject CreatePosToKML(Canvas canvas = null, bool forceNew = false)
+    {
+        return CreatePosVectorPopup(canvas, forceNew, "PosToKML_Popup", "PosToKML_Root", "Pos To KML");
+    }
+
+    public static GameObject CreateDEMToContour(Canvas canvas = null, bool forceNew = false)
+    {
+        return CreateDEMToContourPopup(canvas, forceNew, "DEMToContour_Popup", "DEMToContour_Root", "DEM To Contour");
     }
 
     public static GameObject CreateGNSSDataReader(Canvas canvas = null, bool forceNew = false)
@@ -1073,7 +1158,6 @@ public static class GNSSPopupFactory
         Button cancelBtn = null;
         Button executeBtn = null;
 
-        // Find buttons by name
         Button[] allButtons = root.GetComponentsInChildren<Button>(true);
         foreach (var btn in allButtons)
         {
@@ -1083,6 +1167,231 @@ public static class GNSSPopupFactory
         }
 
         controller.Setup(cancelBtn, executeBtn, title);
+    }
+
+    private static GameObject CreatePosVectorPopup(Canvas canvas, bool forceNew, string resourceName, string rootName, string title)
+    {
+        if (!forceNew)
+        {
+            GameObject prefab = Resources.Load<GameObject>(resourceName);
+            if (prefab != null)
+            {
+                if (canvas == null) canvas = Object.FindFirstObjectByType<Canvas>();
+                GameObject instance = Object.Instantiate(prefab, canvas.transform);
+                instance.name = rootName;
+                AttachPopupLogic(instance, title);
+                return instance;
+            }
+        }
+
+        if (canvas == null)
+            canvas = Object.FindFirstObjectByType<Canvas>();
+
+        GameObject root = new GameObject(rootName, typeof(RectTransform), typeof(Image));
+        root.transform.SetParent(canvas.transform, false);
+        RectTransform rtRoot = root.GetComponent<RectTransform>();
+        rtRoot.anchorMin = Vector2.zero;
+        rtRoot.anchorMax = Vector2.one;
+        rtRoot.sizeDelta = Vector2.zero;
+        root.GetComponent<Image>().color = new Color(0, 0, 0, 0.4f);
+
+        GameObject window = new GameObject("Window", typeof(RectTransform), typeof(Image));
+        window.transform.SetParent(root.transform, false);
+        RectTransform rtWin = window.GetComponent<RectTransform>();
+        rtWin.anchorMin = rtWin.anchorMax = new Vector2(0.5f, 0.5f);
+        rtWin.sizeDelta = new Vector2(650, 300);
+        window.GetComponent<Image>().color = new Color32(235, 235, 235, 255);
+
+        GameObject header = CreateUIElement("Header", window.transform, new Vector2(0, 1), new Vector2(1, 1), new Vector2(0, -30));
+        header.GetComponent<Image>().color = new Color32(245, 245, 245, 255);
+        CreateText(header.transform, title, 14, Color.black, TextAlignmentOptions.Left, new Vector2(10, 0));
+
+        GameObject content = new GameObject("Content", typeof(RectTransform));
+        content.transform.SetParent(window.transform, false);
+        RectTransform rtContent = content.GetComponent<RectTransform>();
+        rtContent.anchorMin = new Vector2(0, 0);
+        rtContent.anchorMax = new Vector2(1, 1);
+        rtContent.offsetMin = new Vector2(20, 20);
+        rtContent.offsetMax = new Vector2(-20, -60);
+
+        float currentY = -10;
+        TMP_DefaultControls.Resources res = GetTMPResources();
+
+        CreatePosVectorRow(content.transform, "Row_InputFile", "Input File", ref currentY, res);
+        currentY -= 10;
+        CreatePosVectorRow(content.transform, "Row_OutputFile", "Output File", ref currentY, res);
+
+        GameObject footer = CreateUIElement("Footer", window.transform, new Vector2(0, 0), new Vector2(1, 0), new Vector2(0, 30));
+        GameObject execBtn = CreateSmallButton(footer.transform, "EXECUTE", new Vector2(150, 0), new Vector2(130, 40));
+        GameObject cancelBtn = CreateSmallButton(footer.transform, "EXIT", new Vector2(350, 0), new Vector2(130, 40));
+
+        AttachPopupLogic(root, title);
+
+        return root;
+    }
+
+    private static void CreatePosVectorRow(Transform parent, string rowName, string labelText, ref float currentY, TMP_DefaultControls.Resources res)
+    {
+        GameObject row = new GameObject(rowName, typeof(RectTransform));
+        row.transform.SetParent(parent, false);
+        RectTransform rtRow = row.GetComponent<RectTransform>();
+        rtRow.anchorMin = new Vector2(0, 1);
+        rtRow.anchorMax = new Vector2(1, 1);
+        rtRow.anchoredPosition = new Vector2(0, currentY);
+        rtRow.sizeDelta = new Vector2(0, 30);
+
+        GameObject labelObj = new GameObject("Label", typeof(RectTransform), typeof(TextMeshProUGUI));
+        labelObj.transform.SetParent(row.transform, false);
+        RectTransform rtLabel = labelObj.GetComponent<RectTransform>();
+        rtLabel.anchorMin = new Vector2(0, 0.5f);
+        rtLabel.anchorMax = new Vector2(0, 0.5f);
+        rtLabel.anchoredPosition = new Vector2(10, 0);
+        rtLabel.sizeDelta = new Vector2(100, 20);
+        TextMeshProUGUI tmpLabel = labelObj.GetComponent<TextMeshProUGUI>();
+        tmpLabel.text = labelText;
+        tmpLabel.fontSize = 12;
+        tmpLabel.color = Color.black;
+        tmpLabel.alignment = TextAlignmentOptions.Left;
+
+        GameObject inputField = TMP_DefaultControls.CreateInputField(res);
+        inputField.name = "InputField_" + labelText.Replace(" ", "");
+        inputField.transform.SetParent(row.transform, false);
+        RectTransform rtInput = inputField.GetComponent<RectTransform>();
+        rtInput.anchorMin = new Vector2(0, 0.5f);
+        rtInput.anchorMax = new Vector2(1, 0.5f);
+        rtInput.offsetMin = new Vector2(110, -12);
+        rtInput.offsetMax = new Vector2(-60, 12);
+        Image imgInput = inputField.GetComponent<Image>();
+        if (imgInput != null) imgInput.color = Color.white;
+        TMP_InputField tmpInput = inputField.GetComponent<TMP_InputField>();
+        if (tmpInput != null && tmpInput.textComponent != null)
+        {
+            tmpInput.textComponent.color = Color.black;
+            tmpInput.textComponent.fontSize = 11;
+        }
+
+        GameObject browse = new GameObject("Button_Browse", typeof(RectTransform), typeof(Image), typeof(Button));
+        browse.transform.SetParent(row.transform, false);
+        RectTransform rtBrowse = browse.GetComponent<RectTransform>();
+        rtBrowse.anchorMin = new Vector2(1, 0.5f);
+        rtBrowse.anchorMax = new Vector2(1, 0.5f);
+        rtBrowse.anchoredPosition = new Vector2(-25, 0);
+        rtBrowse.sizeDelta = new Vector2(40, 24);
+        browse.GetComponent<Image>().color = new Color32(230, 230, 230, 255);
+
+        GameObject browseText = new GameObject("Text", typeof(RectTransform), typeof(TextMeshProUGUI));
+        browseText.transform.SetParent(browse.transform, false);
+        RectTransform rtBrowseText = browseText.GetComponent<RectTransform>();
+        rtBrowseText.anchorMin = Vector2.zero;
+        rtBrowseText.anchorMax = Vector2.one;
+        TextMeshProUGUI tmpBrowse = browseText.GetComponent<TextMeshProUGUI>();
+        tmpBrowse.text = "...";
+        tmpBrowse.fontSize = 14;
+        tmpBrowse.color = Color.black;
+        tmpBrowse.alignment = TextAlignmentOptions.Center;
+
+        currentY -= 40;
+    }
+
+    private static GameObject CreateDEMToContourPopup(Canvas canvas, bool forceNew, string resourceName, string rootName, string title)
+    {
+        if (!forceNew)
+        {
+            GameObject prefab = Resources.Load<GameObject>(resourceName);
+            if (prefab != null)
+            {
+                if (canvas == null) canvas = Object.FindFirstObjectByType<Canvas>();
+                GameObject instance = Object.Instantiate(prefab, canvas.transform);
+                instance.name = rootName;
+                AttachPopupLogic(instance, title);
+                return instance;
+            }
+        }
+
+        if (canvas == null)
+            canvas = Object.FindFirstObjectByType<Canvas>();
+
+        GameObject root = new GameObject(rootName, typeof(RectTransform), typeof(Image));
+        root.transform.SetParent(canvas.transform, false);
+        RectTransform rtRoot = root.GetComponent<RectTransform>();
+        rtRoot.anchorMin = Vector2.zero;
+        rtRoot.anchorMax = Vector2.one;
+        rtRoot.sizeDelta = Vector2.zero;
+        root.GetComponent<Image>().color = new Color(0, 0, 0, 0.4f);
+
+        GameObject window = new GameObject("Window", typeof(RectTransform), typeof(Image));
+        window.transform.SetParent(root.transform, false);
+        RectTransform rtWin = window.GetComponent<RectTransform>();
+        rtWin.anchorMin = rtWin.anchorMax = new Vector2(0.5f, 0.5f);
+        rtWin.sizeDelta = new Vector2(650, 320);
+        window.GetComponent<Image>().color = new Color32(235, 235, 235, 255);
+
+        GameObject header = CreateUIElement("Header", window.transform, new Vector2(0, 1), new Vector2(1, 1), new Vector2(0, -30));
+        header.GetComponent<Image>().color = new Color32(245, 245, 245, 255);
+        CreateText(header.transform, title, 14, Color.black, TextAlignmentOptions.Left, new Vector2(10, 0));
+
+        GameObject content = new GameObject("Content", typeof(RectTransform));
+        content.transform.SetParent(window.transform, false);
+        RectTransform rtContent = content.GetComponent<RectTransform>();
+        rtContent.anchorMin = new Vector2(0, 0);
+        rtContent.anchorMax = new Vector2(1, 1);
+        rtContent.offsetMin = new Vector2(20, 20);
+        rtContent.offsetMax = new Vector2(-20, -60);
+
+        float currentY = -10;
+        TMP_DefaultControls.Resources res = GetTMPResources();
+
+        CreatePosVectorRow(content.transform, "Row_InputFile", "Input File", ref currentY, res);
+
+        GameObject intervalRow = new GameObject("Row_ContourInterval", typeof(RectTransform));
+        intervalRow.transform.SetParent(content.transform, false);
+        RectTransform rtIntervalRow = intervalRow.GetComponent<RectTransform>();
+        rtIntervalRow.anchorMin = new Vector2(0, 1);
+        rtIntervalRow.anchorMax = new Vector2(1, 1);
+        rtIntervalRow.anchoredPosition = new Vector2(0, currentY - 5);
+        rtIntervalRow.sizeDelta = new Vector2(0, 30);
+
+        GameObject intervalLabelObj = new GameObject("Label", typeof(RectTransform), typeof(TextMeshProUGUI));
+        intervalLabelObj.transform.SetParent(intervalRow.transform, false);
+        RectTransform rtIntervalLabel = intervalLabelObj.GetComponent<RectTransform>();
+        rtIntervalLabel.anchorMin = new Vector2(0, 0.5f);
+        rtIntervalLabel.anchorMax = new Vector2(0, 0.5f);
+        rtIntervalLabel.anchoredPosition = new Vector2(10, 0);
+        rtIntervalLabel.sizeDelta = new Vector2(120, 20);
+        TextMeshProUGUI tmpIntervalLabel = intervalLabelObj.GetComponent<TextMeshProUGUI>();
+        tmpIntervalLabel.text = "Contour Interval";
+        tmpIntervalLabel.fontSize = 12;
+        tmpIntervalLabel.color = Color.black;
+        tmpIntervalLabel.alignment = TextAlignmentOptions.Left;
+
+        GameObject intervalInput = TMP_DefaultControls.CreateInputField(res);
+        intervalInput.name = "InputField_ContourInterval";
+        intervalInput.transform.SetParent(intervalRow.transform, false);
+        RectTransform rtIntervalInput = intervalInput.GetComponent<RectTransform>();
+        rtIntervalInput.anchorMin = new Vector2(0, 0.5f);
+        rtIntervalInput.anchorMax = new Vector2(0, 0.5f);
+        rtIntervalInput.anchoredPosition = new Vector2(140, 0);
+        rtIntervalInput.sizeDelta = new Vector2(120, 24);
+        Image imgInterval = intervalInput.GetComponent<Image>();
+        if (imgInterval != null) imgInterval.color = Color.white;
+        TMP_InputField tmpIntervalInput = intervalInput.GetComponent<TMP_InputField>();
+        if (tmpIntervalInput != null && tmpIntervalInput.textComponent != null)
+        {
+            tmpIntervalInput.textComponent.color = Color.black;
+            tmpIntervalInput.textComponent.fontSize = 11;
+        }
+
+        currentY -= 60;
+
+        CreatePosVectorRow(content.transform, "Row_OutputFile", "Output File", ref currentY, res);
+
+        GameObject footer = CreateUIElement("Footer", window.transform, new Vector2(0, 0), new Vector2(1, 0), new Vector2(0, 30));
+        GameObject execBtn = CreateSmallButton(footer.transform, "EXECUTE", new Vector2(150, 0), new Vector2(130, 40));
+        GameObject cancelBtn = CreateSmallButton(footer.transform, "EXIT", new Vector2(350, 0), new Vector2(130, 40));
+
+        AttachPopupLogic(root, title);
+
+        return root;
     }
 
     private static GameObject CreateUIElement(string name, Transform parent, Vector2 anchorMin, Vector2 anchorMax, Vector2 anchoredPos)

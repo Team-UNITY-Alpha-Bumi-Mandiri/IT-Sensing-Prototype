@@ -626,6 +626,22 @@ public class NavbarManager : MonoBehaviour
         {
             GNSSPopupFactory.CreateRasterClassification();
         }
+        else if (title == "Pos to Shapefile")
+        {
+            GNSSPopupFactory.CreatePosToShapefile();
+        }
+        else if (title == "Pos to Geojson")
+        {
+            GNSSPopupFactory.CreatePosToGeojson();
+        }
+        else if (title == "Pos to KML")
+        {
+            GNSSPopupFactory.CreatePosToKML();
+        }
+        else if (title == "DEM to Contour")
+        {
+            GNSSPopupFactory.CreateDEMToContour();
+        }
         else
         {
             // Placeholder for other popups

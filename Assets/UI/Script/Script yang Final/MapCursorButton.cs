@@ -1,4 +1,3 @@
-using NUnit.Framework;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -25,6 +24,11 @@ public class MapCursorButton : MonoBehaviour
         if (myButton == null) myButton = GetComponent<Button>();
         if (buttonImage == null) buttonImage = GetComponent<Image>();
 
+        if (myButton != null)
+        {
+            myButton.transition = Selectable.Transition.None;
+        }
+
         // 2. Setup kondisi awal (Sesuai settingan di Map Controller)
         UpdateVisuals();
 
@@ -36,8 +40,8 @@ public class MapCursorButton : MonoBehaviour
 
     void Update()
     {
-        if (isActive)
-            mapController.isInputEnabled = AllowedToDragMapToo() ? true : false;
+        if (!isActive || mapController == null) return;
+        mapController.isInputEnabled = AllowedToDragMapToo();
     }
 
     bool AllowedToDragMap()
@@ -63,7 +67,7 @@ public class MapCursorButton : MonoBehaviour
     {
         foreach (GameObject t in selectedPopUp)
         {
-            if (t.activeSelf == true)
+            if (t != null && t.activeSelf == true)
             {
                 return false;
             }
@@ -73,7 +77,8 @@ public class MapCursorButton : MonoBehaviour
 
     public void AllowToDragExternal(bool inputState)
     {
-        mapController.isInputEnabled = inputState;
+        if (mapController != null)
+            mapController.isInputEnabled = inputState;
     }
 
     void OnButtonClicked()
@@ -96,7 +101,7 @@ public class MapCursorButton : MonoBehaviour
 
     void UpdateVisuals()
     {
-        if (mapController != null && buttonImage != null)
+        if (buttonImage != null)
         {
             buttonImage.color = isActive ? activeColor : inactiveColor;
             // Jika Enabled = Hijau, Jika Disabled = Putih

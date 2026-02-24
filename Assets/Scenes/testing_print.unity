@@ -23224,6 +23224,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::SplitViewTool
   tiffManager: {fileID: 375825893}
   projectManager: {fileID: 1285994912}
+  fusionMat: {fileID: 0}
   dropdownLeft: {fileID: 1240830344}
   dropdownRight: {fileID: 907327617}
   divider: {fileID: 580119374}
@@ -55251,7 +55252,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 1, y: 0}
   m_AnchorMax: {x: 1, y: 0}
-  m_AnchoredPosition: {x: -437, y: 0}
+  m_AnchoredPosition: {x: 0, y: 0}
   m_SizeDelta: {x: 20, y: 0}
   m_Pivot: {x: 1, y: 1}
 --- !u!114 &1138153679
@@ -55473,8 +55474,8 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: 217.54141, y: 0.0000112}
-  m_SizeDelta: {x: 691.0842, y: 700.75}
+  m_AnchoredPosition: {x: -0.11826, y: 0.0000112}
+  m_SizeDelta: {x: 255.76, y: 700.75}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1140729708
 MonoBehaviour:

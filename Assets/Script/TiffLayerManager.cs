@@ -862,12 +862,12 @@ public class TiffLayerManager : MonoBehaviour
             if (existingRaw.material != layerMat && sceneName != "testing_print")
             {
                 existingRaw.material = Instantiate(layerMat);
+                enhanceTool.AssignValues(existing, layer.name);
             }
             else
             {
                 existingRaw.material = null;
             }
-            enhanceTool.AssignValues(existing, layer.name);
 
             return;
         }

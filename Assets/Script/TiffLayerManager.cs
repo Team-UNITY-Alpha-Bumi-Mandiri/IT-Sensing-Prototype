@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using TMPro;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 
 // ============================================================
@@ -854,13 +855,19 @@ public class TiffLayerManager : MonoBehaviour
             existing.SetActive(true);
             UpdateOverlayPosition(existing);
 
-            // Apply enhancement material jika ada
+            // Apply custom material jika ada
             RawImage existingRaw = existing.GetComponent<RawImage>();
-            if (existingRaw.material != layerMat)
+            string sceneName = SceneManager.GetActiveScene().name;
+
+            if (existingRaw.material != layerMat && sceneName != "testing_print")
             {
                 existingRaw.material = Instantiate(layerMat);
             }
-                enhanceTool.AssignValues(existing, layer.name);
+            else
+            {
+                existingRaw.material = null;
+            }
+            enhanceTool.AssignValues(existing, layer.name);
 
             return;
         }

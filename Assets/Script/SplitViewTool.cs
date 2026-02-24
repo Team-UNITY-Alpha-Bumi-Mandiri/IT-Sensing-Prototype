@@ -9,10 +9,12 @@ public class SplitViewTool : MonoBehaviour
     [Header("Data")]
     public TiffLayerManager tiffManager;
     public ProjectManager projectManager;
+    public Material fusionMat;
     public TMP_Dropdown dropdownLeft, dropdownRight;
 
     string layerNameLeft, layerNameRight;
     GameObject instLeft, instRight;
+    RawImage rawLeft, rawRight;
 
     [Header("Toolbar")]
     public GameObject divider;
@@ -86,6 +88,11 @@ public class SplitViewTool : MonoBehaviour
         instLeft = tiffManager.SelectLayerGameobject(layerNameLeft);
         instRight = tiffManager.SelectLayerGameobject(layerNameRight);
 
+        //  rawLeft = instLeft.GetComponent<RawImage>();
+        //   rawRight = instRight.GetComponent<RawImage>();
+        //  rawLeft.material = fusionMat;
+        //  rawRight.material = fusionMat;
+
         instRight.transform.SetAsLastSibling();
         instLeft.transform.SetAsLastSibling();
 
@@ -99,6 +106,9 @@ public class SplitViewTool : MonoBehaviour
         if (instLeft != null)
         {
             EnableMask(false);
+            //  rawLeft.material = null;
+            //  rawRight.material = null;
+
             tiffManager.OnPropertyToggleExternal(layerNameLeft, false);
             tiffManager.OnPropertyToggleExternal(layerNameRight, false);
         }
